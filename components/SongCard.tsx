@@ -5,12 +5,12 @@ import {motion, AnimatePresence, LayoutGroup} from "framer-motion";
 import {urlFor} from "@/lib/sanity";
 import {ChatBubbleBottomCenterIcon, EllipsisVerticalIcon} from "@heroicons/react/16/solid";
 import React from "react";
-import {CheckCircleIcon, MinusCircleIcon, PlusCircleIcon, XMarkIcon} from "@heroicons/react/24/outline";
+import {MinusCircleIcon, PlusCircleIcon, XMarkIcon} from "@heroicons/react/24/outline";
 import {useSelectedSongContext} from "@/context/selected-song-context";
 import {usePlaylistContext} from "@/context/playlist-context";
-import Divider from "@/components/Divider";
 
-export const SongList = ({songs}: { songs: SongType[] }) => {
+export const SongList = ({songs, isSetlist}: { songs: SongType[] , isSetlist: boolean}) => {
+  const {playlist, setPlaylist} = usePlaylistContext();
   return (
     <div
       className={"flex mx-auto text-rosePine-text items-center justify-center p-2"}>
@@ -19,10 +19,11 @@ export const SongList = ({songs}: { songs: SongType[] }) => {
           {
             songs.map((item, index) => (
               <React.Fragment key={index}>
+                {(isSetlist || !playlist.includes(item)) &&
                 <li>
                   <SongCard song={item}/>
-                  {/*<Divider/>*/}
                 </li>
+                }
               </React.Fragment>
             ))
           }
@@ -41,7 +42,7 @@ const SongCard = ({song}: { song: SongType }) => {
 
   return (
     <div
-      className={`flex flex-col gap-1 px-5 py-0 w-[100%] rounded-xl ${isSelected ? "bg-rosePine-base/75" : "bg-transparent"}`}>
+      className={`flex flex-col gap-1 px-3 py-0 min-w-[400px] rounded-xl ${isSelected ? "bg-rosePine-base/75" : "bg-transparent"}`}>
       <div className={"flex flex-row justify-between items-center z-10"}>
         <motion.div
           layout
@@ -70,7 +71,7 @@ const SongCard = ({song}: { song: SongType }) => {
           }}
         >
           <img src={urlFor(song.cover_art).url()} alt={song.title}
-               className={`w-20 h-20 m-1 p-1 mr-4 ${isSelected ? "border border-rosePine-gold" : "border-0"}`}/>
+               className={`w-16 h-16 m-1 p-1 mr-4 ${isSelected ? "border border-rosePine-gold" : "border-0"}`}/>
           <div className={"flex flex-col flex-grow mr-10"}>
             <h1
               className={`flex ${isSelected ? "font-extrabold text-rosePine-gold" : "text-rosePine-text font-bold"}`}>{song.title}</h1>

@@ -19,7 +19,7 @@ import Divider from "@/components/Divider";
 export default function Setlist() {
   const {playlist, setPlaylist} = usePlaylistContext();
   return (
-    <div className={"mb-10"}>
-      <SongList songs={playlist}/>
+    <div className={""}>
+      <SongList songs={playlist} isSetlist={true}/>
     </div>)
 }

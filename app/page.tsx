@@ -4,7 +4,7 @@ import SelectedSongContextProvider from "@/context/selected-song-context";
 import {Player} from "@/components/Player";
 import PlaylistContextProvider from "@/context/playlist-context";
 import Setlist from "@/components/Setlist";
-import Divider from "@/components/Divider";
+import Divider, {FullDivider} from "@/components/Divider";
 
 
 export default function Home() {
@@ -14,6 +14,7 @@ export default function Home() {
         <PlaylistContextProvider>
           <Player/>
           <Setlist/>
+          <FullDivider/>
           <Songs/>
         </PlaylistContextProvider>
       </SelectedSongContextProvider>
