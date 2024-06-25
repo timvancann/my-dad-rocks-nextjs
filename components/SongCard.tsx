@@ -8,6 +8,7 @@ import React from "react";
 import {CheckCircleIcon, MinusCircleIcon, PlusCircleIcon, XMarkIcon} from "@heroicons/react/24/outline";
 import {useSelectedSongContext} from "@/context/selected-song-context";
 import {usePlaylistContext} from "@/context/playlist-context";
+import Divider from "@/components/Divider";
 
 export const SongList = ({songs}: { songs: SongType[] }) => {
   return (
@@ -20,9 +21,7 @@ export const SongList = ({songs}: { songs: SongType[] }) => {
               <React.Fragment key={index}>
                 <li>
                   <SongCard song={item}/>
-                </li>
-                <li>
-                  <Divider/>
+                  {/*<Divider/>*/}
                 </li>
               </React.Fragment>
             ))
@@ -103,12 +102,16 @@ const SongCard = ({song}: { song: SongType }) => {
           }
         </motion.div>
       </div>
-      <SongExtra isExpanded={isExpanded} song={song}/>
+      <SongExtra isExpanded={isExpanded} setIsExpanded={setIsExpanded} song={song}/>
     </div>
   )
 }
 
-const SongExtra = ({song, isExpanded}: { song: SongType, isExpanded: boolean }) => {
+const SongExtra = ({song, isExpanded, setIsExpanded}: {
+  song: SongType,
+  isExpanded: boolean,
+  setIsExpanded: React.Dispatch<boolean>
+}) => {
   const {playlist, setPlaylist} = usePlaylistContext();
   return (<AnimatePresence>
       {isExpanded && <motion.div
@@ -174,8 +177,8 @@ const SongExtra = ({song, isExpanded}: { song: SongType, isExpanded: boolean }) 
                              return
                            }
                            setPlaylist([...playlist, song])
-                         }
-                         }
+                           setIsExpanded(false)
+                         }}
           >
             <SongExtraItem icon={<PlusCircleIcon className={"w-6 h-6"}/>} text={"Add to playlist"}/>
           </motion.button>
@@ -200,6 +203,7 @@ const SongExtra = ({song, isExpanded}: { song: SongType, isExpanded: boolean }) 
                          }}
                          onClick={() => {
                            setPlaylist(playlist.filter((item) => item.title !== song.title));
+                           setIsExpanded(false)
                          }}
           >
             <SongExtraItem icon={<MinusCircleIcon className={"w-6 h-6"}/>} text={"Remove from playlist"}/>
@@ -225,9 +229,4 @@ const SongExtraItem = ({
       {icon}
     </div>
   )
-}
-
-
-const Divider = () => {
-  return <div className={"flex bg-rosePine-overlay h-[1px] w-5/6"}/>
 }
