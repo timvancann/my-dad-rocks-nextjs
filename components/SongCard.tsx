@@ -7,7 +7,7 @@ import {ChatBubbleBottomCenterIcon, EllipsisVerticalIcon} from "@heroicons/react
 import React from "react";
 import {CheckCircleIcon, MinusCircleIcon, PlusCircleIcon, XMarkIcon} from "@heroicons/react/24/outline";
 import {useSelectedSongContext} from "@/context/selected-song-context";
-import Link from "next/link";
+import {usePlaylistContext} from "@/context/playlist-context";
 
 export const SongList = ({songs}: { songs: SongType[] }) => {
   return (
@@ -36,7 +36,6 @@ export const SongList = ({songs}: { songs: SongType[] }) => {
 
 const SongCard = ({song}: { song: SongType }) => {
   const [isExpanded, setIsExpanded] = React.useState(false);
-
   const {selectedSong, setSelectedSong} = useSelectedSongContext();
 
   const isSelected = selectedSong?.title === song.title;
@@ -110,6 +109,7 @@ const SongCard = ({song}: { song: SongType }) => {
 }
 
 const SongExtra = ({song, isExpanded}: { song: SongType, isExpanded: boolean }) => {
+  const {playlist, setPlaylist} = usePlaylistContext();
   return (<AnimatePresence>
       {isExpanded && <motion.div
         className={"flex flex-col gap-2 justify-end items-end my-2 w-full px-2 py-2"}
@@ -131,7 +131,7 @@ const SongExtra = ({song, isExpanded}: { song: SongType, isExpanded: boolean }) 
         }}
       >
         <p className={"text-xs tracking-[0.2rem] -mt-2 font-light"}>{song.last_played_at || "never played"}</p>
-        <motion.a href={`/lyrics/${song._id}`} className={"py-3 text-rosePine-text/80"}
+        <motion.a href={`/lyrics/${song._id}`} className={"py-2 text-rosePine-text/80"}
                   whileHover={{
                     x: -15,
                     opacity: 1,
@@ -151,16 +151,74 @@ const SongExtra = ({song, isExpanded}: { song: SongType, isExpanded: boolean }) 
         >
           <SongExtraItem icon={<ChatBubbleBottomCenterIcon className={"w-6 h-6"}/>} text={"Lyrics"}/>
         </motion.a>
-        <SongExtraItem icon={<PlusCircleIcon className={"w-6 h-6"}/>} text={"Add to playlist"}/>
-        <SongExtraItem icon={<MinusCircleIcon className={"w-6 h-6"}/>} text={"Remove from playlist"}/>
-        <SongExtraItem icon={<CheckCircleIcon className={"w-6 h-6"}/>} text={"Mark played"}/>
+        {!playlist.includes(song) &&
+          <motion.button className={"py-2 text-rosePine-text/80"}
+                         whileHover={{
+                           x: -15,
+                           opacity: 1,
+                           transition: {
+                             duration: 0.125,
+                             easings: "easeInOut"
+                           },
+                         }}
+                         whileTap={{
+                           x: -15,
+                           scale: 0.9,
+                           transition: {
+                             duration: 0.125,
+                             easings: "easeInOut"
+                           }
+                         }}
+                         onClick={() => {
+                           if (playlist.includes(song)) {
+                             return
+                           }
+                           setPlaylist([...playlist, song])
+                         }
+                         }
+          >
+            <SongExtraItem icon={<PlusCircleIcon className={"w-6 h-6"}/>} text={"Add to playlist"}/>
+          </motion.button>
+        }
+        {playlist.includes(song) &&
+          <motion.button className={"py-2 text-rosePine-text/80"}
+                         whileHover={{
+                           x: -15,
+                           opacity: 1,
+                           transition: {
+                             duration: 0.125,
+                             easings: "easeInOut"
+                           },
+                         }}
+                         whileTap={{
+                           x: -15,
+                           scale: 0.9,
+                           transition: {
+                             duration: 0.125,
+                             easings: "easeInOut"
+                           }
+                         }}
+                         onClick={() => {
+                           setPlaylist(playlist.filter((item) => item.title !== song.title));
+                         }}
+          >
+            <SongExtraItem icon={<MinusCircleIcon className={"w-6 h-6"}/>} text={"Remove from playlist"}/>
+          </motion.button>
+        }
+        {/*<SongExtraItem icon={<CheckCircleIcon className={"w-6 h-6"}/>} text={"Mark played"}/>*/}
       </motion.div>}
     </AnimatePresence>
 
   )
 }
 
-const SongExtraItem = ({icon, text}: { icon: React.ReactNode, text: string }) => {
+const SongExtraItem = ({
+                         icon, text
+                       }: {
+  icon: React.ReactNode, text
+    :
+    string
+}) => {
   return (
     <div className={"flex flex-row gap-4"}>
       <p className={"font-semibold text-sm"}> {text} </p>

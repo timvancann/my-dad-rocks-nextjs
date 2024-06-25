@@ -14,6 +14,7 @@ import {
 } from "media-chrome/react"
 import {ArrowUturnLeftIcon, ArrowUturnRightIcon, PauseCircleIcon, PlayCircleIcon} from "@heroicons/react/16/solid";
 import {CloseCircleIcon} from "@sanity/icons";
+import {usePlaylistContext} from "@/context/playlist-context";
 
 
 const PropSpan = ({children, slot}: { children: ReactNode, slot: string }) => {
@@ -25,7 +26,7 @@ const PropSpan = ({children, slot}: { children: ReactNode, slot: string }) => {
 
 }
 export const Player = () => {
-  const {selectedSong, setSelectedSong} = useSelectedSongContext()
+  const {selectedSong, setSelectedSong} = useSelectedSongContext();
 
   if (!selectedSong) {
     return <div></div>
@@ -63,7 +64,7 @@ export const Player = () => {
             </MediaSeekForwardButton>
           </div>
           <button className={"absolute flex right-2 bottom-2"}
-               onClick={() => setSelectedSong(null)}
+                  onClick={() => setSelectedSong(null)}
           ><CloseCircleIcon className={"w-8 h-8"}/></button>
         </div>
       </MediaControlBar>
