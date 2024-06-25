@@ -7,6 +7,7 @@ import {ChatBubbleBottomCenterIcon, EllipsisVerticalIcon} from "@heroicons/react
 import React from "react";
 import {CheckCircleIcon, MinusCircleIcon, PlusCircleIcon, XMarkIcon} from "@heroicons/react/24/outline";
 import {useSelectedSongContext} from "@/context/selected-song-context";
+import Link from "next/link";
 
 export const SongList = ({songs}: { songs: SongType[] }) => {
   return (
@@ -111,7 +112,7 @@ const SongCard = ({song}: { song: SongType }) => {
 const SongExtra = ({song, isExpanded}: { song: SongType, isExpanded: boolean }) => {
   return (<AnimatePresence>
       {isExpanded && <motion.div
-        className={"flex flex-col gap-6 justify-end items-end my-2 w-full px-2 py-2"}
+        className={"flex flex-col gap-2 justify-end items-end my-2 w-full px-2 py-2"}
         initial={{
           opacity: 1,
           y: -100,
@@ -130,7 +131,26 @@ const SongExtra = ({song, isExpanded}: { song: SongType, isExpanded: boolean }) 
         }}
       >
         <p className={"text-xs tracking-[0.2rem] -mt-2 font-light"}>{song.last_played_at || "never played"}</p>
-        <SongExtraItem icon={<ChatBubbleBottomCenterIcon className={"w-6 h-6"}/>} text={"Lyrics"}/>
+        <motion.a href={`/lyrics/${song._id}`} className={"py-3 text-rosePine-text/80"}
+                  whileHover={{
+                    x: -15,
+                    opacity: 1,
+                    transition: {
+                      duration: 0.125,
+                      easings: "easeInOut"
+                    },
+                  }}
+                  whileTap={{
+                    x: -15,
+                    scale: 0.9,
+                    transition: {
+                      duration: 0.125,
+                      easings: "easeInOut"
+                    }
+                  }}
+        >
+          <SongExtraItem icon={<ChatBubbleBottomCenterIcon className={"w-6 h-6"}/>} text={"Lyrics"}/>
+        </motion.a>
         <SongExtraItem icon={<PlusCircleIcon className={"w-6 h-6"}/>} text={"Add to playlist"}/>
         <SongExtraItem icon={<MinusCircleIcon className={"w-6 h-6"}/>} text={"Remove from playlist"}/>
         <SongExtraItem icon={<CheckCircleIcon className={"w-6 h-6"}/>} text={"Mark played"}/>
@@ -142,7 +162,7 @@ const SongExtra = ({song, isExpanded}: { song: SongType, isExpanded: boolean }) 
 
 const SongExtraItem = ({icon, text}: { icon: React.ReactNode, text: string }) => {
   return (
-    <div className={"flex flex-row gap-4 text-rosePine-text/80"}>
+    <div className={"flex flex-row gap-4"}>
       <p className={"font-semibold text-sm"}> {text} </p>
       {icon}
     </div>

@@ -13,7 +13,6 @@ import {
   MediaTimeDisplay,
 } from "media-chrome/react"
 import {ArrowUturnLeftIcon, ArrowUturnRightIcon, PauseCircleIcon, PlayCircleIcon} from "@heroicons/react/16/solid";
-import IntrinsicAttributes = React.JSX.IntrinsicAttributes;
 
 
 const PropSpan = ({children, slot}: { children: ReactNode, slot: string }) => {
