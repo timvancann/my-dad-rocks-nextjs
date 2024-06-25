@@ -8,27 +8,39 @@ import React from "react";
 import {MinusCircleIcon, PlusCircleIcon, XMarkIcon} from "@heroicons/react/24/outline";
 import {useSelectedSongContext} from "@/context/selected-song-context";
 import {usePlaylistContext} from "@/context/playlist-context";
+import {FullDivider} from "@/components/Divider";
+import {TrashIcon} from "@sanity/icons";
 
-export const SongList = ({songs, isSetlist}: { songs: SongType[] , isSetlist: boolean}) => {
+export const SongList = ({songs, isSetlist, title}: { songs: SongType[], isSetlist: boolean, title: string }) => {
   const {playlist, setPlaylist} = usePlaylistContext();
   return (
-    <div
-      className={"flex mx-auto text-rosePine-text items-center justify-center p-2"}>
+    <div className={"flex flex-col mx-auto text-rosePine-text items-center justify-center p-2"}>
+      <div className={"flex flex-row w-full justify-between mb-3"}>
+        <h1
+          className={"flex text-left self-start uppercase tracking-widest font-light text-xl text-rosePine-gold m-2"}>{title}</h1>
+        {isSetlist && playlist.length> 0 && <motion.button
+          className={"border border-rosePine-muted/60 rounded-full px-2 flex flex-row items-center justify-center tracking-wide bg-rosePine-highlightMed/50 hover:bg-rosePine-foam hover:text-rosePineDawn-text transition-colors"}
+          whileHover={{scale: 1.1,}}
+          whileTap={{scale: 0.9,}}
+          onClick={() => setPlaylist([])}
+        ><TrashIcon className={"h-6 w-6 "}/></motion.button>}
+      </div>
       <ul>
         <LayoutGroup>
           {
             songs.map((item, index) => (
               <React.Fragment key={index}>
                 {(isSetlist || !playlist.includes(item)) &&
-                <li>
-                  <SongCard song={item}/>
-                </li>
+                  <li>
+                    <SongCard song={item}/>
+                  </li>
                 }
               </React.Fragment>
             ))
           }
         </LayoutGroup>
       </ul>
+      {isSetlist && playlist.length > 0 && <FullDivider/>}
     </div>
 
   )
@@ -117,62 +129,22 @@ const SongExtra = ({song, isExpanded, setIsExpanded}: {
   return (<AnimatePresence>
       {isExpanded && <motion.div
         className={"flex flex-col gap-2 justify-end items-end my-2 w-full px-2 py-2"}
-        initial={{
-          opacity: 1,
-          y: -100,
-        }}
-        animate={{
-          opacity: 1,
-          y: 0
-        }}
-        exit={{
-          opacity: 0,
-          y: -100,
-        }}
-        transition={{
-          duration: 0.125,
-          easings: "easeInOut",
-        }}
+        initial={{opacity: 1, y: -100,}}
+        animate={{opacity: 1, y: 0}}
+        exit={{opacity: 0, y: -100,}}
+        transition={{duration: 0.125, easings: "easeInOut",}}
       >
         <p className={"text-xs tracking-[0.2rem] -mt-2 font-light"}>{song.last_played_at || "never played"}</p>
         <motion.a href={`/lyrics/${song._id}`} className={"py-2 text-rosePine-text/80"}
-                  whileHover={{
-                    x: -15,
-                    opacity: 1,
-                    transition: {
-                      duration: 0.125,
-                      easings: "easeInOut"
-                    },
-                  }}
-                  whileTap={{
-                    x: -15,
-                    scale: 0.9,
-                    transition: {
-                      duration: 0.125,
-                      easings: "easeInOut"
-                    }
-                  }}
+                  whileHover={{scale: 1.1,}}
+                  whileTap={{scale: 0.9,}}
         >
           <SongExtraItem icon={<ChatBubbleBottomCenterIcon className={"w-6 h-6"}/>} text={"Lyrics"}/>
         </motion.a>
         {!playlist.includes(song) &&
           <motion.button className={"py-2 text-rosePine-text/80"}
-                         whileHover={{
-                           x: -15,
-                           opacity: 1,
-                           transition: {
-                             duration: 0.125,
-                             easings: "easeInOut"
-                           },
-                         }}
-                         whileTap={{
-                           x: -15,
-                           scale: 0.9,
-                           transition: {
-                             duration: 0.125,
-                             easings: "easeInOut"
-                           }
-                         }}
+                         whileHover={{scale: 1.1,}}
+                         whileTap={{scale: 0.9,}}
                          onClick={() => {
                            if (playlist.includes(song)) {
                              return
@@ -186,22 +158,8 @@ const SongExtra = ({song, isExpanded, setIsExpanded}: {
         }
         {playlist.includes(song) &&
           <motion.button className={"py-2 text-rosePine-text/80"}
-                         whileHover={{
-                           x: -15,
-                           opacity: 1,
-                           transition: {
-                             duration: 0.125,
-                             easings: "easeInOut"
-                           },
-                         }}
-                         whileTap={{
-                           x: -15,
-                           scale: 0.9,
-                           transition: {
-                             duration: 0.125,
-                             easings: "easeInOut"
-                           }
-                         }}
+                         whileHover={{scale: 1.1,}}
+                         whileTap={{scale: 0.9,}}
                          onClick={() => {
                            setPlaylist(playlist.filter((item) => item.title !== song.title));
                            setIsExpanded(false)

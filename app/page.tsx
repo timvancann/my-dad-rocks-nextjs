@@ -9,12 +9,11 @@ import Divider, {FullDivider} from "@/components/Divider";
 
 export default function Home() {
   return (
-    <div className={"flex flex-col mx-auto w-full items-center justify-center"}>
+    <div className={"flex flex-col mx-auto  items-center justify-center"}>
       <SelectedSongContextProvider>
         <PlaylistContextProvider>
           <Player/>
           <Setlist/>
-          <FullDivider/>
           <Songs/>
         </PlaylistContextProvider>
       </SelectedSongContextProvider>

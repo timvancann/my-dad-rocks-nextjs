@@ -21,5 +21,5 @@ async function getData() {
 
 export default async function Songs() {
   const data: SongType[] = await getData();
-  return (<SongList songs={data} isSetlist={false}/>)
+  return (<SongList songs={data} isSetlist={false} title={"Overige Nummers"}/>)
 }

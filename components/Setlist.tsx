@@ -20,6 +20,6 @@ export default function Setlist() {
   const {playlist, setPlaylist} = usePlaylistContext();
   return (
     <div className={""}>
-      <SongList songs={playlist} isSetlist={true}/>
+      <SongList songs={playlist} isSetlist={true} title={"Oefenen"}/>
     </div>)
 }
