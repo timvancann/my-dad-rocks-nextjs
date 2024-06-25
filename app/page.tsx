@@ -1,26 +1,16 @@
-import {client} from "@/lib/sanity";
-import {SongType} from "@/lib/interface";
 import React from "react";
-import {Songs} from "@/components/SongCard";
+import Songs from "@/components/Songs";
+import SelectedSongContextProvider from "@/context/selected-song-context";
+import {Player} from "@/components/Player";
 
 
-async function getData() {
-  const qry = `*[_type == "song"]{
-title,
-artist,
-cover_art,
-audio{
-  asset->{
-  _id,
-  url
-}},
-last_played_at,
-lyrics
-  }`
-  return await client.fetch(qry);
-}
-
-export default async function Home() {
-  const data: SongType[] = await getData();
-  return <Songs songs={data}/>;
+export default function Home() {
+  return (
+    <div className={"flex flex-col mx-auto w-full items-center justify-center"}>
+      <SelectedSongContextProvider>
+        <Player/>
+        <Songs/>
+      </SelectedSongContextProvider>
+    </div>
+  );
 }

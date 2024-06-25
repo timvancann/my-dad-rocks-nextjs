@@ -6,10 +6,12 @@ import {urlFor} from "@/lib/sanity";
 import {ChatBubbleBottomCenterIcon, EllipsisVerticalIcon} from "@heroicons/react/16/solid";
 import React from "react";
 import {CheckCircleIcon, MinusCircleIcon, PlusCircleIcon, XMarkIcon} from "@heroicons/react/24/outline";
+import {useSelectedSongContext} from "@/context/selected-song-context";
 
-export const Songs = ({songs}: { songs: SongType[] }) => {
+export const SongList = ({songs}: { songs: SongType[] }) => {
   return (
-    <div className={"flex  bg-rosePine-base mx-auto text-rosePine-text max-w-xl flex-col gap-1 items-center justify-center"}>
+    <div
+      className={"flex mx-auto text-rosePine-text items-center justify-center p-2"}>
       <ul>
         <LayoutGroup>
           {
@@ -34,20 +36,26 @@ export const Songs = ({songs}: { songs: SongType[] }) => {
 const SongCard = ({song}: { song: SongType }) => {
   const [isExpanded, setIsExpanded] = React.useState(false);
 
+  const {selectedSong, setSelectedSong} = useSelectedSongContext();
+
+  const isSelected = selectedSong?.title === song.title;
+
   return (
-    <div className={"flex flex-col gap-1"}>
+    <div
+      className={`flex flex-col gap-1 px-5 py-0 w-[100%] rounded-xl ${isSelected ? "bg-rosePine-base/75" : "bg-transparent"}`}>
       <div className={"flex flex-row justify-between items-center z-10"}>
         <motion.div
           layout
-          className={"flex flex-row items-center w-full cursor-pointer"}
+          className={`flex flex-row items-center w-full cursor-pointer `}
+          onClick={() => setSelectedSong(song)}
           initial={{
-            opacity: 0.8,
+            opacity: 0.75,
           }}
           transition={{
             duration: 0.2
           }}
           whileHover={{
-            scale: 1.01,
+            scale: 1.02,
             opacity: 1,
             transition: {
               duration: 0.1,
@@ -55,17 +63,20 @@ const SongCard = ({song}: { song: SongType }) => {
             }
           }}
           whileTap={{
-            scale: 0.99,
+            scale: 0.98,
             transition: {
               duration: 0.1,
               easings: "easeInOut"
             }
           }}
         >
-          <img src={urlFor(song.cover_art).url()} alt={song.title} className={"w-20 h-20 p-2"}/>
-          <div className={"flex flex-col flex-grow"}>
-            <h1 className={"flex font-bold"}>{song.title}</h1>
-            <h2 className={"flex text-sm"}>{song.artist}</h2>
+          <img src={urlFor(song.cover_art).url()} alt={song.title}
+               className={`w-20 h-20 m-1 p-1 mr-4 ${isSelected ? "border border-rosePine-gold" : "border-0"}`}/>
+          <div className={"flex flex-col flex-grow mr-10"}>
+            <h1
+              className={`flex ${isSelected ? "font-extrabold text-rosePine-gold" : "text-rosePine-text font-bold"}`}>{song.title}</h1>
+            <h2
+              className={`flex text-sm ${isSelected ? "font-bold text-rosePine-gold" : "text-rosePine-text font-normal"}`}>{song.artist}</h2>
           </div>
         </motion.div>
         <motion.div
@@ -100,10 +111,10 @@ const SongCard = ({song}: { song: SongType }) => {
 const SongExtra = ({song, isExpanded}: { song: SongType, isExpanded: boolean }) => {
   return (<AnimatePresence>
       {isExpanded && <motion.div
-        className={"flex flex-col gap-6 justify-end items-end pb-4 bg-gradient-to-b from-rosePine-base to-rosePine-surface/70"}
+        className={"flex flex-col gap-6 justify-end items-end my-2 w-full px-2 py-2"}
         initial={{
-          opacity: 0,
-          y: -40,
+          opacity: 1,
+          y: -100,
         }}
         animate={{
           opacity: 1,
@@ -111,10 +122,10 @@ const SongExtra = ({song, isExpanded}: { song: SongType, isExpanded: boolean }) 
         }}
         exit={{
           opacity: 0,
-          y: -40
+          y: -100,
         }}
         transition={{
-          duration: 0.25,
+          duration: 0.125,
           easings: "easeInOut",
         }}
       >

@@ -16,7 +16,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`{inter.className} bg-rosePine-base`}>{children}</body>
+      <body className={`{inter.className} bg-gradient-to-br from-rosePine-base to-rosePine-overlay max-w-7xl mx-auto min-h-screen`}>{children}</body>
     </html>
   );
 }
