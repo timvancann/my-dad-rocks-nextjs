@@ -3,83 +3,37 @@
 import {SongType} from "@/lib/interface";
 import {motion, AnimatePresence, LayoutGroup} from "framer-motion";
 import {urlFor} from "@/lib/sanity";
-import {ChatBubbleBottomCenterIcon, EllipsisVerticalIcon} from "@heroicons/react/16/solid";
+import {ChatBubbleBottomCenterIcon, EllipsisVerticalIcon, HandRaisedIcon} from "@heroicons/react/16/solid";
 import React from "react";
 import {MinusCircleIcon, PlusCircleIcon, XMarkIcon} from "@heroicons/react/24/outline";
 import {useSelectedSongContext} from "@/context/selected-song-context";
 import {usePlaylistContext} from "@/context/playlist-context";
-import {FullDivider} from "@/components/Divider";
-import {TrashIcon} from "@sanity/icons";
 
-export const SongList = ({songs, isSetlist, title}: { songs: SongType[], isSetlist: boolean, title: string }) => {
-  const {playlist, setPlaylist} = usePlaylistContext();
-  return (
-    <div className={"flex flex-col mx-auto text-rosePine-text items-center justify-center p-2"}>
-      <div className={"flex flex-row w-full justify-between mb-3"}>
-        <h1
-          className={"flex text-left self-start uppercase tracking-widest font-light text-xl text-rosePine-gold m-2"}>{title}</h1>
-        {isSetlist && playlist.length> 0 && <motion.button
-          className={"border border-rosePine-muted/60 rounded-full px-2 flex flex-row items-center justify-center tracking-wide bg-rosePine-highlightMed/50 hover:bg-rosePine-foam hover:text-rosePineDawn-text transition-colors"}
-          whileHover={{scale: 1.1,}}
-          whileTap={{scale: 0.9,}}
-          onClick={() => setPlaylist([])}
-        ><TrashIcon className={"h-6 w-6 "}/></motion.button>}
-      </div>
-      <ul>
-        <LayoutGroup>
-          {
-            songs.map((item, index) => (
-              <React.Fragment key={index}>
-                {(isSetlist || !playlist.includes(item)) &&
-                  <li>
-                    <SongCard song={item}/>
-                  </li>
-                }
-              </React.Fragment>
-            ))
-          }
-        </LayoutGroup>
-      </ul>
-      {isSetlist && playlist.length > 0 && <FullDivider/>}
-    </div>
 
-  )
-}
-
-const SongCard = ({song}: { song: SongType }) => {
+export const SongCard = ({song}: { song: SongType }) => {
   const [isExpanded, setIsExpanded] = React.useState(false);
   const {selectedSong, setSelectedSong} = useSelectedSongContext();
-
   const isSelected = selectedSong?.title === song.title;
 
+
   return (
-    <div
+    <motion.div
       className={`flex flex-col gap-1 px-3 py-0 min-w-[400px] rounded-xl ${isSelected ? "bg-rosePine-base/75" : "bg-transparent"}`}>
       <div className={"flex flex-row justify-between items-center z-10"}>
         <motion.div
           layout
           className={`flex flex-row items-center w-full cursor-pointer `}
           onClick={() => setSelectedSong(song)}
-          initial={{
-            opacity: 0.75,
-          }}
-          transition={{
-            duration: 0.2
-          }}
+          initial={{opacity: 0.75,}}
+          transition={{duration: 0.2}}
           whileHover={{
             scale: 1.02,
             opacity: 1,
-            transition: {
-              duration: 0.1,
-              easings: "easeInOut"
-            }
+            transition: {duration: 0.1, easings: "easeInOut"}
           }}
           whileTap={{
             scale: 0.98,
-            transition: {
-              duration: 0.1,
-              easings: "easeInOut"
-            }
+            transition: {duration: 0.1, easings: "easeInOut"}
           }}
         >
           <img src={urlFor(song.cover_art).url()} alt={song.title}
@@ -94,17 +48,11 @@ const SongCard = ({song}: { song: SongType }) => {
         <motion.div
           whileHover={{
             rotate: "180deg",
-            transition: {
-              duration: 0.125,
-              easings: "easeInOut"
-            }
+            transition: {duration: 0.125, easings: "easeInOut"}
           }}
           whileTap={{
             scale: 0.9,
-            transition: {
-              duration: 0.125,
-              easings: "easeInOut"
-            }
+            transition: {duration: 0.125, easings: "easeInOut"}
           }}
           onMouseDown={() => setIsExpanded(!isExpanded)}
         >
@@ -116,7 +64,7 @@ const SongCard = ({song}: { song: SongType }) => {
         </motion.div>
       </div>
       <SongExtra isExpanded={isExpanded} setIsExpanded={setIsExpanded} song={song}/>
-    </div>
+    </motion.div>
   )
 }
 

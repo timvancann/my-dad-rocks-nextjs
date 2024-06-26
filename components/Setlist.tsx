@@ -1,7 +1,6 @@
 "use client";
 // import {client} from "@/lib/sanity";
 import {usePlaylistContext} from "@/context/playlist-context";
-import {SongList} from "@/components/SongCard";
 import React from "react";
 import Divider from "@/components/Divider";
 //
@@ -20,6 +19,6 @@ export default function Setlist() {
   const {playlist, setPlaylist} = usePlaylistContext();
   return (
     <div className={""}>
-      <SongList songs={playlist} isSetlist={true} title={"Oefenen"}/>
+      {/*<SongList songs={playlist} isSetlist={true} title={"Oefenen"}/>*/}
     </div>)
 }

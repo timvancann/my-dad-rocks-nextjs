@@ -27,6 +27,7 @@ const PropSpan = ({children, slot}: { children: ReactNode, slot: string }) => {
 }
 export const Player = () => {
   const {selectedSong, setSelectedSong} = useSelectedSongContext();
+  const {playlist, setPlaylist} = usePlaylistContext();
 
   if (!selectedSong) {
     return <div></div>
@@ -39,6 +40,15 @@ export const Player = () => {
         slot="media"
         src={selectedSong.audio.asset.url}
         autoPlay
+        onEnded={() => {
+          // select next song in playlist if current is in playlist
+          const currentIndex = playlist.findIndex(song => song.title === selectedSong.title);
+          if (currentIndex === -1) {
+            return;
+          }
+          const nextIndex = (currentIndex + 1) % playlist.length;
+          setSelectedSong(playlist[nextIndex]);
+        }}
       ></audio>
       <MediaControlBar className={`block `}>
         <div className={`flex flex-col gap-2`}>
