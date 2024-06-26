@@ -12,3 +12,18 @@ export interface SetlistType {
   title: string;
   songs?: SongType[];
 }
+
+export interface GigType {
+  _id: string;
+  title: string;
+  date: string;
+  address: string;
+  setlist: SetlistType;
+}
+
+export interface GigsType {
+  _id: string;
+  title: string;
+  date: string;
+}
+

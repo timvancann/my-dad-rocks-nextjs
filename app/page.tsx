@@ -1,52 +1,13 @@
-import React from "react";
+import React, {Suspense} from "react";
 import SelectedSongContextProvider from "@/context/selected-song-context";
 import {Player} from "@/components/Player";
 import PlaylistContextProvider from "@/context/playlist-context";
-import {client} from "@/lib/sanity";
 import {AllSongs, PlayList} from "@/components/SongList";
 import {SetlistType, SongType} from "@/lib/interface";
-
-
-async function getData() {
-  const qry = `
-  *[_type == "song"]|order(title){
-    _id,
-    title,
-    artist,
-    cover_art,
-    audio{
-      asset->{
-      _id,
-      url
-    }},
-    last_played_at
-  }`
-  return await client.fetch<SongType[]>(qry);
-}
-
-async function getSetlist(title: string) {
-  const qry = `
-   *[_type == "setlist" && title == "${title}"]{
-   _id,
-     title,
-    "songs": songs[]->{ 
-    _id,
-    title,
-    artist,
-    cover_art,
-    audio{
-      asset->{
-      _id,
-      url
-    }},
-    last_played_at    },
- }[0]
-  `;
-  return await client.fetch<SetlistType>(qry);
-}
+import {getAllSongs, getSetlist} from "@/lib/sanity";
 
 export default async function Home() {
-  const data: SongType[] = await getData();
+  const data: SongType[] = await getAllSongs();
   const setlist: SetlistType = await getSetlist("Practice");
 
   return (

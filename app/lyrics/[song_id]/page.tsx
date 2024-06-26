@@ -14,6 +14,7 @@ type LyricType = {
   artist: string,
   lyrics?: any
 }
+
 export default async function Lyrics({params}: { params: { song_id: string } }) {
   const song: LyricType = await getData(params.song_id)
   return <div className={"justify-center items-center flex flex-col my-4"}>

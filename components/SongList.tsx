@@ -58,7 +58,7 @@ export const AllSongs = ({songs}: { songs: SongType[] }) => {
       <SongsTitle title={"Overige nummers"}/>
       <LayoutGroup>
         {songs.map((item, index) => (
-            (!playlist.includes(item)) &&
+            (!playlist.map(s => s._id).includes(item._id)) &&
             <SongCard song={item} key={index}/>
           )
         )}

@@ -1,13 +1,13 @@
 import imageBuilder from "@sanity/image-url";
 import {createClient} from "next-sanity";
-import {SongType} from "@/lib/interface";
+import {SetlistType, SongType} from "@/lib/interface";
 
 export const client = createClient({
   apiVersion: '2023-05-03',
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
   dataset: process.env.NEXT_PUBLIC_SANITY_DATASET,
   useCdn: false,
-  token: process.env.SANITY_WRITE_TOKEN,
+  token: process.env.NEXT_PUBLIC_SANITY_TOKEN,
 })
 
 const builder = imageBuilder(client);
@@ -21,8 +21,7 @@ export async function updateSetlistSongs(setlistId: string, reorderedSongs: Song
   const response = await client
     .patch(setlistId)
     .set({
-      title: "tits"
-      // songs: reorderedSongs.map(song => ({_type: 'reference', _ref: song._id}))
+      songs: reorderedSongs.map(song => ({_type: 'reference', _ref: song._id}))
     })
     .commit()
     .then((updatedBike) => {
@@ -34,4 +33,40 @@ export async function updateSetlistSongs(setlistId: string, reorderedSongs: Song
     })
 }
 
+export async function getAllSongs() {
+  const qry = `
+  *[_type == "song"]|order(title){
+    _id,
+    title,
+    artist,
+    cover_art,
+    audio{
+      asset->{
+      _id,
+      url
+    }},
+    last_played_at
+  }`
+  return await client.fetch<SongType[]>(qry);
+}
 
+export async function getSetlist(title: string) {
+  const qry = `
+   *[_type == "setlist" && title == "${title}"]{
+   _id,
+     title,
+    "songs": songs[]->{ 
+    _id,
+    title,
+    artist,
+    cover_art,
+    audio{
+      asset->{
+      _id,
+      url
+    }},
+    last_played_at    },
+ }[0]
+  `;
+  return await client.fetch<SetlistType>(qry);
+}
