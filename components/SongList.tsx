@@ -7,18 +7,23 @@ import {TrashIcon} from "@sanity/icons";
 import {FullDivider} from "@/components/Divider";
 import React from "react";
 import {SongCard} from "@/components/SongCard";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {ChevronUpDownIcon} from "@heroicons/react/16/solid";
-
+import {updateSetlistSongs} from "@/lib/sanity";
 
 export const PlayList = () => {
-  const {playlist, setPlaylist} = usePlaylistContext();
+  const {playlist, setPlaylist, setlistId} = usePlaylistContext();
+
+  const handleReorder = async (newOrder: SongType[]) => {
+    setPlaylist(newOrder);
+    await updateSetlistSongs(setlistId, newOrder);
+  };
 
   return (
     <div className={"flex flex-col mx-auto text-rosePine-text items-center justify-center p-2"}>
       <PlaylistHeader/>
       <LayoutGroup>
-        <Reorder.Group axis={"y"} values={playlist} onReorder={setPlaylist}>
+        <Reorder.Group axis={"y"} values={playlist} onReorder={handleReorder}
+        >
           {playlist.map((item, index) => (
             <ReorderableSongCard song={item} key={item._id}/>
           ))}
@@ -45,6 +50,7 @@ const ReorderableSongCard = ({song}: { song: SongType }) => {
     </div>
   </Reorder.Item>
 }
+
 export const AllSongs = ({songs}: { songs: SongType[] }) => {
   const {playlist, setPlaylist} = usePlaylistContext();
   return (

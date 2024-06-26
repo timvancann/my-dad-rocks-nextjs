@@ -1,8 +1,8 @@
 "use client";
 
 import {SongType} from "@/lib/interface";
-import {motion, AnimatePresence, LayoutGroup} from "framer-motion";
-import {urlFor} from "@/lib/sanity";
+import {motion, AnimatePresence} from "framer-motion";
+import {updateSetlistSongs, urlFor} from "@/lib/sanity";
 import {ChatBubbleBottomCenterIcon, EllipsisVerticalIcon, HandRaisedIcon} from "@heroicons/react/16/solid";
 import React from "react";
 import {MinusCircleIcon, PlusCircleIcon, XMarkIcon} from "@heroicons/react/24/outline";
@@ -14,7 +14,6 @@ export const SongCard = ({song}: { song: SongType }) => {
   const [isExpanded, setIsExpanded] = React.useState(false);
   const {selectedSong, setSelectedSong} = useSelectedSongContext();
   const isSelected = selectedSong?.title === song.title;
-
 
   return (
     <motion.div
@@ -73,7 +72,22 @@ const SongExtra = ({song, isExpanded, setIsExpanded}: {
   isExpanded: boolean,
   setIsExpanded: React.Dispatch<boolean>
 }) => {
-  const {playlist, setPlaylist} = usePlaylistContext();
+  const {playlist, setPlaylist, setlistId} = usePlaylistContext();
+
+  const addSongToPlaylist = async (song: SongType) => {
+    if (playlist.includes(song)) {
+      return
+    }
+    setPlaylist([...playlist, song])
+    await updateSetlistSongs(setlistId, playlist);
+  };
+
+  const removeSongFromPlaylist = async (song: SongType) => {
+    let updatedList = playlist.filter((item) => item.title !== song.title);
+    setPlaylist(updatedList);
+    await updateSetlistSongs(setlistId, updatedList);
+  };
+
   return (<AnimatePresence>
       {isExpanded && <motion.div
         className={"flex flex-col gap-2 justify-end items-end my-2 w-full px-2 py-2"}
@@ -93,11 +107,8 @@ const SongExtra = ({song, isExpanded, setIsExpanded}: {
           <motion.button className={"py-2 text-rosePine-text/80"}
                          whileHover={{scale: 1.1,}}
                          whileTap={{scale: 0.9,}}
-                         onClick={() => {
-                           if (playlist.includes(song)) {
-                             return
-                           }
-                           setPlaylist([...playlist, song])
+                         onClick={async () => {
+                           await addSongToPlaylist(song);
                            setIsExpanded(false)
                          }}
           >
@@ -108,8 +119,8 @@ const SongExtra = ({song, isExpanded, setIsExpanded}: {
           <motion.button className={"py-2 text-rosePine-text/80"}
                          whileHover={{scale: 1.1,}}
                          whileTap={{scale: 0.9,}}
-                         onClick={() => {
-                           setPlaylist(playlist.filter((item) => item.title !== song.title));
+                         onClick={async () => {
+                           await removeSongFromPlaylist(song);
                            setIsExpanded(false)
                          }}
           >
