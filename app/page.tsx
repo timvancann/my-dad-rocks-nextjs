@@ -3,9 +3,7 @@ import SelectedSongContextProvider from "@/context/selected-song-context";
 import {Player} from "@/components/Player";
 import PlaylistContextProvider from "@/context/playlist-context";
 import {client} from "@/lib/sanity";
-import {SongType} from "@/lib/interface";
 import {AllSongs, PlayList} from "@/components/SongList";
-import SongData from "@/components/SongData";
 
 
 async function getData() {

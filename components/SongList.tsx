@@ -2,30 +2,48 @@
 
 import {SongType} from "@/lib/interface";
 import {usePlaylistContext} from "@/context/playlist-context";
-import {LayoutGroup, motion, Reorder} from "framer-motion";
+import {LayoutGroup, motion, Reorder, useDragControls} from "framer-motion";
 import {TrashIcon} from "@sanity/icons";
 import {FullDivider} from "@/components/Divider";
 import React from "react";
 import {SongCard} from "@/components/SongCard";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {ChevronUpDownIcon} from "@heroicons/react/16/solid";
+
 
 export const PlayList = () => {
   const {playlist, setPlaylist} = usePlaylistContext();
+
   return (
     <div className={"flex flex-col mx-auto text-rosePine-text items-center justify-center p-2"}>
       <PlaylistHeader/>
       <LayoutGroup>
         <Reorder.Group axis={"y"} values={playlist} onReorder={setPlaylist}>
-          {playlist.map(item => (
-            <Reorder.Item value={item} key={item._id}>
-              <SongCard song={item}/>
-            </Reorder.Item>
+          {playlist.map((item, index) => (
+            <ReorderableSongCard song={item} key={item._id}/>
           ))}
         </Reorder.Group>
       </LayoutGroup>
       {playlist.length > 0 && <FullDivider/>}
     </div>
   )
+}
 
+const ReorderableSongCard = ({song}: { song: SongType }) => {
+  const controls = useDragControls();
+  return <Reorder.Item value={song}
+                       key={song._id}
+                       dragListener={false}
+                       dragControls={controls}
+  >
+    <div className={"flex flex-row justify-center items-center"}>
+      <ChevronUpDownIcon //icon="fa-solid fa-grip"
+        className="w-6- h-6"
+        onPointerDown={(e) => controls.start(e)}
+      />
+      <SongCard song={song}/>
+    </div>
+  </Reorder.Item>
 }
 export const AllSongs = ({songs}: { songs: SongType[] }) => {
   const {playlist, setPlaylist} = usePlaylistContext();
