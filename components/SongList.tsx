@@ -8,14 +8,15 @@ import {FullDivider} from "@/components/Divider";
 import React from "react";
 import {SongCard} from "@/components/SongCard";
 import {ChevronUpDownIcon} from "@heroicons/react/16/solid";
-import {updateSetlistSongs} from "@/lib/sanity";
+import {updateSetlistSongs} from "@/actions/sanity";
 
 export const PlayList = () => {
   const {playlist, setPlaylist, setlistId} = usePlaylistContext();
 
+
   const handleReorder = async (newOrder: SongType[]) => {
     setPlaylist(newOrder);
-    await updateSetlistSongs(setlistId, newOrder);
+    await updateSetlistSongs(newOrder, setlistId);
   };
 
   return (

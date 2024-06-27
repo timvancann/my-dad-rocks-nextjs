@@ -7,7 +7,8 @@ import React from "react";
 import {MinusCircleIcon, PlusCircleIcon, XMarkIcon} from "@heroicons/react/24/outline";
 import {useSelectedSongContext} from "@/context/selected-song-context";
 import {usePlaylistContext} from "@/context/playlist-context";
-import {updateSetlistSongs, urlFor} from "@/lib/sanity";
+import {updateSetlistSongs} from "@/actions/sanity";
+import {urlFor} from "@/lib/sanity";
 
 
 export const SongCard = ({song}: { song: SongType }) => {
@@ -80,13 +81,13 @@ const SongExtra = ({song, isExpanded, setIsExpanded}: {
     }
     const updatedList = [...playlist, song];
     setPlaylist(updatedList)
-    await updateSetlistSongs(setlistId, updatedList);
+    await updateSetlistSongs(updatedList, setlistId);
   };
 
   const removeSongFromPlaylist = async (song: SongType) => {
     let updatedList = playlist.filter((item) => item.title !== song.title);
     setPlaylist(updatedList);
-    await updateSetlistSongs(setlistId, updatedList);
+    await updateSetlistSongs(updatedList, setlistId);
   };
 
   return (<AnimatePresence>

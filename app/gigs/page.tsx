@@ -1,21 +1,10 @@
 import React from "react";
-import {client} from "@/lib/sanity";
 import Gigs from "@/components/Gigs";
-import {GigsType} from "@/lib/interface";
+import {getGigs} from "@/lib/sanity";
 
-
-async function getData() {
-  const qry = `
-  *[_type == "gig"]|order(data desc){
-    _id,
-    title,
-    date
-  }`
-  return await client.fetch<GigsType[]>(qry);
-}
 
 export default async function Home() {
-  const data = await getData();
+  const data = await getGigs();
 
   return (
     <div className={"flex flex-col mx-auto  items-center justify-center"}>
