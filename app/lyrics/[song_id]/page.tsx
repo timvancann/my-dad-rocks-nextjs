@@ -1,5 +1,5 @@
 import {PortableText} from "@portabletext/react";
-import {getLyrics} from "@/actions/sanity";
+import {getLyrics} from "@/lib/sanity";
 
 
 export default async function Lyrics({params}: { params: { song_id: string } }) {
