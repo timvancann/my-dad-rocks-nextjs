@@ -10,6 +10,7 @@ import {SongCard} from "@/components/SongCard";
 import {ChevronUpDownIcon} from "@heroicons/react/16/solid";
 import {updateSetlistSongs} from "@/actions/sanity";
 
+
 export const PlayList = () => {
   const {playlist, setPlaylist, setlistId} = usePlaylistContext();
 
@@ -36,8 +37,31 @@ export const PlayList = () => {
 }
 
 const ReorderableSongCard = ({song}: { song: SongType }) => {
+  //https://github.com/framer/motion/issues/1597#issuecomment-1254406569
   const controls = useDragControls();
+  const iRef = React.useRef<HTMLElement | null>(null);
+
+  React.useEffect(() => {
+    const touchHandler: React.TouchEventHandler<HTMLElement> = (e) => e.preventDefault();
+
+    const iTag = iRef.current;
+
+    if (iTag) {
+      //@ts-ignore
+      iTag.addEventListener("touchstart", touchHandler, {passive: false});
+
+      return () => {
+        //@ts-ignore
+        iTag.removeEventListener("touchstart", touchHandler, {
+          passive: false
+        });
+      };
+    }
+    return;
+  }, [iRef]);
+
   return <Reorder.Item value={song}
+                       ref={iRef}
                        key={song._id}
                        dragListener={false}
                        dragControls={controls}
