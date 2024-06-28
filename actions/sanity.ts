@@ -2,6 +2,7 @@
 
 import {createClient} from "next-sanity";
 import {SongType} from "@/lib/interface";
+import {revalidatePath} from "next/cache";
 
 
 export async function updateSetlistSongs(reorderedSongs: SongType[], setlistId: string) {
@@ -13,10 +14,11 @@ export async function updateSetlistSongs(reorderedSongs: SongType[], setlistId: 
     token: process.env.NEXT_PRIVATE_SANITY_TOKEN,
   })
 
+
   await client
     .patch(setlistId)
     .set({
-      songs: reorderedSongs.map(song => ({_type: 'reference', _ref: song._id}))
+      songs: reorderedSongs.map(song => ({_type: 'reference', _ref: song._id, _key: song._id}))
     })
     .commit()
     .then((state) => {
