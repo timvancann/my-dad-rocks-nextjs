@@ -23,6 +23,8 @@ import {
   verticalListSortingStrategy
 } from "@dnd-kit/sortable";
 import {CSS} from "@dnd-kit/utilities";
+import {ChevronUpDownIcon} from "@heroicons/react/16/solid";
+import {MdDragIndicator} from "react-icons/md";
 
 
 export const PlayList = () => {
@@ -88,8 +90,11 @@ const ReorderableSongCard = ({song}: { song: SongType }) => {
   return <div ref={setNodeRef}
               {...attributes}
               style={style}
-              {...listeners}
-              className={"flex flex-row justify-center items-center touch-none"}>
+              className={"flex flex-row justify-center items-center"}>
+    <MdDragIndicator
+      {...listeners}
+      className="w-6- h-6 touch-none"
+    />
     <SongCard song={song}/>
   </div>
 }
