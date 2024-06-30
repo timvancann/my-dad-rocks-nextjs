@@ -18,7 +18,7 @@ export const SongCard = ({song}: { song: SongType }) => {
 
   return (
     <motion.div
-      className={`flex flex-col gap-1 px-3 py-0 min-w-[400px] rounded-xl ${isSelected ? "bg-rosePine-base/75" : "bg-transparent"}`}>
+      className={`flex flex-col grow gap-1 px-3 py-0 rounded-xl ${isSelected ? "bg-rosePine-base/75" : "bg-transparent"}`}>
       <div className={"flex flex-row justify-between items-center z-10"}>
         <motion.div
           layout
@@ -37,12 +37,12 @@ export const SongCard = ({song}: { song: SongType }) => {
           }}
         >
           <img src={urlFor(song.cover_art).url()} alt={song.title}
-               className={`w-16 h-16 m-1 p-1 mr-4 ${isSelected ? "border border-rosePine-gold" : "border-0"}`}/>
-          <div className={"flex flex-col flex-grow mr-10"}>
+               className={`w-16 h-16 m-1 p-1 mr-2 ${isSelected ? "border border-rosePine-gold" : "border-0"}`}/>
+          <div className={"grow mr-6"}>
             <h1
-              className={`flex ${isSelected ? "font-extrabold text-rosePine-gold" : "text-rosePine-text font-bold"}`}>{song.title}</h1>
+              className={`${isSelected ? "font-extrabold text-rosePine-gold" : "text-rosePine-text font-bold"}`}>{song.title}</h1>
             <h2
-              className={`flex text-sm ${isSelected ? "font-bold text-rosePine-gold" : "text-rosePine-text font-normal"}`}>{song.artist}</h2>
+              className={`text-sm ${isSelected ? "font-bold text-rosePine-gold" : "text-rosePine-text font-normal"}`}>{song.artist}</h2>
           </div>
         </motion.div>
         <motion.div

@@ -11,7 +11,8 @@ export default async function Home() {
   const setlist: SetlistType = await getSetlist("Practice");
 
   return (
-    <div className={"flex flex-col mx-auto  items-center justify-center"}>
+    <div
+      className="flex flex-col items-center justify-center">
       <SelectedSongContextProvider>
         <PlaylistContextProvider setlist={setlist}>
           <Player/>

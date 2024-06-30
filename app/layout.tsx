@@ -19,9 +19,9 @@ export default function RootLayout({
   return (
     <html lang="en">
     <body
-      className={`{inter.className} text-rosePine-text bg-gradient-to-br from-rosePine-base to-rosePine-overlay max-w-7xl mx-auto min-h-screen`}>
+      className={`{inter.className} text-rosePine-text bg-gradient-to-br from-rosePine-base to-rosePine-overlay`}>
     <Header/>
-    <main>
+    <main className="flex flex-col min-h-screen justify-between">
       {children}
     </main>
     </body>

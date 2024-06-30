@@ -62,7 +62,7 @@ export const PlayList = () => {
     }))
 
   return (
-    <div className={"flex flex-col mx-auto text-rosePine-text items-center justify-center p-2"}>
+    <div className={"text-rosePine-text items-center justify-center p-2"}>
       <PlaylistHeader/>
       <LayoutGroup>
         <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd} sensors={sensors}>
@@ -90,7 +90,7 @@ const ReorderableSongCard = ({song}: { song: SongType }) => {
   return <div ref={setNodeRef}
               {...attributes}
               style={style}
-              className={"flex flex-row justify-center items-center"}>
+              className={"flex flex-row grow items-center"}>
     <MdDragIndicator
       {...listeners}
       className="w-6- h-6 touch-none"
@@ -102,7 +102,7 @@ const ReorderableSongCard = ({song}: { song: SongType }) => {
 export const AllSongs = ({songs}: { songs: SongType[] }) => {
   const {playlist, setPlaylist} = usePlaylistContext();
   return (
-    <div className={"flex flex-col mx-auto text-rosePine-text items-center justify-center p-2"}>
+    <div className={"text-rosePine-text items-center justify-center p-2"}>
       <SongsTitle title={"Overige nummers"}/>
       <LayoutGroup>
         {songs.map((item, index) => (
