@@ -80,14 +80,14 @@ const SongExtra = ({song, isExpanded, setIsExpanded}: {
       return
     }
     const updatedList = [...playlist, song];
-    updateSetlistSongs(updatedList, setlistId);
     setPlaylist(updatedList)
+    updateSetlistSongs(updatedList, setlistId);
   };
 
   const removeSongFromPlaylist = async (song: SongType) => {
     let updatedList = playlist.filter((item) => item.title !== song.title);
-    updateSetlistSongs(updatedList, setlistId);
     setPlaylist(updatedList);
+    updateSetlistSongs(updatedList, setlistId);
   };
 
   return (<AnimatePresence>

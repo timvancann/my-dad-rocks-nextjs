@@ -10,15 +10,16 @@ const client = createClient({
 })
 
 const builder = imageBuilder(client);
+
 export function urlFor(source: any) {
   return builder.image(source)
 }
-
 
 export async function getAllSongs() {
   const qry = `
   *[_type == "song"]|order(title){
     _id,
+    "id": _id,
     title,
     artist,
     cover_art,
@@ -39,6 +40,7 @@ export async function getSetlist(title: string) {
      title,
     "songs": songs[]->{ 
     _id,
+    "id": _id,
     title,
     artist,
     cover_art,
@@ -66,6 +68,7 @@ type LyricType = {
   artist: string,
   lyrics?: any
 }
+
 export async function getGigs() {
   const qry = `
   *[_type == "gig"]|order(data desc){
@@ -88,6 +91,7 @@ export async function getGig(id: string) {
     title,
     "songs": songs[]->{ 
     _id,
+    "id": _id,
     title,
     artist,
     cover_art,

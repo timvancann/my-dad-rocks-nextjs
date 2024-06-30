@@ -7,73 +7,91 @@ import {TrashIcon} from "@sanity/icons";
 import {FullDivider} from "@/components/Divider";
 import React from "react";
 import {SongCard} from "@/components/SongCard";
-import {ChevronUpDownIcon} from "@heroicons/react/16/solid";
 import {updateSetlistSongs} from "@/actions/sanity";
+import {
+  closestCenter,
+  DndContext,
+  DragEndEvent,
+  PointerSensor, TouchSensor,
+  UniqueIdentifier,
+  useSensor,
+  useSensors
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext, useSortable,
+  verticalListSortingStrategy
+} from "@dnd-kit/sortable";
+import {CSS} from "@dnd-kit/utilities";
 
 
 export const PlayList = () => {
   const {playlist, setPlaylist, setlistId} = usePlaylistContext();
 
+  const getSongIndex = (id: UniqueIdentifier) => {
+    return playlist.findIndex(song => song._id === id);
+  }
 
-  const handleReorder = async (newOrder: SongType[]) => {
-    setPlaylist(newOrder);
-    await updateSetlistSongs(newOrder, setlistId);
-  };
+  const onDragEnd = (event: DragEndEvent) => {
+    const {active, over} = event;
+    if (!over) return;
+    if (active.id == over.id) return;
+    setPlaylist((items) => {
+      const originalPosition = getSongIndex(active.id);
+      const newPosition = getSongIndex(over?.id);
+      let newOrder = arrayMove(items, originalPosition, newPosition);
+      updateSetlistSongs(newOrder, setlistId);
+      return newOrder
+    });
+  }
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
+      }
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
+      }
+    }))
 
   return (
     <div className={"flex flex-col mx-auto text-rosePine-text items-center justify-center p-2"}>
       <PlaylistHeader/>
       <LayoutGroup>
-        <Reorder.Group axis={"y"} values={playlist} onReorder={handleReorder}
-        >
-          {playlist.map((item, index) => (
-            <ReorderableSongCard song={item} key={item._id}/>
-          ))}
-        </Reorder.Group>
+        <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd} sensors={sensors}>
+          <SortableContext items={playlist} strategy={verticalListSortingStrategy}>
+            {playlist.map((item, index) => (
+              <ReorderableSongCard song={item} key={item._id}/>
+            ))}
+          </SortableContext>
+        </DndContext>
       </LayoutGroup>
       {playlist.length > 0 && <FullDivider/>}
     </div>
-  )
+  );
 }
 
 const ReorderableSongCard = ({song}: { song: SongType }) => {
-  //https://github.com/framer/motion/issues/1597#issuecomment-1254406569
-  const controls = useDragControls();
-  const iRef = React.useRef<HTMLElement | null>(null);
+  const {
+    attributes, listeners, setNodeRef, transform, transition
+  } = useSortable({id: song.id});
 
-  React.useEffect(() => {
-    const touchHandler: React.TouchEventHandler<HTMLElement> = (e) => e.preventDefault();
-
-    const iTag = iRef.current;
-
-    if (iTag) {
-      //@ts-ignore
-      iTag.addEventListener("touchstart", touchHandler, {passive: false});
-
-      return () => {
-        //@ts-ignore
-        iTag.removeEventListener("touchstart", touchHandler, {
-          passive: false
-        });
-      };
-    }
-    return;
-  }, [iRef]);
-
-  return <Reorder.Item value={song}
-                       ref={iRef}
-                       key={song._id}
-                       dragListener={false}
-                       dragControls={controls}
-  >
-    <div className={"flex flex-row justify-center items-center"}>
-      <ChevronUpDownIcon //icon="fa-solid fa-grip"
-        className="w-6- h-6"
-        onPointerDown={(e) => controls.start(e)}
-      />
-      <SongCard song={song}/>
-    </div>
-  </Reorder.Item>
+  const style = {
+    transition,
+    transform: CSS.Transform.toString(transform),
+  }
+  return <div ref={setNodeRef}
+              {...attributes}
+              style={style}
+              {...listeners}
+              className={"flex flex-row justify-center items-center touch-none"}>
+    <SongCard song={song}/>
+  </div>
 }
 
 export const AllSongs = ({songs}: { songs: SongType[] }) => {
@@ -93,7 +111,7 @@ export const AllSongs = ({songs}: { songs: SongType[] }) => {
 }
 
 const PlaylistHeader = () => {
-  const {playlist, setPlaylist} = usePlaylistContext();
+  const {playlist, setPlaylist, setlistId} = usePlaylistContext();
   return (
     <div className={"flex flex-row w-full justify-between mb-3"}>
       <SongsTitle title={"Playlist"}/>
@@ -101,13 +119,20 @@ const PlaylistHeader = () => {
         className={"border border-rosePine-muted/60 rounded-full px-2 flex flex-row items-center justify-center tracking-wide bg-rosePine-highlightMed/50 hover:bg-rosePine-foam hover:text-rosePineDawn-text transition-colors"}
         whileHover={{scale: 1.1,}}
         whileTap={{scale: 0.9,}}
-        onClick={() => setPlaylist([])}
+        onClick={() => {
+          setPlaylist([]);
+          updateSetlistSongs([], setlistId)
+        }}
       ><TrashIcon className={"h-6 w-6 "}/></motion.button>}
     </div>
   )
 }
 
-const SongsTitle = ({title}: { title: string }) => {
+const SongsTitle = ({
+                      title
+                    }: {
+  title: string
+}) => {
   return (
     <h1
       className={"flex text-left self-start uppercase tracking-widest font-light text-xl text-rosePine-gold m-2"}>{title}</h1>
