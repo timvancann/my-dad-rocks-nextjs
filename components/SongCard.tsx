@@ -1,14 +1,15 @@
 "use client";
 
 import {SongType} from "@/lib/interface";
-import {motion, AnimatePresence} from "framer-motion";
-import {ChatBubbleBottomCenterIcon, EllipsisVerticalIcon, HandRaisedIcon} from "@heroicons/react/16/solid";
+import {AnimatePresence, motion} from "framer-motion";
+import {ChatBubbleBottomCenterIcon} from "@heroicons/react/16/solid";
 import React from "react";
 import {MinusCircleIcon, PlusCircleIcon, XMarkIcon} from "@heroicons/react/24/outline";
 import {useSelectedSongContext} from "@/context/selected-song-context";
 import {usePlaylistContext} from "@/context/playlist-context";
 import {updateSetlistSongs} from "@/actions/sanity";
 import {urlFor} from "@/lib/sanity";
+import {EllipsisVerticalIcon} from "@sanity/icons";
 
 
 export const SongCard = ({song}: { song: SongType }) => {
@@ -19,10 +20,10 @@ export const SongCard = ({song}: { song: SongType }) => {
   return (
     <motion.div
       className={`flex flex-col grow gap-1 px-3 py-0 rounded-xl ${isSelected ? "bg-rosePine-base/75" : "bg-transparent"}`}>
-      <div className={"flex flex-row justify-between items-center z-10"}>
+      <div className={"flex flex-row justify-between items-center"}>
         <motion.div
           layout
-          className={`flex flex-row items-center w-full cursor-pointer `}
+          className={`flex flex-row items-center cursor-pointer`}
           onClick={() => setSelectedSong(song)}
           initial={{opacity: 0.75,}}
           transition={{duration: 0.2}}
@@ -38,7 +39,7 @@ export const SongCard = ({song}: { song: SongType }) => {
         >
           <img src={urlFor(song.cover_art).url()} alt={song.title}
                className={`w-16 h-16 m-1 p-1 mr-2 ${isSelected ? "border border-rosePine-gold" : "border-0"}`}/>
-          <div className={"grow mr-6"}>
+          <div className={"mr-6"}>
             <h1
               className={`${isSelected ? "font-extrabold text-rosePine-gold" : "text-rosePine-text font-bold"}`}>{song.title}</h1>
             <h2
@@ -144,9 +145,9 @@ const SongExtraItem = ({
     string
 }) => {
   return (
-    <div className={"flex flex-row gap-4"}>
+    <div className={"flex flex-row gap-4 items-center justify-end"}>
       <p className={"font-semibold text-sm"}> {text} </p>
-      {icon}
+      <span>{icon}</span>
     </div>
   )
 }

@@ -23,7 +23,6 @@ import {
   verticalListSortingStrategy
 } from "@dnd-kit/sortable";
 import {CSS} from "@dnd-kit/utilities";
-import {ChevronUpDownIcon} from "@heroicons/react/16/solid";
 import {MdDragIndicator} from "react-icons/md";
 
 
@@ -48,18 +47,9 @@ export const PlayList = () => {
   }
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        delay: 250,
-        tolerance: 5,
-      }
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 250,
-        tolerance: 5,
-      }
-    }))
+    useSensor(PointerSensor, {}),
+    useSensor(TouchSensor, {}),
+  )
 
   return (
     <div className={"text-rosePine-text items-center justify-center p-2"}>

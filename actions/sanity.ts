@@ -22,12 +22,14 @@ export async function updateSetlistSongs(reorderedSongs: SongType[], setlistId: 
     })
     .commit()
     .then((state) => {
+      console.log("success")
       return {
         message: "Successfully updated the setlist",
         payload: state
       }
     })
     .catch((err) => {
+      console.error(err)
       return {
         message: 'Oh no, the update failed',
         payload: err
