@@ -35,7 +35,7 @@ export const Player = () => {
 
   return (
     <MediaController audio
-                     className={`sticky top-14 backdrop-blur-lg my-4 grow w-[90%] md:w-[60%] bg-transparent bg-gradient-to-b from-rosePine-base to-rosePine-overlay rounded-xl drop-shadow-2xl z-20`}>
+                     className={`sticky top-0 w-[90%] md:w-[60%] bg-gradient-to-b from-rosePine-base to-rosePine-overlay rounded-b-xl drop-shadow-2xl z-20`}>
       <audio
         slot="media"
         src={selectedSong.audio.asset.url}
