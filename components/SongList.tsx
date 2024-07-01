@@ -2,7 +2,7 @@
 
 import {SongType} from "@/lib/interface";
 import {usePlaylistContext} from "@/context/playlist-context";
-import {LayoutGroup, motion, Reorder, useDragControls} from "framer-motion";
+import {LayoutGroup, motion} from "framer-motion";
 import {TrashIcon} from "@sanity/icons";
 import {FullDivider} from "@/components/Divider";
 import React from "react";
@@ -12,16 +12,13 @@ import {
   closestCenter,
   DndContext,
   DragEndEvent,
-  PointerSensor, TouchSensor,
+  PointerSensor,
+  TouchSensor,
   UniqueIdentifier,
   useSensor,
   useSensors
 } from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext, useSortable,
-  verticalListSortingStrategy
-} from "@dnd-kit/sortable";
+import {arrayMove, SortableContext, useSortable, verticalListSortingStrategy} from "@dnd-kit/sortable";
 import {CSS} from "@dnd-kit/utilities";
 import {MdDragIndicator} from "react-icons/md";
 
@@ -33,17 +30,17 @@ export const PlayList = () => {
     return playlist.findIndex(song => song._id === id);
   }
 
-  const onDragEnd = (event: DragEndEvent) => {
+  const onDragEnd = async (event: DragEndEvent) => {
     const {active, over} = event;
     if (!over) return;
     if (active.id == over.id) return;
     setPlaylist((items) => {
       const originalPosition = getSongIndex(active.id);
       const newPosition = getSongIndex(over?.id);
-      let newOrder = arrayMove(items, originalPosition, newPosition);
-      updateSetlistSongs(newOrder, setlistId);
-      return newOrder
+      return arrayMove(items, originalPosition, newPosition)
     });
+    const {message, payload} = await updateSetlistSongs(playlist, setlistId);
+    console.log(message, payload)
   }
 
   const sensors = useSensors(
