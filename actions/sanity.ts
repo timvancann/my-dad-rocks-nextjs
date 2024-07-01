@@ -14,36 +14,26 @@ export async function updateSetlistSongs(reorderedSongs: SongType[], setlistId: 
     token: process.env.NEXT_PRIVATE_SANITY_TOKEN,
   })
 
-  console.log(client)
-  console.log(setlistId)
-  console.log(reorderedSongs)
-  console.log(process.env.NEXT_PUBLIC_SANITY_PROJECT_ID)
-  console.log(process.env.NEXT_PUBLIC_SANITY_DATASET)
-  console.log(process.env.NEXT_PRIVATE_SANITY_TOKEN)
-
-
-  await client
+  return await client
     .patch(setlistId)
     .set({
       songs: reorderedSongs.map(song => ({_type: 'reference', _ref: song._id, _key: song._id}))
     })
     .commit()
     .then((state) => {
-      console.log("success")
-      return {
+      const retVal = {
         message: "Successfully updated the setlist",
         payload: state
       }
+      console.log(retVal)
+      return retVal
     })
     .catch((err) => {
-      console.error(err)
-      return {
-        message: 'Oh no, the update failed',
+      const retVal = {
+        message: "Oh no, the update failed",
         payload: err
       }
+      console.log(retVal)
+      return retVal
     })
-  return {
-    message: 'Oh no, the update failed',
-    payload: null
-  }
 }
