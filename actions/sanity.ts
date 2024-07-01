@@ -14,6 +14,13 @@ export async function updateSetlistSongs(reorderedSongs: SongType[], setlistId: 
     token: process.env.NEXT_PRIVATE_SANITY_TOKEN,
   })
 
+  console.log(client)
+  console.log(setlistId)
+  console.log(reorderedSongs)
+  console.log(process.env.NEXT_PUBLIC_SANITY_PROJECT_ID)
+  console.log(process.env.NEXT_PUBLIC_SANITY_DATASET)
+  console.log(process.env.NEXT_PRIVATE_SANITY_TOKEN)
+
 
   await client
     .patch(setlistId)
