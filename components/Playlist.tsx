@@ -21,26 +21,24 @@ import {
 import {arrayMove, SortableContext, useSortable, verticalListSortingStrategy} from "@dnd-kit/sortable";
 import {CSS} from "@dnd-kit/utilities";
 import {MdDragIndicator} from "react-icons/md";
+import {SongsTitle} from "@/components/PlaylistTitle";
+import {PauseCard} from "@/components/PauseCard";
 
 
 export const PlayList = () => {
   const {playlist, setPlaylist, setlistId} = usePlaylistContext();
 
   const getSongIndex = (id: UniqueIdentifier) => {
-    return playlist.findIndex(song => song._id === id);
+    return playlist.findIndex(song => song.id === id);
   }
 
   const onDragEnd = async (event: DragEndEvent) => {
     const {active, over} = event;
     if (!over) return;
     if (active.id == over.id) return;
-    setPlaylist((items) => {
-      const originalPosition = getSongIndex(active.id);
-      const newPosition = getSongIndex(over?.id);
-      return arrayMove(items, originalPosition, newPosition)
-    });
-    const {message, payload} = await updateSetlistSongs(playlist, setlistId);
-    console.log(message, payload)
+    const updatedPlaylist = arrayMove(playlist, getSongIndex(active.id), getSongIndex(over.id));
+    setPlaylist(updatedPlaylist);
+    await updateSetlistSongs(updatedPlaylist, setlistId);
   }
 
   const sensors = useSensors(
@@ -52,7 +50,7 @@ export const PlayList = () => {
     <div className={"text-rosePine-text items-center justify-center p-2"}>
       <PlaylistHeader/>
       <LayoutGroup>
-        <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd} sensors={sensors}>
+        <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd} sensors={sensors} id="builder-dnd">
           <SortableContext items={playlist} strategy={verticalListSortingStrategy}>
             {playlist.map((item, index) => (
               <ReorderableSongCard song={item} key={item._id}/>
@@ -82,24 +80,8 @@ const ReorderableSongCard = ({song}: { song: SongType }) => {
       {...listeners}
       className="w-6- h-6 touch-none"
     />
-    <SongCard song={song}/>
+    {song.title?.startsWith("Pauze") ? <PauseCard pause={song}/> : <SongCard song={song}/>}
   </div>
-}
-
-export const AllSongs = ({songs}: { songs: SongType[] }) => {
-  const {playlist, setPlaylist} = usePlaylistContext();
-  return (
-    <div className={"text-rosePine-text items-center justify-center p-2"}>
-      <SongsTitle title={"Overige nummers"}/>
-      <LayoutGroup>
-        {songs.map((item, index) => (
-            (!playlist.map(s => s._id).includes(item._id)) &&
-            <SongCard song={item} key={index}/>
-          )
-        )}
-      </LayoutGroup>
-    </div>
-  )
 }
 
 const PlaylistHeader = () => {
@@ -120,13 +102,3 @@ const PlaylistHeader = () => {
   )
 }
 
-const SongsTitle = ({
-                      title
-                    }: {
-  title: string
-}) => {
-  return (
-    <h1
-      className={"flex text-left self-start uppercase tracking-widest font-light text-xl text-rosePine-gold m-2"}>{title}</h1>
-  )
-}

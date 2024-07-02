@@ -25,6 +25,7 @@ export default function RootLayout({
       <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"/>
     </head>
     <body
+      suppressHydrationWarning={true}
       className={`{inter.className} text-rosePine-text bg-gradient-to-br from-rosePine-base to-rosePine-overlay`}>
     <Header/>
     <main className="flex flex-col min-h-screen justify-between">

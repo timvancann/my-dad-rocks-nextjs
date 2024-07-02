@@ -2,9 +2,10 @@ import React from "react";
 import SelectedSongContextProvider from "@/context/selected-song-context";
 import {Player} from "@/components/Player";
 import PlaylistContextProvider from "@/context/playlist-context";
-import {AllSongs, PlayList} from "@/components/SongList";
+import {PlayList} from "@/components/Playlist";
 import {SetlistType, SongType} from "@/lib/interface";
 import {getAllSongs, getSetlist} from "@/lib/sanity";
+import {AllSongs} from "@/components/AllSongs";
 
 export default async function Home() {
   const data: SongType[] = await getAllSongs();
