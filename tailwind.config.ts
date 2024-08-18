@@ -66,6 +66,7 @@ const config: Config = {
   // (plugins, content, ...)
   plugins: [
     require('tailwind-dracula')('dracula'),
+    require('@tailwindcss/aspect-ratio'),
     require('daisyui'),
   ],
 };
