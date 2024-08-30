@@ -1,24 +1,26 @@
 "use client"
 
-import React, {createContext, useContext} from 'react'
-import {SetlistType, SongType} from "@/lib/interface";
+import React, { createContext, useContext } from 'react'
+import { SetlistType, SongType } from "@/lib/interface";
 
 type PlaylistContextType = {
   playlist: SongType[]
   setPlaylist: React.Dispatch<React.SetStateAction<SongType[]>>
   setlistId: string
+  allSongs: SongType[]
 }
 
 export const PlaylistContext = createContext<PlaylistContextType | null>(null);
 
-export default function PlaylistContextProvider({children, setlist}: { children: React.ReactNode, setlist: SetlistType }) {
+export default function PlaylistContextProvider({ children, setlist, songs }: { children: React.ReactNode, setlist: SetlistType, songs: SongType[] }) {
   const [playlist, setPlaylist] = React.useState<SongType[]>(setlist.songs);
   const [setlistId, setSetlistId] = React.useState<string>(setlist._id);
+  const [allSongs, _] = React.useState<SongType[]>(songs);
   return (
     <PlaylistContext.Provider
-      value={{playlist, setPlaylist, setlistId}}>
+      value={{ playlist, setPlaylist, setlistId, allSongs }}>
       {children}
-    </PlaylistContext.Provider>)
+    </PlaylistContext.Provider >)
 }
 
 export function usePlaylistContext() {
