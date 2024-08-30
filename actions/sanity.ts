@@ -144,6 +144,6 @@ export async function modifyLyrics(songId: string, lyrics: string) {
     })
 
 
-    await client.patch(songId).set({ lyrics: lyrics });
+    client.patch(songId).set({ lyrics: lyrics }).commit()
 }
 

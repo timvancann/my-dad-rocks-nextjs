@@ -66,7 +66,7 @@ export async function getLyrics(id: string) {
 export type LyricType = {
   title: string,
   artist: string,
-  lyrics?: any
+  lyrics: string,
 }
 
 export async function getGigs() {
