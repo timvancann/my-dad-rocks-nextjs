@@ -1,17 +1,26 @@
 "use client";
 
 import {modifyLyrics} from "@/actions/sanity";
-import React, {useState} from "react";
+import React, {useRef, useState} from "react";
 import {LyricType} from "@/lib/sanity";
 import {FaMinusCircle, FaPlusCircle} from "react-icons/fa";
-import {motion} from "framer-motion";
+import {motion, useScroll} from "framer-motion";
 
 export default function DisplayLyrics({song, songId}: { song: LyricType, songId: string }) {
     const [edit, setEdit] = useState(false);
     const [lyrics, setLyrics] = useState(song.lyrics);
     const [textSize, setTextSize] = useState(1);
 
+    const ref = useRef(null)
+    const {scrollYProgress} = useScroll({
+        target: ref,
+        offset: ["start start", "end end"]
+    })
+
     return <div className={"justify-center items-center flex flex-col my-4"}>
+        <motion.div
+            className={"flex h-1 bg-rosePine-rose sticky top-0 w-screen"}
+            style={{scaleX: scrollYProgress}}/>
         <h1 className={"flex text-lg tracking-widest font-bold text-rosePine-text"}>{song.artist} - {song.title}</h1>
         <div className={"flex flex-row gap-8 my-4"}>
             <motion.button
@@ -24,11 +33,9 @@ export default function DisplayLyrics({song, songId}: { song: LyricType, songId:
             ><FaMinusCircle/></motion.button>
         </div>
         {!edit &&
-            <div className={"text-rosePine-text mx-4 whitespace-pre-line"} style={
-                {
-                    fontSize: `${textSize}em`
-                }
-            }>
+            <div className={"text-rosePine-text mx-4 whitespace-pre-line"}
+                 style={{fontSize: `${textSize}em`}}
+                 ref={ref}>
                 {lyrics || "No lyrics found"}
             </div>
         }
