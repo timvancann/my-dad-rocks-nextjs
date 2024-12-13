@@ -2,22 +2,22 @@
 
 import { SongType } from '@/lib/interface';
 import React from 'react';
-import { usePlaylistContext } from '@/context/playlist-context';
-import { removePause, removePauseFromPlaylist, updateSetlistSongs } from '@/actions/sanity';
+import { removePauseFromPlaylist } from '@/actions/sanity';
 import { AnimatePresence, motion } from 'framer-motion';
 import { MinusCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { EllipsisVerticalIcon } from '@sanity/icons';
 import { useFormState, useFormStatus } from 'react-dom';
+import { useSongDetailStore } from '@/store/store';
 
 export const PauseCard = ({ pause }: { pause: SongType }) => {
   const [isExpanded, setIsExpanded] = React.useState(false);
 
   return (
-    <motion.div className={`flex flex-col grow gap-1 px-3 py-0 rounded-xl "bg-transparent"}`}>
+    <motion.div className={`flex flex-col grow gap-1 px-3 my-2 py-0 rounded-xl "bg-transparent"}`}>
       <div className={'flex flex-row justify-between items-center'}>
         <motion.div
           layout
-          className={`flex flex-row items-center cursor-pointer`}
+          className={`flex flex-row items-center cursor-pointer ml-2`}
           initial={{ opacity: 0.75 }}
           transition={{ duration: 0.2 }}
           whileHover={{
@@ -43,7 +43,7 @@ export const PauseCard = ({ pause }: { pause: SongType }) => {
           }}
           onMouseDown={() => setIsExpanded(!isExpanded)}
         >
-          {isExpanded ? <XMarkIcon className={'w-8 h-8'} /> : <EllipsisVerticalIcon className={'w-8 h-8'} />}
+          {isExpanded ? <XMarkIcon className={'w-6 h-6'} /> : <EllipsisVerticalIcon className={'w-6 h-6'} />}
         </motion.div>
       </div>
       <PauseExtra isExpanded={isExpanded} setIsExpanded={setIsExpanded} song={pause} />
@@ -54,14 +54,24 @@ export const PauseCard = ({ pause }: { pause: SongType }) => {
 const Button = () => {
   const { pending } = useFormStatus();
   return (
-    <motion.button className={'py-2 text-rosePine-text/80'} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} disabled={pending} type={'submit'}>
+    <motion.button className={'py-2 text-rosePine-text/80'} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+                   disabled={pending} type={'submit'}>
       <SongExtraItem icon={<MinusCircleIcon className={'w-6 h-6'} />} text={'Remove from playlist'} />
     </motion.button>
   );
 };
-const PauseExtra = ({ song, isExpanded, setIsExpanded }: { song: SongType; isExpanded: boolean; setIsExpanded: React.Dispatch<boolean> }) => {
-  const { playlist, setPlaylist, setlistId } = usePlaylistContext();
-  const [state, action] = useFormState(removePauseFromPlaylist, playlist);
+
+type PauseExtraProps = {
+  song: SongType;
+  isExpanded: boolean;
+  setIsExpanded: React.Dispatch<boolean>
+}
+const PauseExtra = ({ song, isExpanded, setIsExpanded }: PauseExtraProps) => {
+  const setlist = useSongDetailStore(state => state.setlist);
+  const setSetlist = useSongDetailStore(state => state.setSetlist);
+  const [state, action] = useFormState(removePauseFromPlaylist, setlist?.songs || []);
+
+  if (!setlist) return null;
 
   return (
     <AnimatePresence>
@@ -75,13 +85,13 @@ const PauseExtra = ({ song, isExpanded, setIsExpanded }: { song: SongType; isExp
         >
           <form
             action={(data) => {
-              const updatedList = playlist.filter((item) => item._id !== song._id);
-              setPlaylist(updatedList);
+              const updatedList = setlist.songs.filter((item) => item._id !== song._id);
+              setSetlist({ ...setlist, songs: updatedList });
               setIsExpanded(false);
               action(data);
             }}
           >
-            <input type="hidden" name="setlistId" value={setlistId} />
+            <input type="hidden" name="setlistId" value={setlist._id} />
             <input type="hidden" name="songId" value={song._id} />
             <Button />
           </form>

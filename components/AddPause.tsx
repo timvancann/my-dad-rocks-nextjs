@@ -1,11 +1,11 @@
 'use client';
 
-import { usePlaylistContext } from '@/context/playlist-context';
 import { addPause } from '@/actions/sanity';
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useFormState, useFormStatus } from 'react-dom';
 import { v4 as uuidv4 } from 'uuid';
+import { useSongDetailStore } from '@/store/store';
 
 const initialState = {
   message: '',
@@ -36,8 +36,10 @@ const SubmitButton = () => {
 };
 
 export const AddPause = ({ gigId }: { gigId: string }) => {
-  const { setlistId, setPlaylist, playlist } = usePlaylistContext();
-  const [state, action] = useFormState(addPause, { message: '', songs: playlist });
+  const setlist = useSongDetailStore(state => state.setlist);
+  const [state, action] = useFormState(addPause, { message: '', songs: setlist?.songs  || []});
+
+  if (!setlist) return null;
 
   return (
     <form
@@ -51,7 +53,7 @@ export const AddPause = ({ gigId }: { gigId: string }) => {
       }}
     >
       <input type="hidden" name="id" value={uuidv4()} />
-      <input type="hidden" name="setlistId" value={setlistId} />
+      <input type="hidden" name="setlistId" value={setlist._id} />
       <input type="hidden" name="gigId" value={gigId} />
       <SubmitButton />
     </form>

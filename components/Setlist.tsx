@@ -2,7 +2,6 @@
 
 import { SetlistType, SongType } from '@/lib/interface';
 import { LayoutGroup } from 'framer-motion';
-import { FullDivider } from '@/components/Divider';
 import React from 'react';
 import { SongCard } from '@/components/SongCard';
 import { updateSetlistSongs } from '@/actions/sanity';
@@ -20,15 +19,16 @@ import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } 
 import { CSS } from '@dnd-kit/utilities';
 import { MdDragIndicator } from 'react-icons/md';
 import { PauseCard } from '@/components/PauseCard';
-import { usePlayerStore } from '@/store/store';
+import { useSongDetailStore } from '@/store/store';
 import { SongCardDivider } from '@/components/SongCardDivider';
 
 type PlaylistProps = {
   setlist: SetlistType;
 };
 
-export const PlayList = ({ setlist }: PlaylistProps) => {
-  usePlayerStore(state => state.setSetlist)(setlist);
+export const Setlist = ({ setlist }: PlaylistProps) => {
+  useSongDetailStore(state => state.setSetlist)(setlist);
+
   const [playlist, setPlaylist] = React.useState<SongType[]>(setlist.songs);
   const getSongIndex = (id: UniqueIdentifier) => {
     return playlist.findIndex((song) => song.id === id);
@@ -53,7 +53,7 @@ export const PlayList = ({ setlist }: PlaylistProps) => {
             {playlist.map((item, index) => (
               <div key={item.id}>
                 {index > 0 && <SongCardDivider />}
-                <ReorderableSongCard song={item} />
+                <ReorderableSongCard song={item} playlist={playlist} />
               </div>
             ))}
           </SortableContext>
@@ -63,7 +63,11 @@ export const PlayList = ({ setlist }: PlaylistProps) => {
   );
 };
 
-const ReorderableSongCard = ({ song }: { song: SongType }) => {
+type ReorderableSongCardProps = {
+  song: SongType;
+  playlist: SongType[];
+};
+const ReorderableSongCard = ({ song, playlist }: ReorderableSongCardProps) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: song.id });
 
   const style = {
@@ -73,7 +77,7 @@ const ReorderableSongCard = ({ song }: { song: SongType }) => {
   return (
     <div ref={setNodeRef} {...attributes} style={style} className={'flex flex-row grow items-center'}>
       <MdDragIndicator {...listeners} className="w-6- h-6 touch-none" />
-      {song.title?.startsWith('Pauze') ? <PauseCard pause={song} /> : <SongCard song={song} />}
+      {song.title?.startsWith('Pauze') ? <PauseCard pause={song} /> : <SongCard song={song} playlist={playlist} />}
     </div>
   );
 };

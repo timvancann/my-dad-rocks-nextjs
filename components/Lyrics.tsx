@@ -15,15 +15,8 @@ export default function DisplayLyrics({ song, songId }: { song: LyricType; songI
   const [lyrics, setLyrics] = useState(song.lyrics);
   const [textSize, setTextSize] = useState(1);
 
-  const ref = useRef(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ['start start', 'end end']
-  });
-
   return (
     <div className={'justify-center items-center flex flex-col my-4'}>
-      <motion.div className={'flex h-[4px] bg-rosePine-rose sticky top-0 w-full rounded-r-full'} style={{ scaleX: scrollYProgress, originX: 0 }} />
       <h1 className={'flex text-lg tracking-widest font-bold text-rosePine-text'}>
         {song.artist} - {song.title}
       </h1>
@@ -36,7 +29,7 @@ export default function DisplayLyrics({ song, songId }: { song: LyricType; songI
         </motion.button>
       </div>
       {!edit && (
-        <div className={`text-rosePine-text mx-4 whitespace-pre-line prose ${font.className}`} style={{ fontSize: `${textSize}em` }} ref={ref}>
+        <div className={`text-rosePine-text mx-4 whitespace-pre-line prose ${font.className}`} style={{ fontSize: `${textSize}em` }}>
           {lyrics || 'No lyrics found'}
         </div>
       )}

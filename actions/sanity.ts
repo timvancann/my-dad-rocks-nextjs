@@ -129,7 +129,6 @@ export async function removePauseFromPlaylist(previousState: SongType[], form: F
   return updatedList;
 }
 
-export type UpdateLyricsState = {};
 export async function modifyLyrics(songId: string, lyrics: string) {
   const client = createClient({
     apiVersion: '2023-05-03',
@@ -139,5 +138,5 @@ export async function modifyLyrics(songId: string, lyrics: string) {
     token: process.env.NEXT_PRIVATE_SANITY_TOKEN
   });
 
-  client.patch(songId).set({ lyrics: lyrics }).commit();
+  await client.patch(songId).set({ lyrics: lyrics }).commit();
 }

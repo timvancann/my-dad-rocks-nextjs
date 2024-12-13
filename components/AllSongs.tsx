@@ -5,7 +5,7 @@ import { SongCard } from '@/components/SongCard';
 import React from 'react';
 import { SongsTitle } from '@/components/PlaylistTitle';
 import { SongCardDivider } from '@/components/SongCardDivider';
-import { usePlayerStore } from '@/store/store';
+import { useSongDetailStore } from '@/store/store';
 
 type AllSongsProps = {
   songs: SongType[];
@@ -13,7 +13,8 @@ type AllSongsProps = {
 }
 
 export const AllSongs = ({ songs, setlist }: AllSongsProps) => {
-  usePlayerStore(state => state.setSetlist)(setlist);
+  const setSetlist = useSongDetailStore(state => state.setSetlist);
+  setSetlist(setlist);
 
   return (
     <div className={'text-rosePine-text items-center justify-center'}>
@@ -21,7 +22,7 @@ export const AllSongs = ({ songs, setlist }: AllSongsProps) => {
       {songs.map((item, index) => (
         <div key={index}>
           {index > 0 && <SongCardDivider />}
-          <SongCard song={item} />
+          <SongCard song={item} playlist={setlist.songs} />
         </div>
       ))}
     </div>

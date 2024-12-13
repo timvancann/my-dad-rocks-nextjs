@@ -1,5 +1,5 @@
 import React from 'react';
-import { PlayList } from '@/components/Playlist';
+import { Setlist } from '@/components/Setlist';
 import { SetlistType } from '@/lib/interface';
 import { getSetlist } from '@/lib/sanity';
 import { SongsTitle } from '@/components/PlaylistTitle';
@@ -11,7 +11,7 @@ export default async function Home() {
   return (
     <div className="md:flex md:flex-col items-center justify-center">
       <SongsTitle title={'Oefenlijst'} />
-      <PlayList setlist={setlist} />
+      <Setlist setlist={setlist} />
     </div>
   );
 }

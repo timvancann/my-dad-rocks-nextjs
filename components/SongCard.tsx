@@ -6,11 +6,14 @@ import { usePlayerStore, useSongDetailStore } from '@/store/store';
 
 interface SongCardProps {
   song: SongType;
+  playlist: SongType[];
 }
 
-export const SongCard = ({ song }: SongCardProps) => {
+export const SongCard = ({ song, playlist }: SongCardProps) => {
   const selectedSong = usePlayerStore(state => state.currentSong);
   const setSelectedSong = usePlayerStore(state => state.setCurrentSong);
+  const setPlaylist = usePlayerStore(state => state.setPlaylist);
+
   const isSelected = selectedSong?.title === song.title;
 
   const setSongDetail = useSongDetailStore(state => state.setSong);
@@ -22,7 +25,10 @@ export const SongCard = ({ song }: SongCardProps) => {
         <motion.div
           layout
           className={`flex flex-row items-center cursor-pointer`}
-          onClick={() => setSelectedSong(song)}
+          onClick={() => {
+            setSelectedSong(song);
+            setPlaylist(playlist);
+          }}
           transition={{ duration: 0.2 }}
           whileHover={{
             scale: 1.02,
@@ -49,7 +55,7 @@ export const SongCard = ({ song }: SongCardProps) => {
           }}
           onMouseDown={() => setSongDetail(song)}
         >
-          <EllipsisVerticalIcon className={'w-6 h-8'} />
+          <EllipsisVerticalIcon className={'w-6 h-6'} />
         </motion.div>
       </div>
     </motion.div>
