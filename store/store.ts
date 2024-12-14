@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { SetlistType, SongType } from '@/lib/interface';
+import { GigType, SetlistType, SongType } from '@/lib/interface';
 
 type PlayerContext = {
   currentSong: SongType | null,
@@ -16,15 +16,24 @@ export const usePlayerStore = create<PlayerContext>((set) => ({
 }));
 
 type SongDetailContext = {
-  song: SongType | null,
+  song?: SongType | null;
   setSong: (song: SongType | null) => void;
-  setlist: SetlistType | null,
+  setlist: SetlistType
   setSetlist: (setlist: SetlistType) => void;
 };
 
 export const useSongDetailStore = create<SongDetailContext>((set) => ({
-  song: null,
+  setlist: { songs: [], _id: '', title: 'Practice' } as SetlistType,
   setSong: (song: SongType | null) => set({ song }),
-  setlist: null,
   setSetlist: (setlist: SetlistType) => set({ setlist })
+}));
+
+type AllSongsContext = {
+  songs: SongType[];
+  setSongs: (songs: SongType[]) => void;
+};
+
+export const useAllSongsStore = create<AllSongsContext>((set) => ({
+  songs: [],
+  setSongs: (songs: SongType[]) => set({ songs })
 }));

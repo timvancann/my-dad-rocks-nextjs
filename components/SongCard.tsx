@@ -1,8 +1,8 @@
-import { SongType } from '@/lib/interface';
+import { SetlistType, SongType } from '@/lib/interface';
 import { motion } from 'framer-motion';
 import React from 'react';
-import { EllipsisVerticalIcon } from '@sanity/icons';
 import { usePlayerStore, useSongDetailStore } from '@/store/store';
+import { SongDetailDrawer } from '@/components/Drawer';
 
 interface SongCardProps {
   song: SongType;
@@ -12,27 +12,21 @@ interface SongCardProps {
 export const SongCard = ({ song, playlist }: SongCardProps) => {
   const selectedSong = usePlayerStore(state => state.currentSong);
   const setSelectedSong = usePlayerStore(state => state.setCurrentSong);
+  const setlist = useSongDetailStore(state => state.setlist);
   const setPlaylist = usePlayerStore(state => state.setPlaylist);
 
+  const setSetlist = useSongDetailStore(state => state.setSetlist);
   const isSelected = selectedSong?.title === song.title;
 
-  const setSongDetail = useSongDetailStore(state => state.setSong);
-
   return (
-    <motion.div
+    <div
       className={`flex flex-col grow gap-1 px-3 py-0 rounded-xl ${isSelected ? 'bg-rosePine-overlay' : 'bg-transparent'}`}>
       <div className={'flex flex-row justify-between items-center'}>
-        <motion.div
-          layout
+        <div
           className={`flex flex-row items-center cursor-pointer`}
           onClick={() => {
             setSelectedSong(song);
             setPlaylist(playlist);
-          }}
-          transition={{ duration: 0.2 }}
-          whileHover={{
-            scale: 1.02,
-            transition: { duration: 0.1, easings: 'easeInOut' }
           }}
         >
           <img src={song.artwork} alt={song.title}
@@ -43,22 +37,10 @@ export const SongCard = ({ song, playlist }: SongCardProps) => {
             <h2
               className={`text-sm ${isSelected ? 'font-bold text-rosePine-gold' : 'text-rosePine-text font-normal'}`}>{song.artist}</h2>
           </div>
-        </motion.div>
-        <motion.div
-          whileHover={{
-            rotate: '180deg',
-            transition: { duration: 0.125, easings: 'easeInOut' }
-          }}
-          whileTap={{
-            scale: 0.9,
-            transition: { duration: 0.125, easings: 'easeInOut' }
-          }}
-          onMouseDown={() => setSongDetail(song)}
-        >
-          <EllipsisVerticalIcon className={'w-6 h-6'} />
-        </motion.div>
+        </div>
+        <SongDetailDrawer song={song} setSetlist={setSetlist} setlist={setlist} />
       </div>
-    </motion.div>
+    </div>
   );
 };
 

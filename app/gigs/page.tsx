@@ -1,5 +1,5 @@
 import React from 'react';
-import Gigs from '@/components/Gigs';
+import GigList from '@/components/GigList';
 import { getGigs } from '@/lib/sanity';
 
 export default async function Home() {
@@ -7,7 +7,7 @@ export default async function Home() {
 
   return (
     <div className="md:flex md:flex-col items-center justify-center">
-      <Gigs gigs={data} />
+      <GigList gigs={data} />
     </div>
   );
 }
