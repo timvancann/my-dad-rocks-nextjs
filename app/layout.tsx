@@ -27,8 +27,13 @@ export default function RootLayout({
       <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
       <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     </head>
-    <body suppressHydrationWarning={true} className={`${inter.className} text-rosePine-text h-screen flex-col bg-rosePine-base justify-between`}>
-    <Main>{children}</Main>
+    <body suppressHydrationWarning={true}
+          className={`${inter.className} text-rosePine-text h-screen flex-col bg-rosePine-base justify-between`}>
+    <Main>
+      <div className={'pb-16'}>
+        {children}
+      </div>
+    </Main>
     <Footer />
     </body>
     </html>
