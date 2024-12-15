@@ -3,10 +3,10 @@ import { Drawer } from 'vaul';
 import { SetlistType, SongType } from '@/lib/interface';
 import React, { useEffect, useState } from 'react';
 import { EllipsisVerticalIcon } from '@sanity/icons';
-import { Divider } from '@/components/Divider';
 import { MdLyrics } from 'react-icons/md';
 import { IoMdAddCircleOutline, IoMdRemoveCircleOutline } from 'react-icons/io';
 import { useRouter } from 'next/navigation';
+import { updateSetlistSongs } from '@/actions/sanity';
 
 type SongDetailDrawerProps = {
   song: SongType,
@@ -32,13 +32,13 @@ export const SongDetailDrawer = ({ song, setlist, setSetlist }: SongDetailDrawer
     }
     const updatedList = [...setlist.songs, song];
     setSetlist({ ...setlist, songs: updatedList });
-    // await updateSetlistSongs(updatedList, setlist._id);
+    await updateSetlistSongs(updatedList, setlist._id);
   };
 
   const removeSongFromPlaylist = async (song: SongType) => {
     let updatedList = setlist.songs.filter((item) => item.title !== song.title);
     setSetlist({ ...setlist, songs: updatedList });
-    // await updateSetlistSongs(updatedList, setlist._id);
+    await updateSetlistSongs(updatedList, setlist._id);
   };
   return (
     <Drawer.Root>

@@ -9,6 +9,7 @@ import { useAllSongsStore, useSongDetailStore } from '@/store/store';
 import { MdDelete } from 'react-icons/md';
 import { BsPencilSquare } from 'react-icons/bs';
 import { removeGig } from '@/actions/sanity';
+import { PendingIcon } from '@/components/PendingIcon';
 
 type GigProps = {
   gig: GigType;
@@ -37,8 +38,10 @@ export const Gig = ({ gig, songs }: GigProps) => {
     <div className="md:flex md:flex-col items-center justify-center">
       <div className={'flex w-full px-4 justify-between'}>
         <GigCard gig={gig} />
-        <EditIcon edit={edit} setEdit={setEdit} />
-        {edit && <DeleteIcon gig={gig} />}
+        <div className={"mt-2 flex gap-4"}>
+          {edit && <DeleteIcon gig={gig} />}
+          <EditIcon edit={edit} setEdit={setEdit} />
+        </div>
       </div>
       <Setlist />
       <AddPause gigId={gig._id} />
@@ -59,8 +62,9 @@ interface EditIconProps {
 
 const EditIcon = ({ edit, setEdit }: EditIconProps) => {
   return (
-    <button className={'bg-rosePine-highlightLow rounded-xl p-2 m-2'}
-            onClick={() => setEdit(!edit)}
+    <button
+      className={`w-10 h-10 flex bg-rosePine-highlightLow rounded-xl p-2 drop-shadow-lg items-center gap-2 border border-rosePine-highlightMed justify-center ${edit? 'animate-pulse': 'animate-none'}`}
+      onClick={() => setEdit(!edit)}
     >
       <BsPencilSquare />
     </button>
@@ -72,13 +76,21 @@ interface DeleteIconProps {
 }
 
 const DeleteIcon = ({ gig }: DeleteIconProps) => {
+  const [loading, setLoading] = React.useState(false);
   return (
-    <button className={'bg-rosePine-love rounded-xl p-2 m-2 text-rosePine-base'}
-            onClick={async () =>
-              await removeGig(gig)
-            }
+    <button
+      className={`w-10 h-10 justify-center flex bg-rosePine-highlightLow rounded-xl p-2 drop-shadow-lg items-center gap-2 border border-rosePine-love text-rosePine-love`}
+
+      onClick={async () => {
+        setLoading(true);
+        await removeGig(gig);
+      }
+      }
     >
-      <MdDelete />
+      {loading ?
+        <PendingIcon /> :
+        <MdDelete />
+      }
     </button>
   );
 };

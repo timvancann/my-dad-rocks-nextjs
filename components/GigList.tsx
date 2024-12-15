@@ -22,7 +22,7 @@ export default function GigList({ gigs }: { gigs: GigsType[] }) {
       })}
 
       <Link href={'/gigs/new'}>
-        <button className={'absolute right-5 bottom-20 bg-rosePine-highlightLow rounded-xl p-2 drop-shadow-lg'}
+        <button className={'absolute right-5 bottom-36 bg-rosePine-highlightLow rounded-xl p-2 drop-shadow-lg'}
                 onClick={() => setEdit(true)}>
           <AddCircleIcon className={'h-8 w-8 text-rosePine-love'} />
         </button>
