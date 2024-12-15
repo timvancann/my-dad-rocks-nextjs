@@ -63,7 +63,7 @@ export type LyricType = {
 
 export async function getGigs() {
   const qry = `
-  *[_type == "gig"]|order(data desc){
+  *[_type == "gig"]|order(date desc){
     _id,
     title,
     date,
