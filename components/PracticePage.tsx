@@ -16,7 +16,7 @@ export const PracticePage = ({ setlist }: PracticeProps) => {
   }, [setlist, setSetlist]);
 
   return (
-    <div className={'text-rosePine-text items-center justify-center'}>
+    <div className="md:flex md:flex-col items-center justify-center">
       <SongsTitle title={'Oefenlijst'} />
       <Setlist />
     </div>

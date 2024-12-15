@@ -1,9 +1,10 @@
 'use server';
 
 import { createClient } from 'next-sanity';
-import { SetlistType, SongType } from '@/lib/interface';
+import { GigType, SetlistType, SongType } from '@/lib/interface';
 import { getGig } from '@/lib/sanity';
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 
 export async function updateSetlistSongs(reorderedSongs: SongType[], setlistId: string) {
   const client = createClient({
@@ -139,4 +140,54 @@ export async function modifyLyrics(songId: string, lyrics: string) {
   });
 
   await client.patch(songId).set({ lyrics: lyrics }).commit();
+}
+
+export async function createGig(prevState: any, formData: FormData) {
+  const title = formData.get('title') as string;
+  const date = formData.get('date') as string;
+
+  const client = createClient({
+    apiVersion: '2023-05-03',
+    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
+    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET,
+    useCdn: false,
+    token: process.env.NEXT_PRIVATE_SANITY_TOKEN
+  });
+
+  await client.create({
+    _type: 'setlist',
+    title: title,
+    songs: []
+  })
+    .then(async (data) => {
+      await client.create({
+        _type: 'gig',
+        title: title,
+        date: date,
+        setlist: {
+          _type: 'reference',
+          _ref: data._id
+        }
+      });
+    });
+
+  revalidatePath('/gigs');
+  return {
+    success: true
+  };
+}
+
+export async function removeGig(gig: GigType) {
+  const client = createClient({
+    apiVersion: '2023-05-03',
+    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
+    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET,
+    useCdn: false,
+    token: process.env.NEXT_PRIVATE_SANITY_TOKEN
+  });
+
+
+  await client.delete(gig._id);
+  await client.delete(gig.setlist._id);
+  redirect('/gigs');
 }
