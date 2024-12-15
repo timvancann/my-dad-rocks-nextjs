@@ -13,8 +13,6 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { BiLoaderCircle } from 'react-icons/bi';
-import { motion } from 'motion/react';
 import { PendingIcon } from '@/components/PendingIcon';
 
 export const AddGig = () => {
@@ -23,6 +21,8 @@ export const AddGig = () => {
 
   const router = useRouter();
   const [state, formAction] = useFormState(async (prevState: any, formData: FormData) => {
+    const formattedDate = date ? format(date, 'yyyy-MM-dd') : '';
+    formData.append('date', formattedDate);
     const result = await createGig(prevState, formData);
     if (result.success) {
       router.push('/gigs');
