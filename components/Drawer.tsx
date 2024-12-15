@@ -49,7 +49,7 @@ export const SongDetailDrawer = ({ song, setlist, setSetlist }: SongDetailDrawer
         <Drawer.Overlay className="fixed inset-0 bg-rosePine-base/80" />
         <Drawer.Title></Drawer.Title>
         <Drawer.Content
-          className="bg-rosePine-base flex flex-col  border-t border-t-rosePine-highlightMed rounded-t-xl mt-24 h-fit fixed bottom-0 left-0 right-0 outline-none">
+          className="bg-rosePine-base flex flex-col  border-t border-t-rosePine-highlightMed rounded-t-xl mt-24 h-fit fixed bottom-0 left-0 right-0 outline-none z-40">
           <div className="p-2 bg-rosePine-highlightLow rounded-t-xl border-t border-t-rosePine-highlightMed flex-1">
             <div aria-hidden
                  className="mx-auto w-28 h-[3px] flex-shrink-0 rounded-full bg-rosePine-highlightHigh mb-4" />

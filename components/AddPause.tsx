@@ -37,7 +37,8 @@ const SubmitButton = () => {
 
 export const AddPause = ({ gigId }: { gigId: string }) => {
   const setlist = useSongDetailStore(state => state.setlist);
-  const [state, action] = useFormState(addPause, { message: '', songs: setlist?.songs  || []});
+  const setSetlist = useSongDetailStore(state => state.setSetlist);
+  const [state, action] = useFormState(addPause, { message: '', songs: setlist?.songs || [] });
 
   if (!setlist) return null;
 
@@ -45,10 +46,9 @@ export const AddPause = ({ gigId }: { gigId: string }) => {
     <form
       className={''}
       action={(data) => {
-        // add song with data.id to playlist
         const id = data.get('id') as string;
-        // const updatedPlaylist = [...playlist, { id: id, _id: id, title: 'Pauze' }];
-        // setPlaylist(updatedPlaylist);
+        const updatedPlaylist = { ...setlist, ...{ id: id, _id: id, title: 'Pauze' } };
+        setSetlist(updatedPlaylist);
         action(data);
       }}
     >
