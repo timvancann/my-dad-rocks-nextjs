@@ -1,6 +1,5 @@
 'use client';
 import Link from 'next/link';
-import { MusicalNoteIcon, CalendarIcon, QueueListIcon } from '@heroicons/react/16/solid';
 import { usePathname } from 'next/navigation';
 import {
   IoCalendar,
@@ -8,7 +7,9 @@ import {
   IoList,
   IoListOutline,
   IoMusicalNotes,
-  IoMusicalNotesOutline
+  IoMusicalNotesOutline,
+  IoPlayCircle,
+  IoPlayCircleOutline
 } from 'react-icons/io5';
 
 interface NavItem {
@@ -37,10 +38,15 @@ export const Navbar = () => {
       href: '/gigs',
       icon: <IoCalendarOutline className={'h-6 w-6'} />,
       activeIcon: <IoCalendar className=" text-rosePine-love h-6 w-6" />,
-      text: 'Gigs'
+      text: 'Optredens'
+    },
+    {
+      href: '/player',
+      icon: <IoPlayCircleOutline className={'h-6 w-6'} />,
+      activeIcon: <IoPlayCircle className=" text-rosePine-love h-6 w-6" />,
+      text: 'Speler'
     }
   ];
-  console.log(pathname);
   return (
     <footer
       className="flex flex-row fixed inset-x-0 bottom-0 w-full bg-rosePine-base bg-opacity-80 backdrop-blur-md backdrop-filter border-t border-rosePine-highlightMed p-1 rounded-t-2xl ">
@@ -71,8 +77,8 @@ const NavbarTab = (
       ${index > 0 ? 'border-l border-rosePine-highlightMed' : ''}`}
     >
       <div className="flex flex-col items-center justify-center gap-1">
-          {isCurrent? navItem.activeIcon : navItem.icon}
-        <div className={`text-[10px] ${isCurrent ? "text-rosePine-love": "text-rosePine-text"}`}>{navItem.text}</div>
+        {isCurrent ? navItem.activeIcon : navItem.icon}
+        <div className={`text-[10px] ${isCurrent ? 'text-rosePine-love' : 'text-rosePine-text'}`}>{navItem.text}</div>
       </div>
     </Link>
   );

@@ -1,8 +1,9 @@
-import { SetlistType, SongType } from '@/lib/interface';
-import { motion } from 'framer-motion';
+import { SongType } from '@/lib/interface';
 import React from 'react';
 import { usePlayerStore, useSongDetailStore } from '@/store/store';
 import { SongDetailDrawer } from '@/components/Drawer';
+import { useGlobalAudioPlayer } from 'react-use-audio-player';
+import { usePlaylistPlayer } from '@/hooks/useAudioTime';
 
 interface SongCardProps {
   song: SongType;
@@ -18,6 +19,9 @@ export const SongCard = ({ song, playlist }: SongCardProps) => {
   const setSetlist = useSongDetailStore(state => state.setSetlist);
   const isSelected = selectedSong?.title === song.title;
 
+  const { playTrack } = usePlaylistPlayer();
+
+
   return (
     <div
       className={`flex flex-col grow gap-1 px-3 py-0 rounded-xl ${isSelected ? 'bg-rosePine-overlay' : 'bg-transparent'}`}>
@@ -25,6 +29,7 @@ export const SongCard = ({ song, playlist }: SongCardProps) => {
         <div
           className={`flex flex-row items-center cursor-pointer`}
           onClick={() => {
+            playTrack(song);
             setSelectedSong(song);
             setPlaylist(playlist);
           }}

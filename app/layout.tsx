@@ -32,9 +32,9 @@ export default function RootLayout({
     <Main>
       <div className={'pb-16'}>
         {children}
+        <Footer />
       </div>
     </Main>
-    <Footer />
     </body>
     </html>
   );

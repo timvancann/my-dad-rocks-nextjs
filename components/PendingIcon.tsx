@@ -1,8 +1,8 @@
 import React from 'react';
-import { BiLoaderCircle } from 'react-icons/bi';
+import { ImSpinner } from 'react-icons/im';
 
 export const PendingIcon = () => {
   return (
-    <BiLoaderCircle className={'h-6 w-6 text-rosePine-love animate-spin'} />
+    <ImSpinner className={'h-6 w-6 text-rosePine-love animate-spin'} />
   );
 };
