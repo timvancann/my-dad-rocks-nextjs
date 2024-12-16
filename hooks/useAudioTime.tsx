@@ -30,9 +30,7 @@ export const usePlaylistPlayer = () => {
   const { load, paused, togglePlayPause, duration, stop, seek, looping } = useGlobalAudioPlayer();
 
   const selectedSong = usePlayerStore(state => state.currentSong);
-  const setSelectedSong = usePlayerStore(state => state.setCurrentSong);
   const playlist = usePlayerStore(state => state.playlist);
-  const setCurrentSong = usePlayerStore(state => state.setCurrentSong);
 
   const skipTrack = (increment: number) => {
     if (!selectedSong || !playlist.length) return;
@@ -51,7 +49,10 @@ export const usePlaylistPlayer = () => {
   };
 
   const playTrack = (song: SongType) => {
-    setSelectedSong(song);
+    if (!song.audio) {
+      nextTrack();
+      return;
+    }
     load(song.audio, {
       autoplay: true,
       loop: looping,
@@ -70,7 +71,6 @@ export const usePlaylistPlayer = () => {
   const seekTrack = (seconds: number) => {
     seek(seconds);
   };
-
 
 
   return {

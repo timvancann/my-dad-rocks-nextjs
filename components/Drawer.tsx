@@ -60,35 +60,33 @@ export const SongDetailDrawer = ({ song, setlist, setSetlist }: SongDetailDrawer
                 <div className={'text-xs'}>{song.artist}</div>
               </div>
             </div>
-            <Drawer.Close>
-              <div className={'flex flex-col ml-2 mt-2 gap-4 mb-6'}>
-                <Button icon={<MdLyrics className={'h-6 w-6'} />}
+            <Drawer.Close />
+            <div className={'flex flex-col ml-2 mt-2 gap-4 mb-6 w-full'}>
+              <Button icon={<MdLyrics className={'h-6 w-6'} />}
+                      song={song}
+                      title={'Lyrics'}
+                      setlist={setlist}
+                      onClick={() => {
+                        router.push(`/lyrics/${song.id}`);
+                      }} />
+              {songInPlaylist ?
+                <Button icon={<IoMdRemoveCircleOutline className={'h-6 w-6'} />}
                         song={song}
-                        title={'Lyrics'}
+                        title={'Verwijder van playlist'}
                         setlist={setlist}
-                        onClick={() => {
-                          router.push(`/lyrics/${song.id}`);
+                        onClick={async () => {
+                          await removeSongFromPlaylist(song);
                         }} />
-                {songInPlaylist ?
-                  <Button icon={<IoMdRemoveCircleOutline className={'h-6 w-6'} />}
-                          song={song}
-                          title={'Verwijder van playlist'}
-                          setlist={setlist}
-                          onClick={() => {
-                            removeSongFromPlaylist(song);
-
-                          }} />
-                  :
-                  <Button icon={<IoMdAddCircleOutline className={'h-6 w-6'} />}
-                          song={song}
-                          title={'Toevoegen aan playlist'}
-                          setlist={setlist}
-                          onClick={() => {
-                            addSongToPlaylist(song);
-                          }} />
-                }
-              </div>
-            </Drawer.Close>
+                :
+                <Button icon={<IoMdAddCircleOutline className={'h-6 w-6'} />}
+                        song={song}
+                        title={'Toevoegen aan playlist'}
+                        setlist={setlist}
+                        onClick={async () => {
+                          await addSongToPlaylist(song);
+                        }} />
+              }
+            </div>
           </div>
         </Drawer.Content>
       </Drawer.Portal>
@@ -105,7 +103,7 @@ type ButtonProps = {
 }
 const Button = ({ icon, onClick, song, setlist, title }: ButtonProps) => {
   return (
-    <div className={'flex gap-4 items-center'} onClick={() => onClick(song, setlist)}>
+    <div className={'flex gap-4 items-center w-full'} onClick={() => onClick(song, setlist)}>
       {icon}
       <p className={'text-sm'}>{title}</p>
     </div>

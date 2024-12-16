@@ -46,7 +46,7 @@ export const Setlist = () => {
         <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd} sensors={sensors} id="builder-dnd">
           <SortableContext items={setlist.songs} strategy={verticalListSortingStrategy}>
             {setlist.songs.map((item, index) => (
-              <div key={item.id}>
+              <div key={index}>
                 {index > 0 && <Divider />}
                 <ReorderableSongCard song={item} />
               </div>

@@ -2,9 +2,9 @@ export interface SongType {
   _id: string;
   id: string;
   title: string;
-  artist: string;
-  artwork: string;
-  audio: string;
+  artist?: string;
+  artwork?: string;
+  audio?: string;
 }
 
 export interface SetlistType {

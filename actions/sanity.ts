@@ -63,8 +63,8 @@ export async function addPause(previousState: FormDataState, formData: FormData)
     title: `Pauze in ${setlistId}`
   });
   const gig = await getGig(gigId);
-  // const updatedSongs = gig.setlist.songs.concat({ _id: pauseId, id: pauseId, title: 'Pauze' });
-  // await updateSetlistSongs(updatedSongs, gig.setlist._id);
+  const updatedSongs = gig.setlist.songs.concat({ _id: pauseId, id: pauseId, title: 'Pauze' });
+  await updateSetlistSongs(updatedSongs, gig.setlist._id);
 
   revalidatePath(`/gigs/${gigId}`);
 
