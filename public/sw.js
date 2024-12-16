@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 //console.log('WORKER: executing.');
 
@@ -20,7 +20,7 @@ var offlineFundamentals = [
    You can use this event to prepare the service worker to be able to serve
    files while visitors are offline.
 */
-self.addEventListener("install", function (event) {
+self.addEventListener('install', function (event) {
   //console.log('WORKER: install event in progress.');
   /* Using event.waitUntil(p) blocks the installation process on the provided
      promise. If the promise is rejected, the service worker won't be installed.
@@ -53,7 +53,7 @@ self.addEventListener("install", function (event) {
    comprehends even the request for the HTML page on first load, as well as JS and
    CSS resources, fonts, any images, etc.
 */
-self.addEventListener("fetch", function (event) {
+self.addEventListener('fetch', function (event) {
   //console.log('WORKER: fetch event in progress.');
 
   /* We should only cache GET requests, and deal with the rest of method in the
@@ -163,7 +163,7 @@ self.addEventListener("fetch", function (event) {
    we delete old caches that don't match the version in the worker we just finished
    installing.
 */
-self.addEventListener("activate", function (event) {
+self.addEventListener('activate', function (event) {
   /* Just like with the install event, event.waitUntil blocks activate on a promise.
      Activation will fail unless the promise is fulfilled.
   */
