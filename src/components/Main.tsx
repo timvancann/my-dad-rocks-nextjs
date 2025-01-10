@@ -1,15 +1,12 @@
 'use client';
 import React from 'react';
-import { useSongDetailStore } from '@/store/store';
+import { ApolloProvider } from '@apollo/client';
+import { client } from '@/lib/apollo';
 
 export const Main = ({ children }: { children: React.ReactNode }) => {
-  const songDetail = useSongDetailStore((state) => state.song);
-
-
-
   return (
-    <div className={`${songDetail? "opacity-20":"opacity-100"} transition-opacity duration-200`}>
+    <ApolloProvider client={client}>
       <main className={'pb-16'}>{children}</main>
-    </div>
+    </ApolloProvider>
   );
 };

@@ -1,9 +1,34 @@
-import { getLyrics } from '@/lib/sanity';
+'use client'
 import DisplayLyrics from '@/components/Lyrics';
+import { gql, useQuery } from '@apollo/client';
+import { Track } from '@payload-types';
+import React from 'react';
 
-export default async function Lyrics(props: { params: Promise<{ song_id: string }> }) {
-  const params = await props.params;
-  const song = await getLyrics(params.song_id);
+const GET_LYRICS = gql`
+  query Track($trackId: Int!){
+    Track(id: $trackId) {
+        lyrics
+        title
+        artist
+    }
+  }
+`
 
-  return <DisplayLyrics song={song} songId={params.song_id} />;
+export default function Lyrics(props: { params: Promise<{ song_id: string }> }) {
+  const params = React.use(props.params);
+
+  const { loading, error, data } = useQuery(GET_LYRICS, {
+    variables: {
+      trackId: parseInt(params.song_id)
+    }
+  });
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error : {error.message}</p>;
+
+  const track: Track = data.Track;
+  console.log(track)
+
+
+  return <DisplayLyrics song={track} />;
 }

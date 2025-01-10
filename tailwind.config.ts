@@ -3,9 +3,7 @@ import plugin from 'tailwindcss/plugin';
 
 const config: Config = {
   darkMode: ['class'],
-  content: [
-    './src/**/*.{js,ts,jsx,tsx,mdx}',
-  ],
+  content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
   theme: {
     extend: {
       colors: {
@@ -109,10 +107,6 @@ const config: Config = {
     }
   },
   // (plugins, content, ...)
-  plugins: [
-    require('@tailwindcss/aspect-ratio'),
-    require('@tailwindcss/typography'),
-    require('tailwindcss-animate')
-  ]
+  plugins: [require('@tailwindcss/aspect-ratio'), require('@tailwindcss/typography'), require('tailwindcss-animate')]
 };
 export default config;

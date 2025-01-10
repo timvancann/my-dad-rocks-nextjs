@@ -2,11 +2,13 @@
 import React, { useEffect, useState } from 'react';
 import { usePlayerStore } from '@/store/store';
 import { useAudioTime, usePlaylistPlayer } from '@/hooks/useAudioTime';
-import { SkipBackIcon, SkipForwardIcon } from 'lucide-react';
-import { PauseIcon, PlayIcon } from '@sanity/icons';
+import { PauseCircleIcon, PlayCircleIcon, SkipBackIcon, SkipForwardIcon } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { useGlobalAudioPlayer } from 'react-use-audio-player';
 import { TbRepeat, TbRepeatOff } from 'react-icons/tb';
+import { Image as PayloadImage } from '@payload-types';
+import Image from 'next/image'
+
 
 
 export default function Player() {
@@ -30,10 +32,14 @@ export default function Player() {
     </div>
   );
 
+  const url = (selectedSong.coverart as PayloadImage).url ?? "";
 
   return (
     <div className="items-center flex pt-12 flex-col w-full justify-center">
-      <img src={selectedSong.artwork} alt={selectedSong.title} className="w-72 h-72 rounded-xl drop-shadow-md" />
+      <Image
+        src={url}
+        alt={selectedSong.title}
+        className="w-72 h-72 rounded-xl drop-shadow-md" />
       <div className="flex flex-col items-center justify-center mt-10">
         <h1 className="text-rosePine-text font-bold text-2xl">{selectedSong.title}</h1>
         <h2 className="text-rosePine-text font-normal text-md">{selectedSong.artist}</h2>
@@ -44,7 +50,7 @@ export default function Player() {
             <SkipBackIcon className={'w-6 h-6'} />
           </div>
           <div className={'rounded-full bg-rosePine-text text-rosePine-base'} onClick={playPauseTrack}>
-            {paused ? <PlayIcon className={'h-20 w-20 pl-2'} /> : <PauseIcon className={'h-20 w-20'} />}
+            {paused ? <PlayCircleIcon className={'h-20 w-20 pl-2'} /> : <PauseCircleIcon className={'h-20 w-20'} />}
           </div>
           <div onClick={nextTrack}>
             <SkipForwardIcon className={'w-6 h-6'} />
@@ -57,10 +63,10 @@ export default function Player() {
 
       <div className={'flex px-4 w-full mt-10'}>
         <Slider defaultValue={[33]} max={100} step={1} value={[progress]}
-                onValueChange={(value) => {
-                  const newTime = (value[0] / 100) * duration;
-                  seekTrack(newTime);
-                }} />
+          onValueChange={(value) => {
+            const newTime = (value[0] / 100) * duration;
+            seekTrack(newTime);
+          }} />
       </div>
     </div>
   );

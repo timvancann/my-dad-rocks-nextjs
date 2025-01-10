@@ -1,7 +1,8 @@
+'use client';
 import { useEffect, useRef, useState } from 'react';
 import { useGlobalAudioPlayer } from 'react-use-audio-player';
 import { usePlayerStore } from '@/store/store';
-import { SongType } from '@/lib/interface';
+import { Audio, Track } from '../../payload-types';
 
 export const useAudioTime = () => {
   const frameRef = useRef<number>(undefined);
@@ -37,7 +38,10 @@ export const usePlaylistPlayer = () => {
     if (!selectedSong || !playlist.length) return;
 
     const currentIndex = playlist.findIndex(song => song.id === selectedSong.id);
-    const nextIndex = (currentIndex + increment) % playlist.length;
+    let nextIndex = (currentIndex + increment) % playlist.length;
+    if (nextIndex < 0) {
+      nextIndex = playlist.length + nextIndex
+    }
     const nextSong = playlist[nextIndex];
     playTrack(nextSong);
   };
@@ -49,13 +53,14 @@ export const usePlaylistPlayer = () => {
     skipTrack(-1);
   };
 
-  const playTrack = (song: SongType) => {
-    if (!song.audio) {
+  const playTrack = (track: Track) => {
+    const audio = track.audio as Audio
+    if (!audio.url) {
       nextTrack();
       return;
     }
-    setSelectedSong(song);
-    load(song.audio, {
+    setSelectedSong(track);
+    load(audio.url, {
       autoplay: true,
       loop: looping,
       onend: nextTrack

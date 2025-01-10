@@ -1,18 +1,20 @@
 'use client';
 
-import { modifyLyrics } from '@/actions/sanity';
-import React, { useRef, useState } from 'react';
-import { LyricType } from '@/lib/sanity';
+import React, { useState } from 'react';
 import { FaMinusCircle, FaPlusCircle } from 'react-icons/fa';
-import { motion, useScroll } from 'framer-motion';
+import {
+  PayloadLexicalReactRenderer,
+  PayloadLexicalReactRendererContent,
+} from "@atelier-disko/payload-lexical-react-renderer";
+
 
 import { Poppins } from 'next/font/google';
+import { Track } from '@payload-types';
+import { motion } from 'motion/react';
 
 const font = Poppins({ subsets: ['latin'], weight: '300' });
 
-export default function DisplayLyrics({ song, songId }: { song: LyricType; songId: string }) {
-  const [edit, setEdit] = useState(false);
-  const [lyrics, setLyrics] = useState(song.lyrics);
+export default function DisplayLyrics({ song }: { song: Track }) {
   const [textSize, setTextSize] = useState(1);
 
   return (
@@ -28,30 +30,12 @@ export default function DisplayLyrics({ song, songId }: { song: LyricType; songI
           <FaMinusCircle />
         </motion.button>
       </div>
-      {!edit && (
-        <div className={`text-rosePine-text mx-4 whitespace-pre-line prose ${font.className}`} style={{ fontSize: `${textSize}em` }}>
-          {lyrics || 'No lyrics found'}
-        </div>
-      )}
-      {edit && (
-        <div className="flew flex-col">
-          <textarea value={lyrics ?? ''} onChange={(e) => setLyrics(e.target.value)} cols={50} rows={30} />
-          <div>
-            <button
-              className={'mx-auto bg-rosePine-gold text-rosePine-base rounded-md p-1 px-2 mt-2'}
-              onClick={async () => {
-                await modifyLyrics(songId, lyrics);
-                setEdit(false);
-              }}
-            >
-              Save
-            </button>
-          </div>
-        </div>
-      )}
-      <button className={'mx-auto bg-rosePine-rose text-rosePine-base rounded-md p-1 px-2 mt-2'} onClick={() => setEdit(!edit)}>
-        {edit ? 'Cancel' : 'Edit'}
-      </button>
+      <div className={`text-rosePine-text mx-4 whitespace-pre-line prose ${font.className}`} style={{ fontSize: `${textSize}em` }}>
+        {song.lyrics &&
+          <PayloadLexicalReactRenderer content={song.lyrics as PayloadLexicalReactRendererContent} />
+        }
+        {!song.lyrics && <p>Geen lyrics gevonden</p>}
+      </div>
     </div>
   );
 }

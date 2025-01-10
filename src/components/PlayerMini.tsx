@@ -4,6 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { useAudioTime, usePlaylistPlayer } from '@/hooks/useAudioTime';
 import { usePlayerStore } from '@/store/store';
 import { PauseCircleIcon, PlayCircleIcon, SkipBackIcon, SkipForwardIcon } from 'lucide-react';
+import { Image as PayloadImage } from '@payload-types';
+import Image from 'next/image'
 
 
 export const PlayerMini = () => {
@@ -29,7 +31,7 @@ export const PlayerMini = () => {
       <div className={'flex-col'}>
         <div className={'flex grow flex-row justify-between items-center mr-4'}>
           <div className={'flex flex-row items-center'}>
-            <img src={selectedSong.artwork} alt={selectedSong.title} className={'w-12 h-12 m-1 p-1 ml-2'} />
+            <Image src={(selectedSong.coverart as PayloadImage).thumbnailURL ?? ""} alt={selectedSong.title} className={'w-12 h-12 m-1 p-1 ml-2'} />
             <div className={'flex flex-col justify-between'}>
               <div className={'text-sm font-bold'}>{selectedSong.title}</div>
               <div className={'text-xs'}>{selectedSong.artist}</div>
