@@ -18,6 +18,7 @@ import { useForm } from 'react-hook-form';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { GET_GIGS } from '@/queries/getGigs';
 
 const CREATE_GIG = gql`
   mutation CreateGig($title: String!, $date: String!, $setlistId: Int!) {
@@ -36,7 +37,11 @@ const CREATE_SETLIST = gql`
 `
 
 export default function Home() {
-  const [createGig] = useMutation(CREATE_GIG);
+  const [createGig] = useMutation(CREATE_GIG, {
+    refetchQueries: [
+      GET_GIGS
+    ]
+  });
   const [createSetlist] = useMutation(CREATE_SETLIST);
 
   const router = useRouter();

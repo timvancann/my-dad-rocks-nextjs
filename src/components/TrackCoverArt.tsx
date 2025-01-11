@@ -10,5 +10,10 @@ type TrackCoverArtProps = {
 
 export const TrackCoverArt = ({ track, className }: TrackCoverArtProps) => {
   const coverart = track.coverart as PayloadImage
-  return <Image src={coverart.thumbnailURL ?? ""} alt={coverart.alt} className={`w-16 h-16 rounded-xl ${className}`} />;
+  return <Image
+    width={64}
+    height={64}
+    src={coverart.thumbnailURL ?? ""}
+    alt={coverart.alt ?? ""}
+    className={`w-16 h-16 rounded-xl ${className}`} />;
 };

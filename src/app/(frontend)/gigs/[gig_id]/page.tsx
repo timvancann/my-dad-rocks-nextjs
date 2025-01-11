@@ -32,9 +32,9 @@ query Gig($id: Int!) {
                     artist
                     coverart {
                         thumbnailURL
+                        url
                     }
                     audio {
-                        thumbnailURL
                         url
                     }
                 }
@@ -47,6 +47,7 @@ query Gig($id: Int!) {
             title
             artist
             coverart {
+                url
                 thumbnailURL
             }
             audio {

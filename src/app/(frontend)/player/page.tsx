@@ -37,8 +37,10 @@ export default function Player() {
   return (
     <div className="items-center flex pt-12 flex-col w-full justify-center">
       <Image
+        width={288}
+        height={288}
         src={url}
-        alt={selectedSong.title}
+        alt={selectedSong.title ?? ""}
         className="w-72 h-72 rounded-xl drop-shadow-md" />
       <div className="flex flex-col items-center justify-center mt-10">
         <h1 className="text-rosePine-text font-bold text-2xl">{selectedSong.title}</h1>

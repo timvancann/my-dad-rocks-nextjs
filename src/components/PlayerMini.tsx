@@ -31,7 +31,12 @@ export const PlayerMini = () => {
       <div className={'flex-col'}>
         <div className={'flex grow flex-row justify-between items-center mr-4'}>
           <div className={'flex flex-row items-center'}>
-            <Image src={(selectedSong.coverart as PayloadImage).thumbnailURL ?? ""} alt={selectedSong.title} className={'w-12 h-12 m-1 p-1 ml-2'} />
+            <Image
+              width={48}
+              height={48}
+              src={(selectedSong.coverart as PayloadImage).thumbnailURL ?? ""}
+              alt={selectedSong.title ?? ""}
+              className={'w-12 h-12 m-1 p-1 ml-2'} />
             <div className={'flex flex-col justify-between'}>
               <div className={'text-sm font-bold'}>{selectedSong.title}</div>
               <div className={'text-xs'}>{selectedSong.artist}</div>

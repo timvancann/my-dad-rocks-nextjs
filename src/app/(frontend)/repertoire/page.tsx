@@ -17,6 +17,7 @@ const GET_TRACKS = gql`
         artist
         coverart {
           thumbnailURL
+          url
         }
         audio {
           url
