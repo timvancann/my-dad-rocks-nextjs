@@ -10,7 +10,7 @@ import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob';
 import { nl } from 'payload/i18n/nl';
 
 export default buildConfig({
-  editor: lexicalEditor(),
+  editor: lexicalEditor({}),
 
   collections: [Audio, Image, Track, Setlist, Gig],
 
@@ -32,29 +32,46 @@ export default buildConfig({
       ]
     : [],
   async onInit(payload) {
-    const existingUsers = await payload.find({
-      collection: 'users',
+    if (!process.env.VERCEL_ENV) {
+      const existingUsers = await payload.find({
+        collection: 'users',
+        limit: 1
+      });
+
+      if (existingUsers.docs.length === 0) {
+        await payload.create({
+          collection: 'users',
+          data: {
+            email: 'tim@gmail.com',
+            password: 'test'
+          }
+        });
+      }
+    }
+
+    const existingSetlists = await payload.find({
+      collection: 'setlists',
       limit: 1
     });
 
-    // This is useful for local development
-    // so you do not need to create a first-user every time
-    if (existingUsers.docs.length === 0) {
+    if (existingSetlists.docs.length === 0) {
       await payload.create({
-        collection: 'users',
+        collection: 'setlists',
         data: {
-          email: 'tim@gmail.com',
-          password: 'test'
+          title: 'Oefenen',
+          isPractice: true
         }
       });
     }
   },
   admin: {
-    autoLogin: {
-      email: 'tim@gmail.com',
-      password: 'test',
-      prefillOnly: true
-    }
+    autoLogin: process.env.VERCEL_ENV
+      ? {
+          email: 'tim@gmail.com',
+          password: 'test',
+          prefillOnly: true
+        }
+      : false
   },
   sharp
 });
