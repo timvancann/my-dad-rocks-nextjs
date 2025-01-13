@@ -148,6 +148,9 @@ export interface Track {
   } | null;
   coverart: number | Image;
   audio: number | Audio;
+  artistId?: string | null;
+  releaseId?: string | null;
+  recordingId?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -346,6 +349,9 @@ export interface TracksSelect<T extends boolean = true> {
   lyrics?: T;
   coverart?: T;
   audio?: T;
+  artistId?: T;
+  releaseId?: T;
+  recordingId?: T;
   updatedAt?: T;
   createdAt?: T;
 }

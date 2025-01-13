@@ -21,6 +21,15 @@ export const Track: CollectionConfig = {
         { name: 'coverart', type: 'upload', relationTo: 'images', required: true },
         { name: 'audio', type: 'upload', relationTo: 'audio', required: true }
       ]
+    },
+    {
+      label: 'musicbrainz',
+      type: 'collapsible',
+      fields: [
+        { name: 'artistId', type: 'text', required: false },
+        { name: 'releaseId', type: 'text', required: false },
+        { name: 'recordingId', type: 'text', required: false }
+      ]
     }
     // {
     //   label: 'tonal', type: 'collapsible', fields: [

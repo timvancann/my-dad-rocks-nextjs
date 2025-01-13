@@ -6,8 +6,20 @@ import { Image, Audio } from '@/collections/Media';
 import { Track } from '@/collections/Track';
 import { Setlist } from '@/collections/Setlist';
 import { Gig } from '@/collections/Gig';
-import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob';
+import { gcsStorage } from '@payloadcms/storage-gcs';
 import { nl } from 'payload/i18n/nl';
+import { decode } from 'js-base64';
+
+const myGcsAdapter = gcsStorage({
+  collections: {
+    audio: true,
+    images: true
+  },
+  options: {
+    credentials: JSON.parse(decode(process.env.GCS_CREDENTIALS || ''))
+  },
+  bucket: process.env.GCS_BUCKET || ''
+});
 
 export default buildConfig({
   editor: lexicalEditor({}),
@@ -23,14 +35,7 @@ export default buildConfig({
   i18n: {
     supportedLanguages: { nl }
   },
-  plugins: process.env.BLOB_READ_WRITE_TOKEN
-    ? [
-        vercelBlobStorage({
-          collections: { [(Image.slug, Audio.slug)]: true },
-          token: process.env.BLOB_READ_WRITE_TOKEN || ''
-        })
-      ]
-    : [],
+  plugins: [myGcsAdapter],
   async onInit(payload) {
     if (!process.env.VERCEL_ENV) {
       const existingUsers = await payload.find({
