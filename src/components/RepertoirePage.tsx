@@ -1,8 +1,7 @@
-import { SetlistType, SongType } from '@/lib/interface';
-import React from 'react';
-import { Divider } from '@/components/Divider';
-import { SongCard } from './SongCard';
 import { updateSetlistSongs } from '@/actions/sanity';
+import { Divider } from '@/components/Divider';
+import { SetlistType, SongType } from '@/lib/interface';
+import { SongCard } from './SongCard';
 
 type AllSongsProps = {
   filterSetlist: boolean;
@@ -18,7 +17,7 @@ export const Repertoire = ({ filterSetlist, songs, addSong, setlist }: AllSongsP
   };
 
   return (
-    <div className={'text-rosePine-text items-center justify-center p-2'}>
+    <div className={'items-center justify-center p-2 text-rosePine-text'}>
       {songs
         .filter((s) => {
           if (!filterSetlist) return true;

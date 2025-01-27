@@ -1,6 +1,5 @@
-import { getGig } from '@/lib/sanity';
-import React from 'react';
 import GigVideo from '@/components/GigVideo';
+import { getGig } from '@/lib/sanity';
 
 export default async function Video(props: { params: Promise<{ gig_id: string }> }) {
   const params = await props.params;

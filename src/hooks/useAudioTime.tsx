@@ -1,7 +1,7 @@
+import { SongType } from '@/lib/interface';
+import { usePlayerStore } from '@/store/store';
 import { useEffect, useRef, useState } from 'react';
 import { useGlobalAudioPlayer } from 'react-use-audio-player';
-import { usePlayerStore } from '@/store/store';
-import { SongType } from '@/lib/interface';
 
 export const useAudioTime = () => {
   const frameRef = useRef<number>(undefined);

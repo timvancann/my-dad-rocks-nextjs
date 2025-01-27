@@ -3,15 +3,14 @@
 import { SetlistType, SongType } from '@/lib/interface';
 import { LayoutGroup } from 'motion/react';
 
-import React, { useEffect, useState } from 'react';
+import { removeSongFromSetlist, updateSetlistSongs } from '@/actions/sanity';
+import { Divider } from '@/components/Divider';
+import { PauseCard } from '@/components/PauseCard';
 import { SongCard } from '@/components/SongCard';
 import { closestCenter, DndContext, DragEndEvent, PointerSensor, TouchSensor, UniqueIdentifier, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { MdDragIndicator } from 'react-icons/md';
-import { PauseCard } from '@/components/PauseCard';
-import { Divider } from '@/components/Divider';
-import { removeSongFromSetlist, updateSetlistSongs } from '@/actions/sanity';
 
 type SetlistProps = {
   setlist: SetlistType;
@@ -42,7 +41,7 @@ export const Setlist = ({ setlist, removeSong, updateSongsInSetlist }: SetlistPr
   };
 
   return (
-    <div className={'text-rosePine-text items-center justify-center p-2'}>
+    <div className={'items-center justify-center p-2 text-rosePine-text'}>
       <LayoutGroup>
         <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd} sensors={sensors} id="builder-dnd">
           <SortableContext items={setlist.songs.map((s) => s._id)} strategy={verticalListSortingStrategy}>
@@ -72,8 +71,8 @@ const ReorderableSongCard = ({ song, setlist, removeFromSetlistFn }: Reorderable
     transform: CSS.Transform.toString(transform)
   };
   return (
-    <div ref={setNodeRef} {...attributes} style={style} className={'flex flex-row grow items-center'}>
-      <MdDragIndicator {...listeners} className="w-6 h-6 touch-none" />
+    <div ref={setNodeRef} {...attributes} style={style} className={'flex grow flex-row items-center'}>
+      <MdDragIndicator {...listeners} className="h-6 w-6 touch-none" />
       {song.title?.startsWith('Pauze') ? <PauseCard removeFromSetlistFn={removeFromSetlistFn} /> : <SongCard song={song} playlist={setlist.songs} removeFromSetlistFn={removeFromSetlistFn} />}
     </div>
   );

@@ -1,23 +1,22 @@
 'use client';
-import { SongsTitle } from '@/components/PlaylistTitle';
-import { MdCancel, MdSend } from 'react-icons/md';
-import React, { useActionState } from 'react';
 import { createGig } from '@/actions/sanity';
-import { useFormStatus } from 'react-dom';
+import { SongsTitle } from '@/components/PlaylistTitle';
 import { useRouter } from 'next/navigation';
+import React, { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
+import { MdCancel, MdSend } from 'react-icons/md';
 
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 
-import { cn } from '@/lib/utils';
+import { PendingIcon } from '@/components/PendingIcon';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { PendingIcon } from '@/components/PendingIcon';
+import { cn } from '@/lib/utils';
 
 export const AddGig = () => {
   const [date, setDate] = React.useState<Date>();
-
 
   const router = useRouter();
   const [state, formAction] = useActionState(async (prevState: any, formData: FormData) => {
@@ -30,21 +29,18 @@ export const AddGig = () => {
     return result;
   }, null);
 
-
   return (
     <form action={formAction}>
       <div>
-        <div
-          className="mt-10 grid grid-cols-1 mb-2 bg-rosePine-highlightLow mx-2 rounded-lg border border-rosePine-highlightHigh drop-shadow-lg gap-2">
+        <div className="mx-2 mb-2 mt-10 grid grid-cols-1 gap-2 rounded-lg border border-rosePine-highlightHigh bg-rosePine-highlightLow drop-shadow-lg">
           <SongsTitle title={'Nieuw optreden'} />
-          <div className={'flex-col mx-6'}>
-            <label htmlFor="title" className="block text-sm/6 font-medium text-rosePine-text">Titel</label>
+          <div className={'mx-6 flex-col'}>
+            <label htmlFor="title" className="block text-sm/6 font-medium text-rosePine-text">
+              Titel
+            </label>
             <div>
-              <div
-                className="flex items-center rounded-md bg-rosePine-highlightLow pl-3 outline outline-1 -outline-offset-1 outline-rosePine-highlightHigh focus-within:outline focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-rosePine-love">
-                <input type="text" name="title" id="title"
-                       className="bg-rosePine-highlightLow block min-w-0 grow py-1.5 px-3 text-rosePine-text focus:outline focus:outline-0 text-sm"
-                />
+              <div className="flex items-center rounded-md bg-rosePine-highlightLow pl-3 outline outline-1 -outline-offset-1 outline-rosePine-highlightHigh focus-within:outline focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-rosePine-love">
+                <input type="text" name="title" id="title" className="block min-w-0 grow bg-rosePine-highlightLow px-3 py-1.5 text-sm text-rosePine-text focus:outline focus:outline-0" />
               </div>
             </div>
           </div>
@@ -54,7 +50,9 @@ export const AddGig = () => {
                 <Button
                   variant={'default'}
                   className={cn(
-                    'bg-rosePine-highlightLow text-rosePine-text text-sm w-full justify-start border border-rosePine-highlightHigh hover:bg-rosePine-highlightLow hover:outline hover:outline-rosePine-love',
+                    'w-full justify-start bg-rosePine-highlightLow text-sm text-rosePine-text',
+                    'border border-rosePine-highlightHigh hover:bg-rosePine-highlightLow',
+                    'hover:outline hover:outline-rosePine-love',
                     !date && 'text-muted-foreground'
                   )}
                 >
@@ -62,8 +60,7 @@ export const AddGig = () => {
                   {date ? format(date, 'yyyy-MM-dd') : <span>Datum</span>}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 border border-rosePine-highlightHigh text-rosePine-text"
-                              align="start">
+              <PopoverContent className="w-auto border border-rosePine-highlightHigh p-0 text-rosePine-text" align="start">
                 <Calendar
                   classNames={{
                     day_selected:
@@ -75,30 +72,26 @@ export const AddGig = () => {
                   defaultMonth={date}
                   selected={date}
                   onSelect={setDate}
-                  className="bg-rosePine-highlightLow border-rosePine-highlightHigh rounded"
+                  className="rounded border-rosePine-highlightHigh bg-rosePine-highlightLow"
                   initialFocus
                 />
               </PopoverContent>
             </Popover>
           </div>
-          <div className={'flex justify-end gap-2 mx-5 my-4'}>
+          <div className={'mx-5 my-4 flex justify-end gap-2'}>
             <CancelButton />
             <SubmitButton />
           </div>
         </div>
       </div>
     </form>
-  )
-    ;
+  );
 };
 
 const CancelButton = () => {
   const router = useRouter();
   return (
-    <button
-      type={'reset'}
-      onClick={() => router.push('/gigs')}
-      className={'flex bg-rosePine-base rounded-xl p-2 drop-shadow-lg items-center gap-2 border border-rosePine-highlightMed'}>
+    <button type={'reset'} onClick={() => router.push('/gigs')} className={'flex items-center gap-2 rounded-xl border border-rosePine-highlightMed bg-rosePine-base p-2 drop-shadow-lg'}>
       <p className={'text-xs'}>Annuleren</p>
       <MdCancel className={'h-6 w-6 text-rosePine-love'} />
     </button>
@@ -109,16 +102,15 @@ const SubmitButton = () => {
   const { pending } = useFormStatus();
 
   return (
-    <button
-      type={'submit'}
-      disabled={pending}
-      className={`flex bg-rosePine-base rounded-xl p-2 drop-shadow-lg items-center gap-2 border border-rosePine-highlightMed`}>
-      {pending ? <PendingIcon />
-        : <>
+    <button type={'submit'} disabled={pending} className={`flex items-center gap-2 rounded-xl border border-rosePine-highlightMed bg-rosePine-base p-2 drop-shadow-lg`}>
+      {pending ? (
+        <PendingIcon />
+      ) : (
+        <>
           <span className={'text-xs'}>Opslaan</span>
           <MdSend className={'h-6 w-6 text-rosePine-love'} />
         </>
-      }
+      )}
     </button>
   );
 };

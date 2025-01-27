@@ -4,7 +4,7 @@ import { GigType } from '@/lib/interface';
 
 export default function GigVideo({ gig }: { gig: GigType }) {
   return (
-    <div className={'w-full aspect-w-16 aspect-h-9'}>
+    <div className={'aspect-h-9 aspect-w-16 w-full'}>
       <iframe
         className="rounded-lg px-5 pt-5"
         src={gig.video_playlist}

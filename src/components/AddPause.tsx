@@ -1,10 +1,9 @@
 'use client';
 
 import { addPause } from '@/actions/sanity';
-import React from 'react';
-import { v4 as uuidv4 } from 'uuid';
 import { SetlistType, SongType } from '@/lib/interface';
 import { MdAdd } from 'react-icons/md';
+import { v4 as uuidv4 } from 'uuid';
 
 type AddPauseProps = {
   setlist: SetlistType;
@@ -24,7 +23,7 @@ export const AddPause = ({ setlist, addSong }: AddPauseProps) => {
           const pause = { _id: uuidv4(), title: `Pauze in ${setlist._id}`, _type: 'pause' } as SongType;
           addToSetlistFn(pause);
         }}
-        className={`flex bg-rosePine-base rounded-xl p-2 drop-shadow-lg items-center gap-2 border border-rosePine-highlightMed`}
+        className={`flex items-center gap-2 rounded-xl border border-rosePine-highlightMed bg-rosePine-base p-2 drop-shadow-lg`}
       >
         <span className={'text-xs'}>Pauze</span>
         <MdAdd className={'h-6 w-6 text-rosePine-love'} />

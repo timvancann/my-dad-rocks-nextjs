@@ -1,14 +1,14 @@
 'use client';
-import React, { useEffect, useState } from 'react';
-import { usePlayerStore } from '@/store/store';
-import { useAudioTime, usePlaylistPlayer } from '@/hooks/useAudioTime';
-import { SkipBackIcon, SkipForwardIcon } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
-import { useGlobalAudioPlayer } from 'react-use-audio-player';
-import { TbRepeat, TbRepeatOff } from 'react-icons/tb';
-import { PlayCircleIcon } from '@heroicons/react/24/outline';
+import { useAudioTime, usePlaylistPlayer } from '@/hooks/useAudioTime';
+import { usePlayerStore } from '@/store/store';
 import { PauseCircleIcon } from '@heroicons/react/16/solid';
+import { PlayCircleIcon } from '@heroicons/react/24/outline';
+import { SkipBackIcon, SkipForwardIcon } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { ImSpinner7 } from 'react-icons/im';
+import { TbRepeat, TbRepeatOff } from 'react-icons/tb';
+import { useGlobalAudioPlayer } from 'react-use-audio-player';
 
 export default function Player() {
   const selectedSong = usePlayerStore((state) => state.currentSong);
@@ -27,42 +27,42 @@ export default function Player() {
 
   if (!selectedSong)
     return (
-      <div className="items-center justify-center align-center flex pt-32">
-        <h1 className="text-rosePine-text font-bold text-md flex">Selecteer een nummer om te beginnen</h1>
+      <div className="align-center flex items-center justify-center pt-32">
+        <h1 className="text-md flex font-bold text-rosePine-text">Selecteer een nummer om te beginnen</h1>
       </div>
     );
 
   return (
-    <div className="items-center flex pt-12 flex-col w-full justify-center">
+    <div className="flex w-full flex-col items-center justify-center pt-12">
       {isLoading ? (
-        <div className={'m-1 p-1 ml-2 rounded-full'}>
-          <ImSpinner7 className="animate-spin animate-pulse text-rosePine-love w-16 h-16" />
+        <div className={'m-1 ml-2 rounded-full p-1'}>
+          <ImSpinner7 className="h-16 w-16 animate-pulse animate-spin text-rosePine-love" />
         </div>
       ) : (
-        <img src={selectedSong.artwork} alt={selectedSong.title} className="w-72 h-72 rounded-xl drop-shadow-md" />
+        <img src={selectedSong.artwork} alt={selectedSong.title} className="h-72 w-72 rounded-xl drop-shadow-md" />
       )}
-      <div className="flex flex-col items-center justify-center mt-10">
-        <h1 className="text-rosePine-text font-bold text-2xl">{selectedSong.title}</h1>
-        <h2 className="text-rosePine-text font-normal text-md">{selectedSong.artist}</h2>
+      <div className="mt-10 flex flex-col items-center justify-center">
+        <h1 className="text-2xl font-bold text-rosePine-text">{selectedSong.title}</h1>
+        <h2 className="text-md font-normal text-rosePine-text">{selectedSong.artist}</h2>
       </div>
-      <div className="flex flex-row items-center mt-10 justify-center w-full">
+      <div className="mt-10 flex w-full flex-row items-center justify-center">
         <div className={'flex flex-row items-center gap-6'}>
           <div onClick={previousTrack}>
-            <SkipBackIcon className={'w-6 h-6'} />
+            <SkipBackIcon className={'h-6 w-6'} />
           </div>
           <div className={'rounded-full bg-rosePine-text text-rosePine-base'} onClick={playPauseTrack}>
             {paused ? <PlayCircleIcon className={'h-20 w-20 pl-2'} /> : <PauseCircleIcon className={'h-20 w-20'} />}
           </div>
           <div onClick={nextTrack}>
-            <SkipForwardIcon className={'w-6 h-6'} />
+            <SkipForwardIcon className={'h-6 w-6'} />
           </div>
         </div>
         <div onClick={() => loop(!looping)} className={'absolute right-6'}>
-          {looping ? <TbRepeat className={'w-6 h-6 text-rosePine-love'} /> : <TbRepeatOff className={'w-6 h-6'} />}
+          {looping ? <TbRepeat className={'h-6 w-6 text-rosePine-love'} /> : <TbRepeatOff className={'h-6 w-6'} />}
         </div>
       </div>
 
-      <div className={'flex px-4 w-full mt-10'}>
+      <div className={'mt-10 flex w-full px-4'}>
         <Slider
           defaultValue={[33]}
           max={100}

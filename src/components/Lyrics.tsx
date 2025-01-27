@@ -1,12 +1,12 @@
 'use client';
 
 import { modifyLyrics } from '@/actions/sanity';
-import React, { useRef, useState } from 'react';
 import { LyricType } from '@/lib/sanity';
+import { useState } from 'react';
 import { FaMinusCircle, FaPlusCircle } from 'react-icons/fa';
 
-import { Poppins } from 'next/font/google';
 import { motion } from 'motion/react';
+import { Poppins } from 'next/font/google';
 
 const font = Poppins({ subsets: ['latin'], weight: '300' });
 
@@ -16,11 +16,11 @@ export default function DisplayLyrics({ song, songId }: { song: LyricType; songI
   const [textSize, setTextSize] = useState(1);
 
   return (
-    <div className={'justify-center items-center flex flex-col my-4'}>
-      <h1 className={'flex text-lg tracking-widest font-bold text-rosePine-text'}>
+    <div className={'my-4 flex flex-col items-center justify-center'}>
+      <h1 className={'flex text-lg font-bold tracking-widest text-rosePine-text'}>
         {song.artist} - {song.title}
       </h1>
-      <div className={'flex flex-row gap-8 my-4'}>
+      <div className={'my-4 flex flex-row gap-8'}>
         <motion.button className={'text-3xl'} onClick={() => setTextSize(textSize + 0.2)}>
           <FaPlusCircle />
         </motion.button>
@@ -29,7 +29,7 @@ export default function DisplayLyrics({ song, songId }: { song: LyricType; songI
         </motion.button>
       </div>
       {!edit && (
-        <div className={`text-rosePine-text mx-4 whitespace-pre-line prose ${font.className}`} style={{ fontSize: `${textSize}em` }}>
+        <div className={`prose mx-4 whitespace-pre-line text-rosePine-text ${font.className}`} style={{ fontSize: `${textSize}em` }}>
           {lyrics || 'No lyrics found'}
         </div>
       )}
@@ -38,7 +38,7 @@ export default function DisplayLyrics({ song, songId }: { song: LyricType; songI
           <textarea value={lyrics ?? ''} onChange={(e) => setLyrics(e.target.value)} cols={50} rows={30} />
           <div>
             <button
-              className={'mx-auto bg-rosePine-gold text-rosePine-base rounded-md p-1 px-2 mt-2'}
+              className={'mx-auto mt-2 rounded-md bg-rosePine-gold p-1 px-2 text-rosePine-base'}
               onClick={async () => {
                 await modifyLyrics(songId, lyrics);
                 setEdit(false);
@@ -49,7 +49,7 @@ export default function DisplayLyrics({ song, songId }: { song: LyricType; songI
           </div>
         </div>
       )}
-      <button className={'mx-auto bg-rosePine-rose text-rosePine-base rounded-md p-1 px-2 mt-2'} onClick={() => setEdit(!edit)}>
+      <button className={'mx-auto mt-2 rounded-md bg-rosePine-rose p-1 px-2 text-rosePine-base'} onClick={() => setEdit(!edit)}>
         {edit ? 'Cancel' : 'Edit'}
       </button>
     </div>

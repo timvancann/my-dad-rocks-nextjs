@@ -1,18 +1,18 @@
 'use client';
 
-import { GigCard } from '@/components/GigCard';
-import { Setlist } from '@/components/Setlist';
-import { AddPause } from '@/components/AddPause';
-import React from 'react';
-import { GigType } from '@/lib/interface';
-import { MdDelete } from 'react-icons/md';
-import { BsPencilSquare } from 'react-icons/bs';
 import { removeGig } from '@/actions/sanity';
+import { AddPause } from '@/components/AddPause';
+import { GigCard } from '@/components/GigCard';
 import { PendingIcon } from '@/components/PendingIcon';
-import { usePracticeStore } from '@/context/PracticeProvider';
+import { Setlist } from '@/components/Setlist';
 import GigProvider, { useGigStore } from '@/context/GigProvider';
-import { Repertoire } from './RepertoirePage';
+import { usePracticeStore } from '@/context/PracticeProvider';
+import { GigType } from '@/lib/interface';
+import React from 'react';
+import { BsPencilSquare } from 'react-icons/bs';
+import { MdDelete } from 'react-icons/md';
 import { SongsTitle } from './PlaylistTitle';
+import { Repertoire } from './RepertoirePage';
 
 type GigProps = {
   gig: GigType;
@@ -21,8 +21,8 @@ export const Gig = ({ gig }: GigProps) => {
   const allSongs = usePracticeStore((state) => state.allSongs);
 
   return (
-    <div className="md:flex md:flex-col items-center justify-center">
-      <div className={'flex w-full px-4 justify-between'}>
+    <div className="items-center justify-center md:flex md:flex-col">
+      <div className={'flex w-full justify-between px-4'}>
         <GigCard gig={gig} />
       </div>
       <GigProvider setlist={gig.setlist} allSongs={allSongs}>
@@ -53,7 +53,7 @@ interface EditIconProps {
 const EditIcon = ({ edit, setEdit }: EditIconProps) => {
   return (
     <button
-      className={`w-10 h-10 flex bg-rosePine-highlightLow rounded-xl p-2 drop-shadow-lg items-center gap-2 border border-rosePine-highlightMed justify-center ${edit ? 'animate-pulse' : 'animate-none'}`}
+      className={`flex h-10 w-10 items-center justify-center gap-2 rounded-xl border border-rosePine-highlightMed bg-rosePine-highlightLow p-2 drop-shadow-lg ${edit ? 'animate-pulse' : 'animate-none'}`}
       onClick={() => setEdit(!edit)}
     >
       <BsPencilSquare />
@@ -69,7 +69,7 @@ const DeleteIcon = ({ gig }: DeleteIconProps) => {
   const [loading, setLoading] = React.useState(false);
   return (
     <button
-      className={`w-10 h-10 justify-center flex bg-rosePine-highlightLow rounded-xl p-2 drop-shadow-lg items-center gap-2 border border-rosePine-love text-rosePine-love`}
+      className={`flex h-10 w-10 items-center justify-center gap-2 rounded-xl border border-rosePine-love bg-rosePine-highlightLow p-2 text-rosePine-love drop-shadow-lg`}
       onClick={async () => {
         setLoading(true);
         await removeGig(gig);

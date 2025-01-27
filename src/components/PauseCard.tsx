@@ -1,9 +1,8 @@
 'use client';
 
-import React from 'react';
+import { PendingIcon } from '@/components/PendingIcon';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { useFormStatus } from 'react-dom';
-import { PendingIcon } from '@/components/PendingIcon';
 
 type Props = {
   removeFromSetlistFn: () => void;
@@ -11,14 +10,10 @@ type Props = {
 
 export const PauseCard = ({ removeFromSetlistFn }: Props) => {
   return (
-    <div className={`flex flex-col grow gap-1 px-3 my-2 py-0 rounded-xl`}>
-      <div className={'flex flex-row justify-between items-center'}>
-        <div className={`flex flex-row items-center cursor-pointer ml-2`}>
-          Pause
-        </div>
-        <form
-          action={() => removeFromSetlistFn()}
-        >
+    <div className={`my-2 flex grow flex-col gap-1 rounded-xl px-3 py-0`}>
+      <div className={'flex flex-row items-center justify-between'}>
+        <div className={`ml-2 flex cursor-pointer flex-row items-center`}>Pause</div>
+        <form action={() => removeFromSetlistFn()}>
           <SubmitButton />
         </form>
       </div>
@@ -30,15 +25,14 @@ const SubmitButton = () => {
   const { pending } = useFormStatus();
 
   return (
-    <button
-      type={'submit'}
-      disabled={pending}
-      className={`flex bg-rosePine-base rounded-xl p-1 drop-shadow-lg items-center gap-2 border border-rosePine-highlightMed`}>
-      {pending ? <PendingIcon />
-        : <>
+    <button type={'submit'} disabled={pending} className={`flex items-center gap-2 rounded-xl border border-rosePine-highlightMed bg-rosePine-base p-1 drop-shadow-lg`}>
+      {pending ? (
+        <PendingIcon />
+      ) : (
+        <>
           <XMarkIcon className={'h-4 w-4 text-rosePine-love'} />
         </>
-      }
+      )}
     </button>
   );
 };

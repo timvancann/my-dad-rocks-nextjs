@@ -1,11 +1,10 @@
-import React from 'react';
 import { getGigs } from '@/lib/sanity';
 
 export default async function Home() {
   const gigs = await getGigs();
 
   return (
-    <div className={'flex flex-col mx-auto  items-center justify-center'}>
+    <div className={'mx-auto flex flex-col items-center justify-center'}>
       {gigs
         .filter((gig) => gig.video_playlist !== null)
         .map((gig) => {

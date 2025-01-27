@@ -1,5 +1,5 @@
+import { SongType } from '@/lib/interface';
 import { create } from 'zustand';
-import { SetlistType, SongType } from '@/lib/interface';
 
 type PlayerContext = {
   currentSong: SongType | null;

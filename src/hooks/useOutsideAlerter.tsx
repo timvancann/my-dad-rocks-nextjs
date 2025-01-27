@@ -14,4 +14,3 @@ export function useOutsideAlerter(ref: React.RefObject<HTMLDivElement | null>, c
     };
   }, [ref]);
 }
-

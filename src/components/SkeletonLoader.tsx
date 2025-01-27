@@ -2,22 +2,17 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 type LoadingProps = {
   howMany?: number;
-
 };
-
-
-
 
 export default function SkeletonLoader({ howMany = 3 }: LoadingProps) {
   return (
-    <div className="md:flex md:flex-col items-center justify-center space-y-6">
+    <div className="items-center justify-center space-y-6 md:flex md:flex-col">
       {Array.from({ length: howMany }).map((_, index) => (
         <LoaderElements key={index} />
       ))}
     </div>
   );
 }
-
 
 export const LoaderElements = () => {
   return (

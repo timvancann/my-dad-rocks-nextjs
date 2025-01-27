@@ -1,10 +1,10 @@
-import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
-import './globals.css';
-import React from 'react';
 import { Footer } from '@/components/Footer';
 import PracticeProvider from '@/context/PracticeProvider';
 import { getAllSongs, getSetlist } from '@/lib/sanity';
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import React from 'react';
+import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -18,10 +18,8 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-
-  const setlist = await getSetlist('Practice')
-  const allSongs = await getAllSongs()
-
+  const setlist = await getSetlist('Practice');
+  const allSongs = await getAllSongs();
 
   return (
     <html lang="en">
@@ -31,7 +29,7 @@ export default async function RootLayout({
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
       </head>
-      <body suppressHydrationWarning={true} className={`${inter.className} text-rosePine-text h-screen flex-col bg-rosePine-base justify-between`}>
+      <body suppressHydrationWarning={true} className={`${inter.className} h-screen flex-col justify-between bg-rosePine-base text-rosePine-text`}>
         <div className={'pb-16'}>
           <PracticeProvider setlist={setlist} allSongs={allSongs}>
             {children}

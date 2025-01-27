@@ -1,9 +1,8 @@
 'use client';
 
-import { StoreApi, createStore, useStore } from 'zustand';
-import { createContext, PropsWithChildren, useContext, useState } from 'react';
 import { SetlistType, SongType } from '@/lib/interface';
-
+import { createContext, PropsWithChildren, useContext, useState } from 'react';
+import { createStore, StoreApi, useStore } from 'zustand';
 
 export type SetlistStore = {
   setlist: SetlistType;
@@ -18,19 +17,18 @@ const PracticeContext = createContext<StoreApi<SetlistStore> | undefined>(undefi
 type PracticeProviderProps = PropsWithChildren & {
   setlist: SetlistType;
   allSongs: SongType[];
-}
+};
 
 export default function PracticeProvider({ children, setlist: setlist, allSongs }: PracticeProviderProps) {
-  const [store] = useState(() => createStore<SetlistStore>((set) => ({
-    setlist: setlist,
-    allSongs: allSongs,
-    addSong: (song: SongType) =>
-      set((state) => ({ ...state, setlist: { ...state.setlist, songs: [...state.setlist.songs, song] } })),
-    removeSong: (song: SongType) =>
-      set((state) => ({ ...state, setlist: { ...state.setlist, songs: state.setlist.songs.filter(s => s._id !== song._id) } })),
-    updateSongsInSetlist: (songs: SongType[]) =>
-      set((state) => ({ ...state, setlist: { ...state.setlist, songs } }))
-  })));
+  const [store] = useState(() =>
+    createStore<SetlistStore>((set) => ({
+      setlist: setlist,
+      allSongs: allSongs,
+      addSong: (song: SongType) => set((state) => ({ ...state, setlist: { ...state.setlist, songs: [...state.setlist.songs, song] } })),
+      removeSong: (song: SongType) => set((state) => ({ ...state, setlist: { ...state.setlist, songs: state.setlist.songs.filter((s) => s._id !== song._id) } })),
+      updateSongsInSetlist: (songs: SongType[]) => set((state) => ({ ...state, setlist: { ...state.setlist, songs } }))
+    }))
+  );
 
   return <PracticeContext.Provider value={store}>{children}</PracticeContext.Provider>;
 }

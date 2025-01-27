@@ -1,7 +1,6 @@
 'use client';
-import { PlayerMini } from '@/components/PlayerMini';
 import { Navbar } from '@/components/Navbar';
-import React from 'react';
+import { PlayerMini } from '@/components/PlayerMini';
 import { usePathname } from 'next/navigation';
 
 export const Footer = () => {
