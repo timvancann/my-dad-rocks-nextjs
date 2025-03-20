@@ -26,10 +26,10 @@ export const SongCard = ({ song, playlist, removeFromSetlistFn, addToSetlistFn }
       <div className={'flex flex-row items-center justify-between'}>
         <div
           className={`flex cursor-pointer flex-row items-center`}
-          onClick={() => {
-            playTrack(song);
-            setSelectedSong(song);
+          onClick={async () => {
             setPlaylist(playlist);
+            await playTrack(song);
+            setSelectedSong(song);
           }}
         >
           <img src={`${song.artwork}?h=64`} alt={song.title} className={`m-1 mr-2 h-16 w-16 p-1 ${isSelected ? 'border border-rosePine-gold' : 'border-0'}`} />

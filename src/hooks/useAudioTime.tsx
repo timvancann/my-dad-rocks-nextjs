@@ -1,7 +1,25 @@
+import { db} from '@/lib/db';
 import { SongType } from '@/lib/interface';
 import { usePlayerStore } from '@/store/store';
 import { useEffect, useRef, useState } from 'react';
 import { useGlobalAudioPlayer } from 'react-use-audio-player';
+
+export async function getAudioFromCache(songId: string): Promise<string | null> {
+  const cachedFile = await db.audioFiles.get(songId);
+  if (cachedFile) {
+    return URL.createObjectURL(cachedFile.blob); // Convert Blob to URL
+  }
+  return null;
+}
+
+export async function fetchAndCacheAudio(song: SongType, url: string): Promise<string> {
+  const response = await fetch(url);
+  const blob = await response.blob();
+
+  await db.audioFiles.put({ id: song._id, title: song.title, blob}); // Store in Dexie
+
+  return URL.createObjectURL(blob);
+}
 
 export const useAudioTime = () => {
   const frameRef = useRef<number>(undefined);
@@ -32,8 +50,8 @@ export const usePlaylistPlayer = () => {
   const selectedSong = usePlayerStore((state) => state.currentSong);
   const setSelectedSong = usePlayerStore((state) => state.setCurrentSong);
   const playlist = usePlayerStore((state) => state.playlist);
-
-  const skipTrack = (increment: number) => {
+  
+  const skipTrack = async (increment: number) => {
     if (!selectedSong || !playlist.length) return;
 
     const currentIndex = playlist.findIndex((song) => song._id === selectedSong._id);
@@ -42,24 +60,24 @@ export const usePlaylistPlayer = () => {
     playTrack(nextSong);
   };
 
-  const nextTrack = () => {
+  const nextTrack = async () => {
     skipTrack(1);
   };
-  const previousTrack = () => {
+  const previousTrack = async () => {
     skipTrack(-1);
   };
 
-  const playTrack = (song: SongType) => {
+  const playTrack = async (song: SongType) => {
     if (!song.audio) {
       nextTrack();
       return;
     }
     setSelectedSong(song);
-    load(song.audio, {
-      autoplay: true,
-      loop: looping,
-      onend: nextTrack
-    });
+    let url = await getAudioFromCache(song._id);
+    if (!url) {
+      url = await fetchAndCacheAudio(song, song.audio as string);
+    }
+    load(url, { autoplay: true, format: 'mp3' });
   };
 
   const playPauseTrack = () => {

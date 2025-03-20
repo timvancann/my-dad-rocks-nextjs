@@ -47,13 +47,13 @@ export default function Player() {
       </div>
       <div className="mt-10 flex w-full flex-row items-center justify-center">
         <div className={'flex flex-row items-center gap-6'}>
-          <div onClick={previousTrack}>
+          <div onClick={async() => await previousTrack()}>
             <SkipBackIcon className={'h-6 w-6'} />
           </div>
           <div className={'rounded-full bg-rosePine-text text-rosePine-base'} onClick={playPauseTrack}>
             {paused ? <PlayCircleIcon className={'h-20 w-20 pl-2'} /> : <PauseCircleIcon className={'h-20 w-20'} />}
           </div>
-          <div onClick={nextTrack}>
+          <div onClick={async() => await nextTrack()}>
             <SkipForwardIcon className={'h-6 w-6'} />
           </div>
         </div>
