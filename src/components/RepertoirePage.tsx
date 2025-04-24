@@ -17,7 +17,7 @@ export const Repertoire = ({ filterSetlist, songs, addSong, setlist }: AllSongsP
   };
 
   return (
-    <div className={'items-center justify-center p-2 text-rosePine-text'}>
+    <div className={'mb-16 items-center justify-center p-2 text-rosePine-text'}>
       {songs
         .filter((s) => {
           if (!filterSetlist) return true;

@@ -6,9 +6,10 @@ import { useState } from 'react';
 import { FaMinusCircle, FaPlusCircle } from 'react-icons/fa';
 
 import { motion } from 'motion/react';
-import { Poppins } from 'next/font/google';
+import { Noto_Sans, Poppins } from 'next/font/google';
 
 const font = Poppins({ subsets: ['latin'], weight: '300' });
+const noto = Noto_Sans({ subsets: ['latin'], weight: '300' });
 
 export default function DisplayLyrics({ song, songId }: { song: LyricType; songId: string }) {
   const [edit, setEdit] = useState(false);
@@ -16,10 +17,9 @@ export default function DisplayLyrics({ song, songId }: { song: LyricType; songI
   const [textSize, setTextSize] = useState(1);
 
   return (
-    <div className={'my-4 flex flex-col items-center justify-center'}>
-      <h1 className={'flex text-lg font-bold tracking-widest text-rosePine-text'}>
-        {song.artist} - {song.title}
-      </h1>
+    <div className={'my-4 mb-20 flex flex-col items-center justify-center'}>
+      <h1 className={'flex text-lg font-bold tracking-widest text-rosePine-text'}>{song.title}</h1>
+      <h2 className={'text-md flex font-semibold text-rosePine-text'}>{song.artist}</h2>
       <div className={'my-4 flex flex-row gap-8'}>
         <motion.button className={'text-3xl'} onClick={() => setTextSize(textSize + 0.2)}>
           <FaPlusCircle />
@@ -29,7 +29,7 @@ export default function DisplayLyrics({ song, songId }: { song: LyricType; songI
         </motion.button>
       </div>
       {!edit && (
-        <div className={`prose mx-4 whitespace-pre-line text-rosePine-text ${font.className}`} style={{ fontSize: `${textSize}em` }}>
+        <div className={`prose mx-4 whitespace-pre-line text-rosePine-text ${noto.className}`} style={{ fontSize: `${textSize}em` }}>
           {lyrics || 'No lyrics found'}
         </div>
       )}
