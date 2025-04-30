@@ -3,7 +3,7 @@ export interface SongType {
   _type?: string;
   title: string;
   artist?: string;
-  artwork?: string;
+  artwork: string;
   audio?: string;
   dualGuitar: boolean;
   dualVocal: boolean;
