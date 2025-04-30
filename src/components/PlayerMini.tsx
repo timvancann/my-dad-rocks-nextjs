@@ -41,15 +41,15 @@ export const PlayerMini = () => {
             </div>
           </div>
           <div className={'flex flex-row items-center gap-4'}>
-            <div onClick={async() => await previousTrack()}>
+            <button onClick={previousTrack}>
               <SkipBackIcon />
-            </div>
-            <div className={''} onClick={playPauseTrack}>
+            </button>
+            <button className={''} onClick={playPauseTrack}>
               {paused ? <PlayCircleIcon className={'h-8 w-8'} /> : <PauseCircleIcon className={'h-8 w-8'} />}
-            </div>
-            <div onClick={async() => await nextTrack()}>
+            </button>
+            <button onClick={nextTrack}>
               <SkipForwardIcon />
-            </div>
+            </button>
           </div>
         </div>
         <div>

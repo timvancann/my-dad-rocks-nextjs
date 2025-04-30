@@ -5,6 +5,8 @@ export interface SongType {
   artist?: string;
   artwork?: string;
   audio?: string;
+  dualGuitar: boolean;
+  dualVocal: boolean;
 }
 
 export interface SetlistType {

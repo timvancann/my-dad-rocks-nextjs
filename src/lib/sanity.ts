@@ -16,7 +16,9 @@ export async function getAllSongs(): Promise<SongType[]> {
     artist,
     "artwork": cover_art.asset->url,
     "audio": audio.asset->url,
-    last_played_at
+    last_played_at,
+    dualGuitar,
+    dualVocal
   }`;
   return await client.fetch<SongType[]>(qry, {}, { cache: 'no-store' });
 }
@@ -32,7 +34,9 @@ export async function getSetlist(title: string): Promise<SetlistType> {
     artist,
     "artwork": cover_art.asset->url,
     "audio": audio.asset->url,
-    last_played_at
+    last_played_at,
+    dualGuitar,
+    dualVocal
  }}[0]
   `;
   return client.fetch<SetlistType>(qry, {}, { cache: 'no-store' });
@@ -81,7 +85,9 @@ export async function getGig(id: string) {
     artist,
     "artwork": cover_art.asset->url,
     "audio": audio.asset->url,
-    last_played_at    
+    last_played_at,
+    dualGuitar,
+    dualVocal
   },
   }
 }[0]`;

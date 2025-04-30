@@ -1,7 +1,7 @@
-import { db} from '@/lib/db';
+import { db } from '@/lib/db';
 import { SongType } from '@/lib/interface';
 import { usePlayerStore } from '@/store/store';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useGlobalAudioPlayer } from 'react-use-audio-player';
 
 export async function getAudioFromCache(songId: string): Promise<string | null> {
@@ -16,7 +16,7 @@ export async function fetchAndCacheAudio(song: SongType, url: string): Promise<s
   const response = await fetch(url);
   const blob = await response.blob();
 
-  await db.audioFiles.put({ id: song._id, title: song.title, blob}); // Store in Dexie
+  await db.audioFiles.put({ id: song._id, title: song.title, blob }); // Store in Dexie
 
   return URL.createObjectURL(blob);
 }
@@ -50,35 +50,62 @@ export const usePlaylistPlayer = () => {
   const selectedSong = usePlayerStore((state) => state.currentSong);
   const setSelectedSong = usePlayerStore((state) => state.setCurrentSong);
   const playlist = usePlayerStore((state) => state.playlist);
-  
-  const skipTrack = async (increment: number) => {
+  const songIndex = usePlayerStore((state) => state.songIndex);
+  const setSongIndex = usePlayerStore((state) => state.setSongIndex);
+
+  const skipTrack = (increment: number) => {
     if (!selectedSong || !playlist.length) return;
 
     const currentIndex = playlist.findIndex((song) => song._id === selectedSong._id);
     const nextIndex = (currentIndex + increment) % playlist.length;
-    const nextSong = playlist[nextIndex];
-    playTrack(nextSong);
+    setSongIndex(nextIndex);
   };
 
-  const nextTrack = async () => {
+  useEffect(() => {
+    const nextIndex = songIndex % playlist.length;
+    const nextSong = playlist[nextIndex];
+    setSelectedSong(nextSong);
+  }, [songIndex]);
+
+  const nextTrack = () => {
     skipTrack(1);
   };
-  const previousTrack = async () => {
+
+  const previousTrack = () => {
     skipTrack(-1);
   };
 
-  const playTrack = async (song: SongType) => {
-    if (!song.audio) {
+  const playTrack = useCallback(
+    async (song: SongType) => {
+      if (selectedSong === song) return;
+      if (!song.audio) {
+        nextTrack();
+        return;
+      }
+      let url = await getAudioFromCache(song._id);
+      if (!url) {
+        url = await fetchAndCacheAudio(song, song.audio as string);
+      }
+      load(url, {
+        autoplay: true,
+        format: 'mp3',
+        html5: true,
+        onend: () => {
+          setSongIndex(songIndex + 1);
+        }
+      });
+    },
+    [songIndex]
+  );
+
+  useEffect(() => {
+    if (!selectedSong) return;
+    if (!selectedSong.audio) {
       nextTrack();
       return;
     }
-    setSelectedSong(song);
-    let url = await getAudioFromCache(song._id);
-    if (!url) {
-      url = await fetchAndCacheAudio(song, song.audio as string);
-    }
-    load(url, { autoplay: true, format: 'mp3' });
-  };
+    playTrack(selectedSong);
+  }, [selectedSong]);
 
   const playPauseTrack = () => {
     togglePlayPause();
