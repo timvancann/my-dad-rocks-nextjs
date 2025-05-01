@@ -10,19 +10,18 @@ import { IoMdAddCircle } from 'react-icons/io';
 export default function GigList({ gigs }: { gigs: GigsType[] }) {
   const [edit, setEdit] = React.useState(false);
   return (
-    <div className={'items-center justify-center text-rosePine-text'}>
+    <div className={''}>
       <SongsTitle title={'Optredens'} />
+      <div className='flex flex-col gap-4'>
       {gigs.map((gig, index) => {
         return (
-          <div key={index}>
-            {index > 0 && <Divider />}
-            <GigCard gig={gig} />
-          </div>
+            <GigCard key={index}  gig={gig} />
         );
       })}
+      </div>
 
       <Link href={'/gigs/new'}>
-        <button className={'absolute bottom-36 right-5 rounded-xl bg-rosePine-highlightLow p-2 drop-shadow-lg'} onClick={() => setEdit(true)}>
+        <button className={'fixed bottom-36 right-5 rounded-xl bg-rosePine-highlightLow p-2 drop-shadow-lg'} onClick={() => setEdit(true)}>
           <IoMdAddCircle className={'h-8 w-8 text-rosePine-love'} />
         </button>
       </Link>

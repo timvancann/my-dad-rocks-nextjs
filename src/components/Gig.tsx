@@ -21,7 +21,7 @@ export const Gig = ({ gig }: GigProps) => {
   const allSongs = usePracticeStore((state) => state.allSongs);
 
   return (
-    <div className="items-center justify-center md:flex md:flex-col">
+    <div className="flex flex-col">
       <div className={'flex w-full justify-between px-4'}>
         <GigCard gig={gig} />
       </div>

@@ -8,7 +8,7 @@ export default function Home() {
   const store = usePracticeStore((state) => state);
 
   return (
-    <div className="items-center justify-center md:flex md:flex-col">
+    <div className="flex flex-col">
       <SongsTitle title={'Oefenlijst'} />
       <Setlist setlist={store.setlist} removeSong={store.removeSong} updateSongsInSetlist={store.updateSongsInSetlist} />
     </div>

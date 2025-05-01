@@ -39,7 +39,7 @@ export const Navbar = () => {
     }
   ];
   return (
-    <footer className="fixed inset-x-0 bottom-0 flex w-full flex-row rounded-t-2xl border-t border-rosePine-highlightMed bg-rosePine-base bg-opacity-80 p-1 backdrop-blur-md backdrop-filter">
+    <footer className="flex w-full flex-row rounded-t-2xl border-t border-rosePine-highlightMed bg-rosePine-base bg-opacity-80 p-1 backdrop-blur-md backdrop-filter">
       {tabs.map((tab, index) => (
         <NavbarTab key={tab.href} navItem={tab} index={index} isCurrent={pathname === tab.href} />
       ))}

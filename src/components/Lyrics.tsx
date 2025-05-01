@@ -17,7 +17,7 @@ export default function DisplayLyrics({ song, songId }: { song: LyricType; songI
   const [textSize, setTextSize] = useState(1);
 
   return (
-    <div className={'my-4 mb-20 flex flex-col items-center justify-center'}>
+    <div className={'my-4 flex flex-col items-center justify-center'}>
       <h1 className={'flex text-lg font-bold tracking-widest text-rosePine-text'}>{song.title}</h1>
       <h2 className={'text-md flex font-semibold text-rosePine-text'}>{song.artist}</h2>
       <div className={'my-4 flex flex-row gap-8'}>

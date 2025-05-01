@@ -1,5 +1,4 @@
 import { updateSetlistSongs } from '@/actions/sanity';
-import { Divider } from '@/components/Divider';
 import { SetlistType, SongType } from '@/lib/interface';
 import { SongCard } from './SongCard';
 
@@ -17,17 +16,14 @@ export const Repertoire = ({ filterSetlist, songs, addSong, setlist }: AllSongsP
   };
 
   return (
-    <div className={'mb-16 items-center justify-center p-2 text-rosePine-text'}>
+    <div className={'flex flex-col'}>
       {songs
         .filter((s) => {
           if (!filterSetlist) return true;
           return !setlist.songs.some((song) => song._id === s._id);
         })
         .map((item, index) => (
-          <div key={item._id}>
-            {index > 0 && <Divider />}
-            <SongCard song={item} playlist={songs} addToSetlistFn={() => addToSetlistFn(item)} />
-          </div>
+          <SongCard key={item._id} song={item} playlist={songs} addToSetlistFn={() => addToSetlistFn(item)} />
         ))}
     </div>
   );

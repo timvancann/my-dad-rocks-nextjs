@@ -4,9 +4,9 @@ import { SetlistType, SongType } from '@/lib/interface';
 import { LayoutGroup } from 'motion/react';
 
 import { removeSongFromSetlist, updateSetlistSongs } from '@/actions/sanity';
-import { Divider } from '@/components/Divider';
 import { PauseCard } from '@/components/PauseCard';
 import { SongCard } from '@/components/SongCard';
+import { usePlayerStore } from '@/store/store';
 import { closestCenter, DndContext, DragEndEvent, PointerSensor, TouchSensor, UniqueIdentifier, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -41,19 +41,16 @@ export const Setlist = ({ setlist, removeSong, updateSongsInSetlist }: SetlistPr
   };
 
   return (
-    <div className={'items-center justify-center p-2 text-rosePine-text'}>
-      <LayoutGroup>
-        <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd} sensors={sensors} id="builder-dnd">
-          <SortableContext items={setlist.songs.map((s) => s._id)} strategy={verticalListSortingStrategy}>
-            {setlist.songs.map((item, index) => (
-              <div key={index}>
-                {index > 0 && <Divider />}
-                <ReorderableSongCard song={item} setlist={setlist} removeFromSetlistFn={() => removeFromSetlistFn(item)} />
-              </div>
-            ))}
-          </SortableContext>
-        </DndContext>
-      </LayoutGroup>
+    <div className='flex flex-col'>
+    <LayoutGroup>
+      <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd} sensors={sensors} id="builder-dnd">
+        <SortableContext items={setlist.songs.map((s) => s._id)} strategy={verticalListSortingStrategy}>
+          {setlist.songs.map((item, index) => (
+            <ReorderableSongCard key={index} song={item} setlist={setlist} removeFromSetlistFn={() => removeFromSetlistFn(item)} />
+          ))}
+        </SortableContext>
+      </DndContext>
+    </LayoutGroup>
     </div>
   );
 };
@@ -70,10 +67,17 @@ const ReorderableSongCard = ({ song, setlist, removeFromSetlistFn }: Reorderable
     transition,
     transform: CSS.Transform.toString(transform)
   };
+  const selectedSong = usePlayerStore((state) => state.currentSong);
+  const isSelected = selectedSong?._id === song._id;
+  let selectedStyle = isSelected ? 'bg-rosePine-overlay' : 'bg-transparent';
   return (
-    <div ref={setNodeRef} {...attributes} style={style} className={'flex grow flex-row items-center'}>
-      <MdDragIndicator {...listeners} className="h-6 w-6 touch-none" />
+    <div ref={setNodeRef} {...attributes} style={style} className={`flex items-center ${selectedStyle}`}>
+      <div {...listeners} className="ml-2 flex h-10 w-8 touch-none items-center">
+        <MdDragIndicator className="h-6 w-6 pl-2" />
+      </div>
+      <div className='flex-1'>
       {song.title?.startsWith('Pauze') ? <PauseCard removeFromSetlistFn={removeFromSetlistFn} /> : <SongCard song={song} playlist={setlist.songs} removeFromSetlistFn={removeFromSetlistFn} />}
+      </div>
     </div>
   );
 };

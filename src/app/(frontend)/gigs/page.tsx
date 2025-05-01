@@ -5,7 +5,7 @@ export default async function Home() {
   const data = await getGigs();
 
   return (
-    <div className="items-center justify-center md:flex md:flex-col">
+    <div className="flex flex-col ">
       <GigList gigs={data} />
     </div>
   );

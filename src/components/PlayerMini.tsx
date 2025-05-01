@@ -24,16 +24,16 @@ export const PlayerMini = () => {
   if (!selectedSong) return null;
 
   return (
-    <div className={`fixed bottom-16 z-20 w-full rounded-2xl border-y-rosePine-highlightMed bg-rosePineMoon-highlightLow bg-opacity-50 shadow-lg backdrop-blur-2xl backdrop-filter`}>
-      <div className={'flex-col'}>
-        <div className={'mr-4 flex grow flex-row items-center justify-between'}>
+    <div className={`w-full rounded-xl border-[1px] border-rosePine-text/20 bg-rosePineMoon-highlightLow shadow-lg backdrop-blur-2xl backdrop-filter`}>
+      <div className={'flex flex-col py-1 gap-1'}>
+        <div className={'mr-4 flex grow flex-row items-center justify-between pt-1'}>
           <div className={'flex flex-row items-center'}>
             {isLoading ? (
               <div className={'m-1 ml-2 rounded-full p-1'}>
                 <ImSpinner7 className="h-8 w-8 animate-spin text-rosePine-love" />
               </div>
             ) : (
-              <img src={selectedSong.artwork} alt={selectedSong.title} className={'m-1 ml-2 h-12 w-12 p-1'}></img>
+              <img src={selectedSong.artwork} alt={selectedSong.title} className={' rounded-md ml-2 h-12 w-12'}></img>
             )}
             <div className={'flex flex-col justify-between'}>
               <div className={'text-sm font-bold'}>{selectedSong.title}</div>
@@ -53,8 +53,8 @@ export const PlayerMini = () => {
           </div>
         </div>
         <div>
-          <div className="mx-4 h-[2px] rounded-full bg-rosePine-highlightMed">
-            <div className="h-[2px] rounded-full bg-rosePine-love" style={{ width: progress + '%' }}></div>
+          <div className='mx-4 bg-rosePine-love/10'>
+            <div className="h-[1px] bg-rosePine-love" style={{ width: progress + '%' }}></div>
           </div>
         </div>
       </div>

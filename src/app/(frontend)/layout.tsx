@@ -2,11 +2,11 @@ import { Footer } from '@/components/Footer';
 import PracticeProvider from '@/context/PracticeProvider';
 import { getAllSongs, getSetlist } from '@/lib/sanity';
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Noto_Sans } from 'next/font/google';
 import React from 'react';
 import './globals.css';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Noto_Sans({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'My Dad Rocks',
@@ -29,10 +29,12 @@ export default async function RootLayout({
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
       </head>
-      <body suppressHydrationWarning={true} className={`${inter.className} h-screen flex-col justify-between bg-rosePine-base text-rosePine-text`}>
-        <div className={'pb-16'}>
+      <body suppressHydrationWarning={true} className={`${inter.className} h-screen bg-rosePine-base text-rosePine-text`}>
+        <div className={'flex flex-col'}>
           <PracticeProvider setlist={setlist} allSongs={allSongs}>
+            <div className='mb-32'>
             {children}
+            </div>
           </PracticeProvider>
           <Footer />
         </div>

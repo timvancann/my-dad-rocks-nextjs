@@ -65,9 +65,9 @@ type ButtonProps = {
 };
 const Button = ({ icon, onClick, song, title }: ButtonProps) => {
   return (
-    <div className={'flex w-full items-center gap-4'} onClick={() => onClick(song)}>
+    <button className={'flex w-full items-center gap-4'} onClick={() => onClick(song)}>
       {icon}
       <p className={'text-sm'}>{title}</p>
-    </div>
+    </button>
   );
 };
