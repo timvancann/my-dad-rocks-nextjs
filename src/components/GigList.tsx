@@ -1,30 +1,33 @@
 'use client';
-import { Divider } from '@/components/Divider';
 import { GigCard } from '@/components/GigCard';
-import { SongsTitle } from '@/components/PlaylistTitle';
 import { GigsType } from '@/lib/interface';
-import Link from 'next/link';
+import { THEME } from '@/themes';
 import React from 'react';
-import { IoMdAddCircle } from 'react-icons/io';
 
 export default function GigList({ gigs }: { gigs: GigsType[] }) {
   const [edit, setEdit] = React.useState(false);
+
+  const upcomingGigs = gigs.filter((gig) => new Date(gig.date) > new Date()).sort((a, b) => new Date(a.time).getDate() - new Date(b.time).getDate());
+  const pastGigs = gigs.filter((gig) => new Date(gig.date) <= new Date()).sort((a, b) => new Date(a.time).getDate() - new Date(b.time).getDate());
   return (
     <div className={''}>
-      <SongsTitle title={'Optredens'} />
-      <div className='flex flex-col gap-4'>
-      {gigs.map((gig, index) => {
-        return (
-            <GigCard key={index}  gig={gig} />
-        );
-      })}
-      </div>
+      <div className="mb-8">
+        <h2 className={`text-lg font-bold ${THEME.secondary} mb-4 uppercase tracking-wider`}>Komende Gigs</h2>
 
-      <Link href={'/gigs/new'}>
-        <button className={'fixed bottom-36 right-5 rounded-xl bg-rosePine-highlightLow p-2 drop-shadow-lg'} onClick={() => setEdit(true)}>
-          <IoMdAddCircle className={'h-8 w-8 text-rosePine-love'} />
-        </button>
-      </Link>
+        <div className="space-y-3">
+          {upcomingGigs.map((gig) => (
+            <GigCard key={gig._id} gig={gig} />
+          ))}
+        </div>
+      </div>
+      <div>
+        <h2 className={`mb-4 text-lg font-bold uppercase tracking-wider text-gray-500`}>Afgelopen Gigs</h2>
+        <div className="space-y-3">
+          {pastGigs.map((gig) => (
+            <GigCard key={gig._id} gig={gig} />
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

@@ -7,6 +7,8 @@ export interface SongType {
   audio?: string;
   dualGuitar: boolean;
   dualVocal: boolean;
+  duration: number;
+  notes?: string;
 }
 
 export interface SetlistType {
@@ -19,6 +21,8 @@ export interface GigType {
   _id: string;
   title: string;
   date: string;
+  time: string;
+  venue: string;
   address: string;
   video_playlist: string;
   setlist: SetlistType;
@@ -28,5 +32,8 @@ export interface GigsType {
   _id: string;
   title: string;
   date: string;
+  time: string;
+  address: string;
+  venue: string;
   video_playlist: string;
 }

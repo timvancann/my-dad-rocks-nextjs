@@ -1,11 +1,9 @@
 'use client';
 import { SongType } from '@/lib/interface';
-import { EllipsisHorizontalIcon } from '@heroicons/react/16/solid';
+import { CirclePlus, FileText, Info, MoreHorizontal, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import React from 'react';
-import { IoMdAddCircleOutline, IoMdRemoveCircleOutline } from 'react-icons/io';
-import { MdLyrics } from 'react-icons/md';
 import { Drawer } from 'vaul';
 import { Divider } from './Divider';
 
@@ -17,38 +15,50 @@ type SongDetailDrawerProps = {
 export const SongDetailDrawer = ({ song, removeFromSetlistFn, addToSetlistFn }: SongDetailDrawerProps) => {
   const router = useRouter();
 
+  const toggleExpand = (id: string) => {};
   return (
     <Drawer.Root>
       <Drawer.Trigger>
-        <EllipsisHorizontalIcon className={'h-6 w-6'} />
+        <MoreHorizontal className={'h-5 w-5'} />
       </Drawer.Trigger>
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 bg-rosePine-base/80" />
+        <Drawer.Overlay className="fixed inset-0 bg-zinc-900/90" />
         <Drawer.Title></Drawer.Title>
-        <Drawer.Content className="fixed bottom-0 left-0 right-0 z-40 mt-24 flex h-fit flex-col rounded-t-xl border-t border-t-rosePine-highlightMed bg-rosePine-base outline-none">
-          <div className="flex-1 rounded-t-xl border-t border-t-rosePine-highlightMed bg-rosePine-highlightLow p-2">
-            <div aria-hidden className="mx-auto mb-4 h-[3px] w-28 flex-shrink-0 rounded-full bg-rosePine-highlightHigh" />
-            <div className={'my-2 flex flex-row items-center gap-2'}>
-              <Image src={song.artwork as string} alt={song.title} width={48} height={48} className={'m-1 ml-2 h-12 w-12 p-1'} />
+        <Drawer.Content className="fixed bottom-0 left-0 right-0 z-40 mt-24 flex h-fit flex-col outline-none">
+          <div className="flex-1 rounded-md border border-zinc-700 bg-zinc-800 p-2 shadow-lg">
+            <div aria-hidden className="mx-auto mb-2 h-[2px] w-28 flex-shrink-0 rounded-full bg-zinc-700" />
+            <div className={'flex flex-row items-center gap-2'}>
+              <Image src={song.artwork as string} alt={song.title} width={48} height={48} className={'m-1 ml-2 h-12 w-12 rounded-lg p-1'} />
               <div className={'flex flex-col justify-between'}>
                 <div className={'text-sm font-bold'}>{song.title}</div>
                 <div className={'text-xs'}>{song.artist}</div>
               </div>
             </div>
-            <Divider className={'my-2'} />
-            <div className={'mb-6 ml-2 mt-2 flex w-full flex-col gap-4'}>
-              <Button
-                icon={<MdLyrics className={'h-6 w-6'} />}
-                song={song}
-                title={'Lyrics'}
+            <Divider className={'my-1'} />
+            <div className={'m-2 flex w-full flex-col gap-4'}>
+              <button className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-zinc-700" onClick={() => window.open(`/lyrics/${song._id}`, '_blank')}>
+                <FileText className="h-4 w-4 text-amber-400" /> Lyrics
+              </button>
+
+              {/* Notes toggle option */}
+              <button
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-zinc-700"
                 onClick={() => {
-                  router.push(`/lyrics/${song._id}`);
+                  toggleExpand(song._id);
                 }}
-              />
-              {removeFromSetlistFn ? (
-                <Button icon={<IoMdRemoveCircleOutline className={'h-6 w-6'} />} song={song} title={'Verwijder van playlist'} onClick={() => removeFromSetlistFn(song._id)} />
-              ) : null}
-              {addToSetlistFn ? <Button icon={<IoMdAddCircleOutline className={'h-6 w-6'} />} song={song} title={'Toevoegen aan playlist'} onClick={() => addToSetlistFn(song._id)} /> : null}
+              >
+                <Info className="h-4 w-4 text-amber-400" /> Notities
+              </button>
+              {removeFromSetlistFn && (
+                <button className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-400 hover:bg-red-800/40" onClick={() => removeFromSetlistFn(song._id)}>
+                  <Trash2 className="h-4 w-4" /> Verwijder uit setlist
+                </button>
+              )}
+              {addToSetlistFn && (
+                <button className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-amber-400 hover:bg-amber-800/40" onClick={() => addToSetlistFn(song._id)}>
+                  <CirclePlus className="h-4 w-4" /> Toevoegen aan setlist
+                </button>
+              )}
             </div>
           </div>
         </Drawer.Content>

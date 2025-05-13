@@ -2,12 +2,10 @@
 import { Slider } from '@/components/ui/slider';
 import { useAudioTime, usePlaylistPlayer } from '@/hooks/useAudioTime';
 import { usePlayerStore } from '@/store/store';
-import { PauseCircleIcon } from '@heroicons/react/16/solid';
-import { PlayCircleIcon } from '@heroicons/react/24/outline';
-import { SkipBackIcon, SkipForwardIcon } from 'lucide-react';
+import { THEME } from '@/themes';
+import { FileText, Pause, Play, SkipBack, SkipForward } from 'lucide-react';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { ImSpinner7 } from 'react-icons/im';
-import Image from 'next/image';
 
 export default function Player() {
   const selectedSong = usePlayerStore((state) => state.currentSong);
@@ -31,43 +29,62 @@ export default function Player() {
     );
 
   return (
-    <div className="flex w-full flex-col items-center justify-center pt-12">
-      {isLoading ? (
-        <div className={'m-1 ml-2 rounded-full p-1'}>
-          <ImSpinner7 className="h-16 w-16 animate-spin text-rosePine-love" />
-        </div>
-      ) : (
-        <Image src={selectedSong.artwork} alt={selectedSong.title} width={288} height={288} className="h-72 w-72 rounded-xl drop-shadow-md" />
-      )}
-      <div className="mt-10 flex flex-col items-center justify-center">
-        <h1 className="text-2xl font-bold text-rosePine-text">{selectedSong.title}</h1>
-        <h2 className="text-md font-normal text-rosePine-text">{selectedSong.artist}</h2>
+    <div className="flex flex-col items-center">
+      <div className="relative mb-8 mt-4">
+        {/* Vinyl record behind album */}
+        <div className="absolute inset-0 -m-4 rounded-full bg-black shadow-xl"></div>
+
+        {/* Spinning vinyl grooves */}
+        <div className="absolute inset-0 -m-4 animate-spin rounded-full bg-zinc-800/30 opacity-30" style={{ animationDuration: '10s' }}></div>
+
+        <img src={selectedSong.artwork} alt={selectedSong.title} className="aspect-square relative z-10 h-60 w-60 rounded-md shadow-2xl" />
+
+        {/* Center hole of vinyl */}
+        <div className="absolute left-1/2 top-1/2 z-20 h-6 w-6 -translate-x-1/2 -translate-y-1/2 transform rounded-full border border-zinc-700 bg-zinc-900"></div>
       </div>
-      <div className="mt-10 flex w-full flex-row items-center justify-center">
-        <div className={'flex flex-row items-center gap-6'}>
-          <div onClick={previousTrack}>
-            <SkipBackIcon className={'h-6 w-6'} />
-          </div>
-          <div className={'rounded-full bg-rosePine-text text-rosePine-base'} onClick={playPauseTrack}>
-            {paused ? <PlayCircleIcon className={'h-20 w-20'} /> : <PauseCircleIcon className={'h-20 w-20'} />}
-          </div>
-          <div onClick={nextTrack}>
-            <SkipForwardIcon className={'h-6 w-6'} />
-          </div>
-        </div>
+      <h2 className={`mb-1 text-2xl font-bold ${THEME.primary}`}>{selectedSong.title}</h2>
+      <p className="mb-1 text-gray-300">{selectedSong.artist}</p>
+      <div className="mt-8 flex w-full justify-center gap-8">
+        <Link className="p-2 text-gray-300" href={`/lyrics/${selectedSong._id}`}>
+          <FileText className="h-5 w-5" />
+        </Link>
       </div>
 
-      <div className={'mt-10 flex w-full px-4'}>
-        <Slider
-          defaultValue={[33]}
-          max={100}
-          step={1}
-          value={[progress]}
-          onValueChange={(value) => {
-            const newTime = (value[0] / 100) * duration;
-            seekTrack(newTime);
-          }}
-        />
+      <div className="fixed bottom-12 left-0 right-0 px-5 pb-8 pt-3">
+        {/* Progress bar */}
+        <div className="mb-6">
+          <div className="mb-1 flex justify-between text-xs text-gray-400">
+            <span>{new Date(time * 1000).toISOString().slice(15, 19)}</span>
+            <span>{new Date(duration * 1000).toISOString().slice(15, 19)}</span>
+          </div>
+          <Slider
+            defaultValue={[33]}
+            max={100}
+            step={1}
+            value={[progress]}
+            onValueChange={(value) => {
+              const newTime = (value[0] / 100) * duration;
+              seekTrack(newTime);
+            }}
+          />
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="flex w-14 justify-center">
+            <button className="cursor-pointer p-2" onClick={previousTrack}>
+              <SkipBack className="h-6 w-6 text-gray-300" />
+            </button>
+          </div>
+
+          <button className={`${THEME.primaryBg} cursor-pointer rounded-full p-4 shadow-lg shadow-red-900/30`} onClick={playPauseTrack}>
+            {!paused ? <Pause className="h-8 w-8 text-white" /> : <Play className="ml-1 h-8 w-8 text-white" />}
+          </button>
+
+          <div className="flex w-14 justify-center">
+            <button className="cursor-pointer p-2" onClick={nextTrack}>
+              <SkipForward className="h-6 w-6 text-gray-300" />
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

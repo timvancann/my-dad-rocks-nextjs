@@ -1,12 +1,12 @@
 'use client';
+import { THEME } from '@/themes';
+import { Calendar, Home, ListMusic, Music4 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { IoCalendar, IoCalendarOutline, IoList, IoListOutline, IoMusicalNotes, IoMusicalNotesOutline, IoPlayCircle, IoPlayCircleOutline } from 'react-icons/io5';
 
 interface NavItem {
   href: string;
   icon: React.ReactNode;
-  activeIcon: React.ReactNode;
   text: string;
 }
 
@@ -15,56 +15,48 @@ export const Navbar = () => {
   const tabs: NavItem[] = [
     {
       href: '/',
-      activeIcon: <IoMusicalNotes className="h-6 w-6 text-rosePine-love" />,
-      icon: <IoMusicalNotesOutline className={'h-6 w-6'} />,
+      icon: <Home />,
       text: 'Oefenlijst'
     },
     {
       href: '/repertoire',
-      icon: <IoListOutline className={'h-6 w-6'} />,
-      activeIcon: <IoList className="h-6 w-6 text-rosePine-love" />,
+      icon: <ListMusic />,
       text: 'Repertoire'
     },
     {
       href: '/gigs',
-      icon: <IoCalendarOutline className={'h-6 w-6'} />,
-      activeIcon: <IoCalendar className="h-6 w-6 text-rosePine-love" />,
+      icon: <Calendar />,
       text: 'Optredens'
     },
     {
       href: '/player',
-      icon: <IoPlayCircleOutline className={'h-6 w-6'} />,
-      activeIcon: <IoPlayCircle className="h-6 w-6 text-rosePine-love" />,
+      icon: <Music4 />,
       text: 'Speler'
     }
   ];
   return (
-    <footer className="flex w-full flex-row rounded-t-2xl border-t border-rosePine-highlightMed bg-rosePine-base bg-opacity-80 p-1 backdrop-blur-md backdrop-filter">
+    <nav className={` ${THEME.card} border-t ${THEME.border} z-40 flex justify-around py-2 shadow-lg`}>
       {tabs.map((tab, index) => (
-        <NavbarTab key={tab.href} navItem={tab} index={index} isCurrent={pathname === tab.href} />
+        <NavItem key={index} url={tab.href} icon={tab.icon} label={tab.text} active={pathname === tab.href} theme={THEME} />
       ))}
-    </footer>
+    </nav>
   );
 };
 
-const NavbarTab = ({
-  navItem,
-  index,
-  isCurrent
-}: Readonly<{
-  navItem: NavItem;
-  index: number;
-  isCurrent: boolean;
-}>) => {
+interface NavItemProps {
+  icon: React.ReactNode;
+  label: string;
+  active: boolean;
+  url: string;
+  theme: any;
+}
+
+const NavItem = ({ icon, label, active, url, theme }: NavItemProps) => {
   return (
-    <Link
-      href={navItem.href}
-      className={`x-2 flex w-full flex-col items-center justify-center py-1 text-rosePine-text ${isCurrent ? 'opacity-100' : 'opacity-80'} transition-all hover:opacity-100 ${index > 0 ? 'border-l border-rosePine-highlightMed' : ''}`}
-    >
-      <div className="flex flex-col items-center justify-center gap-1">
-        {isCurrent ? navItem.activeIcon : navItem.icon}
-        <div className={`text-[10px] ${isCurrent ? 'text-rosePine-love' : 'text-rosePine-text'}`}>{navItem.text}</div>
-      </div>
+    <Link href={url} className={`relative flex grow flex-col items-center justify-center border-x-[1px] ${theme.border}`}>
+      {active && <div className="absolute -top-1.5 left-1/2 h-0.5 w-12 -translate-x-1/2 transform rounded bg-gradient-to-r from-red-600/0 via-amber-400 to-red-600/0"></div>}
+      <div className={`p-1 ${active ? theme.secondary : theme.textSecondary}`}>{icon}</div>
+      <span className={`text-xs ${active ? theme.secondary : theme.textSecondary}`}>{label}</span>
     </Link>
   );
 };

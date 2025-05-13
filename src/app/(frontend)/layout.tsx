@@ -1,8 +1,9 @@
 import { Footer } from '@/components/Footer';
 import PracticeProvider from '@/context/PracticeProvider';
 import { getAllSongs, getSetlist } from '@/lib/sanity';
+import { THEME } from '@/themes';
 import type { Metadata } from 'next';
-import { Inter, Noto_Sans } from 'next/font/google';
+import { Noto_Sans } from 'next/font/google';
 import React from 'react';
 import './globals.css';
 
@@ -29,12 +30,10 @@ export default async function RootLayout({
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
       </head>
-      <body suppressHydrationWarning={true} className={`${inter.className} h-screen bg-rosePine-base text-rosePine-text`}>
+      <body suppressHydrationWarning={true} className={`${inter.className} h-screen ${THEME.bg} ${THEME.text}`}>
         <div className={'flex flex-col'}>
           <PracticeProvider setlist={setlist} allSongs={allSongs}>
-            <div className='mb-32'>
-            {children}
-            </div>
+            <main className="mb-36 px-3 pt-4">{children}</main>
           </PracticeProvider>
           <Footer />
         </div>

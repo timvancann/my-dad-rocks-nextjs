@@ -1,17 +1,12 @@
 'use client';
 
-import { removeGig } from '@/actions/sanity';
 import { AddPause } from '@/components/AddPause';
-import { GigCard } from '@/components/GigCard';
-import { PendingIcon } from '@/components/PendingIcon';
 import { Setlist } from '@/components/Setlist';
 import GigProvider, { useGigStore } from '@/context/GigProvider';
 import { usePracticeStore } from '@/context/PracticeProvider';
 import { GigType } from '@/lib/interface';
-import React from 'react';
-import { BsPencilSquare } from 'react-icons/bs';
-import { MdDelete } from 'react-icons/md';
-import { SongsTitle } from './PlaylistTitle';
+import { THEME } from '@/themes';
+import { ArrowLeft, Calendar, Clock, MapPin, Music } from 'lucide-react';
 import { Repertoire } from './RepertoirePage';
 
 type GigProps = {
@@ -20,10 +15,86 @@ type GigProps = {
 export const Gig = ({ gig }: GigProps) => {
   const allSongs = usePracticeStore((state) => state.allSongs);
 
+  const totalDuration = Math.round(gig.setlist.songs.reduce((acc, song) => acc + (song.duration || 0), 0) / 60);
+  const totalSongs = gig.setlist.songs.length;
+
+  const formatDate = (dateTime: string) => {
+    const date = new Date(dateTime);
+    return date.toLocaleDateString('nl-NL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  };
+
+  const formatTime = (dateTime: string) => {
+    const date = new Date(dateTime);
+    return date.toLocaleTimeString('nl-NL', {
+      timeStyle: 'short'
+    });
+  };
+
   return (
     <div className="flex flex-col">
-      <div className={'flex w-full justify-between px-4'}>
-        <GigCard gig={gig} />
+      <header className="border-zinc-800/50 bg-zinc-950/95 bg-opacity-90 shadow-lg backdrop-blur-xl">
+        {/* Top navigation bar */}
+        <div className="flex items-center justify-between px-4 py-3">
+          <button className="rounded-full bg-zinc-800/70 p-1.5" onClick={() => window.history.back()}>
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <h1 className={`text-xl font-bold ${THEME.primary}`}>Gig Details</h1>
+          <button className="rounded-full bg-zinc-800/70 p-1.5 opacity-0">
+            {/* Placeholder for alignment */}
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Gig information card */}
+        <div className="mx-4 mb-3 rounded-lg border border-zinc-800 bg-zinc-900 p-3 shadow-md">
+          <div className="flex items-start">
+            {/* Left: Gig image */}
+            <div className="mr-3">
+              <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-md bg-zinc-800">
+                <Music className={`h-8 w-8 ${THEME.primary}`} />
+              </div>
+            </div>
+
+            {/* Right: Gig details */}
+            <div className="flex-1">
+              <h2 className="text-lg font-bold">{gig.title}</h2>
+
+              {/* Date and time */}
+              <div className="mt-1 flex items-center gap-1 text-sm">
+                <Calendar className={`h-3.5 w-3.5 ${THEME.secondary}`} />
+                <span className="text-gray-300">{formatDate(gig.time)}</span>
+                <span className="mx-1 text-gray-500">•</span>
+                <Clock className={`h-3.5 w-3.5 ${THEME.secondary}`} />
+                <span className="text-gray-300">{formatTime(gig.time)}</span>
+              </div>
+
+              {/* Venue and address */}
+              <div className="mt-1.5 flex items-start gap-1">
+                <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-gray-500" />
+                <div className="flex flex-col">
+                  <span className="text-sm text-gray-300">{gig.venue}</span>
+                  <span className="text-xs text-gray-500">{gig.address}</span>
+                </div>
+              </div>
+
+              {/* Setlist summary */}
+              <div className="mt-1.5 flex items-center text-xs text-gray-400">
+                <div className="flex items-center">
+                  <Music className="mr-1 h-3.5 w-3.5" />
+                  <span>{totalSongs} songs</span>
+                </div>
+                <span className="mx-2">•</span>
+                <div className="flex items-center">
+                  <Clock className="mr-1 h-3.5 w-3.5" />
+                  <span>{totalDuration} min</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+      <div className="mb-3 flex items-center">
+        <h2 className={`text-base font-bold ${THEME.primary} mr-2 uppercase tracking-wider`}>Setlist</h2>
       </div>
       <GigProvider setlist={gig.setlist} allSongs={allSongs}>
         <Content />
@@ -34,48 +105,20 @@ export const Gig = ({ gig }: GigProps) => {
 
 const Content = () => {
   const store = useGigStore((state) => state);
+  const allSongs = usePracticeStore((state) => state.allSongs);
+  const availableSongs = allSongs.filter((song) => !store.setlist.songs.some((s) => s._id === song._id)).length;
 
   return (
     <>
       <Setlist setlist={store.setlist} removeSong={store.removeSong} updateSongsInSetlist={store.updateSongsInSetlist} />
-      <AddPause addSong={store.addSong} setlist={store.setlist} />
-      <SongsTitle title={'Repertoire'} />
+      <div className="flex justify-end">
+        <AddPause addSong={store.addSong} setlist={store.setlist} />
+      </div>
+      <div className="mb-3 flex items-center">
+        <h2 className="mr-2 text-base font-bold uppercase tracking-wider text-gray-400">Overige nummers</h2>
+        <div className="rounded bg-zinc-800 px-1.5 py-0.5 text-xs font-medium text-gray-400">{availableSongs}</div>
+      </div>
       <Repertoire songs={store.allSongs} setlist={store.setlist} addSong={store.addSong} filterSetlist={true} />
     </>
-  );
-};
-
-interface EditIconProps {
-  edit: boolean;
-  setEdit: React.Dispatch<React.SetStateAction<boolean>>;
-}
-
-const EditIcon = ({ edit, setEdit }: EditIconProps) => {
-  return (
-    <button
-      className={`flex h-10 w-10 items-center justify-center gap-2 rounded-xl border border-rosePine-highlightMed bg-rosePine-highlightLow p-2 drop-shadow-lg ${edit ? 'animate-pulse' : 'animate-none'}`}
-      onClick={() => setEdit(!edit)}
-    >
-      <BsPencilSquare />
-    </button>
-  );
-};
-
-interface DeleteIconProps {
-  gig: GigType;
-}
-
-const DeleteIcon = ({ gig }: DeleteIconProps) => {
-  const [loading, setLoading] = React.useState(false);
-  return (
-    <button
-      className={`flex h-10 w-10 items-center justify-center gap-2 rounded-xl border border-rosePine-love bg-rosePine-highlightLow p-2 text-rosePine-love drop-shadow-lg`}
-      onClick={async () => {
-        setLoading(true);
-        await removeGig(gig);
-      }}
-    >
-      {loading ? <PendingIcon /> : <MdDelete />}
-    </button>
   );
 };

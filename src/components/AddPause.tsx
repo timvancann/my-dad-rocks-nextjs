@@ -2,7 +2,8 @@
 
 import { addPause } from '@/actions/sanity';
 import { SetlistType, SongType } from '@/lib/interface';
-import { MdAdd } from 'react-icons/md';
+import { THEME } from '@/themes';
+import { Coffee } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
 type AddPauseProps = {
@@ -17,17 +18,15 @@ export const AddPause = ({ setlist, addSong }: AddPauseProps) => {
   };
 
   return (
-    <div className={'mx-4'}>
-      <button
-        onClick={() => {
-          const pause = { _id: uuidv4(), title: `Pauze in ${setlist._id}`, _type: 'pause' } as SongType;
-          addToSetlistFn(pause);
-        }}
-        className={`flex items-center gap-2 rounded-xl border border-rosePine-highlightMed bg-rosePine-base p-2 drop-shadow-lg`}
-      >
-        <span className={'text-xs'}>Pauze</span>
-        <MdAdd className={'h-6 w-6 text-rosePine-love'} />
-      </button>
-    </div>
+    <button
+      onClick={() => {
+        const pause = { _id: uuidv4(), title: `Pauze in ${setlist._id}`, _type: 'pause' } as SongType;
+        addToSetlistFn(pause);
+      }}
+      className={`my-2 flex shrink items-center gap-1 rounded px-2 py-1 ${THEME.highlight} text-sm`}
+    >
+      <Coffee className={`h-4 w-4 ${THEME.secondary}`} />
+      <span className={THEME.secondary}>Pauze toevoegen</span>
+    </button>
   );
 };
