@@ -82,7 +82,7 @@ export const usePlaylistPlayer = () => {
         nextTrack();
         return;
       }
-      let url = await getAudioFromCache(song._id, song.version);
+      let url = await getAudioFromCache(song._id, song.version || 0);
       if (!url) {
         url = await fetchAndCacheAudio(song, song.audio as string);
       }
