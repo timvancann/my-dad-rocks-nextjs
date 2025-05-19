@@ -4,6 +4,7 @@ import Dexie, { type EntityTable } from 'dexie';
 interface AudioFile {
   id: string;
   title: string;
+  version: number;
   blob: Blob;
 }
 
@@ -16,8 +17,8 @@ const db = new Dexie('SongsDatabase') as Dexie & {
 
 // Schema declaration:
 db.version(1).stores({
-  audioFiles: '++id, title' 
+  audioFiles: '++id, title, version'
 });
 
-export type { AudioFile };
 export { db };
+export type { AudioFile };

@@ -9,6 +9,7 @@ export interface SongType {
   dualVocal: boolean;
   duration: number;
   notes?: string;
+  version?: number;
 }
 
 export interface SetlistType {

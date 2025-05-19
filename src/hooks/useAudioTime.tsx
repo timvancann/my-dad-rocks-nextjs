@@ -4,9 +4,9 @@ import { usePlayerStore } from '@/store/store';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useGlobalAudioPlayer } from 'react-use-audio-player';
 
-export async function getAudioFromCache(songId: string): Promise<string | null> {
+export async function getAudioFromCache(songId: string, version: number): Promise<string | null> {
   const cachedFile = await db.audioFiles.get(songId);
-  if (cachedFile) {
+  if (cachedFile && cachedFile.version === version) {
     return URL.createObjectURL(cachedFile.blob); // Convert Blob to URL
   }
   return null;
@@ -16,7 +16,7 @@ export async function fetchAndCacheAudio(song: SongType, url: string): Promise<s
   const response = await fetch(url);
   const blob = await response.blob();
 
-  await db.audioFiles.put({ id: song._id, title: song.title, blob }); // Store in Dexie
+  await db.audioFiles.put({ id: song._id, title: song.title, blob, version: song.version || 0 }); // Store in Dexie
 
   return URL.createObjectURL(blob);
 }
@@ -82,7 +82,7 @@ export const usePlaylistPlayer = () => {
         nextTrack();
         return;
       }
-      let url = await getAudioFromCache(song._id);
+      let url = await getAudioFromCache(song._id, song.version);
       if (!url) {
         url = await fetchAndCacheAudio(song, song.audio as string);
       }

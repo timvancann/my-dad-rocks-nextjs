@@ -20,7 +20,8 @@ export async function getAllSongs(): Promise<SongType[]> {
     dualGuitar,
     dualVocal,
     notes,
-    duration
+    duration,
+    version
   }`;
   return await client.fetch<SongType[]>(qry, {}, { cache: 'no-store' });
 }
@@ -40,7 +41,8 @@ export async function getSetlist(title: string): Promise<SetlistType> {
     dualGuitar,
     dualVocal,
     notes,
-    duration
+    duration,
+    version
  }}[0]
   `;
   return client.fetch<SetlistType>(qry, {}, { cache: 'no-store' });
@@ -98,7 +100,8 @@ export async function getGig(id: string) {
     dualGuitar,
     dualVocal,
     notes,
-    duration
+    duration,
+    version
   },
   }
 }[0]`;
