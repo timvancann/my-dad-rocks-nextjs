@@ -35,7 +35,13 @@ export default function DisplayLyrics({ song, songId }: { song: LyricType; songI
       )}
       {edit && (
         <div className="flew flex-col">
-          <textarea value={lyrics ?? ''} onChange={(e) => setLyrics(e.target.value)} cols={50} rows={30} />
+          <textarea
+            value={lyrics ?? ''}
+            onChange={(e) => setLyrics(e.target.value)}
+            cols={50}
+            rows={30}
+            className="prose mx-4 whitespace-pre-line border border-rosePine-gold bg-rosePine-base p-2 text-rosePine-text"
+          />
           <div>
             <button
               className={'mx-auto mt-2 rounded-md bg-rosePine-gold p-1 px-2 text-rosePine-base'}
