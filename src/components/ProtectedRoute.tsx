@@ -13,14 +13,16 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
-  
-  // Don't protect auth pages
-  const isAuthPage = pathname?.startsWith('/auth');
+
   useEffect(() => {
+    console.log(status)
     if (status === 'unauthenticated') {
       router.push('/auth/signin');
     }
   }, [status, router]);
+  
+  // Don't protect auth pages
+  const isAuthPage = pathname?.startsWith('/auth');
   if (isAuthPage) {
     return <>{children}</>;
   }

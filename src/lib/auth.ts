@@ -1,5 +1,6 @@
 import { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
+import AzureADProvider from 'next-auth/providers/azure-ad';
 
 // List of allowed email addresses
 const allowedEmails = [
@@ -12,6 +13,11 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string
+    }),
+    AzureADProvider({
+      clientId: process.env.AZURE_AD_CLIENT_ID as string,
+      clientSecret: process.env.AZURE_AD_CLIENT_SECRET as string,
+      tenantId: process.env.AZURE_AD_TENANT_ID
     })
   ],
   session: {
@@ -37,6 +43,8 @@ export const authOptions: NextAuthOptions = {
       // Add user ID to the session
       if (session.user && token.sub) {
         session.user.id = token.sub;
+        // @ts-ignore - Add provider to the session
+        session.user.provider = token.provider;
       }
       return session;
     },

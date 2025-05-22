@@ -8,6 +8,8 @@ declare module 'next-auth' {
     user: {
       /** The user's unique identifier */
       id?: string;
+      /** The authentication provider used (e.g., 'google', 'azure-ad') */
+      provider?: string;
     } & DefaultSession['user'];
   }
 }

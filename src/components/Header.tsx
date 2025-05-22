@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import Image from 'next/image';
 import { IoLogOutOutline, IoPersonCircleOutline } from 'react-icons/io5';
+import { FcGoogle } from 'react-icons/fc';
+import { getAuthProvider, getProviderDisplayName } from '@/lib/authUtils';
+import { FaMicrosoft } from 'react-icons/fa';
 
 interface HeaderProps {
   username?: string;
@@ -67,9 +70,35 @@ export const Header = ({ username = 'Band Member', onSignOut }: HeaderProps) => 
                   <div className="mb-3 border-b border-zinc-800 pb-2">
                     <p className="text-sm text-gray-400">Signed in as</p>
                     <div className="flex items-center gap-2 mt-2">
-                      <img src={session.user.image|| ""} alt="User Avatar" 
-                      className="h-10 w-10 rounded-full " />
+                      {session.user.image &&
+                        <Image src={session.user.image} alt="User Avatar" height={30} width={30}
+                          className="rounded-full " />
+                      }
                       <p className="text-sm font-medium text-amber-400">{session.user.email}</p>
+                    </div>
+                    <div className="flex items-center gap-2 mt-2 text-xs text-gray-400">
+                      <span>Signed in with</span>
+                      {(() => {
+                        const provider = getAuthProvider(session);
+                        switch (provider) {
+                          case 'google':
+                            return (
+                              <span className="flex items-center gap-1">
+                                <FcGoogle className="h-4 w-4" />
+                                {getProviderDisplayName(provider)}
+                              </span>
+                            );
+                          case 'azure-ad':
+                            return (
+                              <span className="flex items-center gap-1">
+                                <FaMicrosoft className="h-3 w-3 text-blue-500" />
+                                {getProviderDisplayName(provider)}
+                              </span>
+                            );
+                          default:
+                            return <span>Unknown Provider</span>;
+                        }
+                      })()}
                     </div>
                   </div>
 

@@ -15,13 +15,23 @@ export default function SignIn() {
           <p className="mt-2 text-gray-400">Sign in to access band materials</p>
         </div>
 
-        <Button 
-          onClick={() => signIn('google', { callbackUrl: '/' })} 
-          className="flex w-full items-center justify-center gap-2 bg-white py-2 text-gray-800 hover:bg-gray-100"
-        >
-          <Image src="/google-icon.svg" alt="Google Logo" width={20} height={20} />
-          <span>Sign in with Google</span>
-        </Button>
+        <div className="flex flex-col gap-3">
+          <Button 
+            onClick={() => signIn('google', { callbackUrl: '/' })} 
+            className="flex w-full items-center justify-center gap-2 bg-white py-2 text-gray-800 hover:bg-gray-100"
+          >
+            <Image src="/google-icon.svg" alt="Google Logo" width={20} height={20} />
+            <span>Sign in with Google</span>
+          </Button>
+          
+          <Button 
+            onClick={() => signIn('azure-ad', { callbackUrl: '/' })} 
+            className="flex w-full items-center justify-center gap-2 bg-white py-2 text-gray-800 hover:bg-gray-100"
+          >
+            <Image src="/microsoft-icon.svg" alt="Microsoft Logo" width={20} height={20} />
+            <span>Sign in with Outlook</span>
+          </Button>
+        </div>
 
         <p className="mt-4 text-center text-sm text-gray-400">
           Only band members with authorized email addresses can access this site.
