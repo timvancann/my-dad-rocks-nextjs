@@ -1,6 +1,7 @@
 'use client';
 import { THEME } from '@/themes';
 import { Calendar, Home, ListMusic, Music4 } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { UserProfile } from './UserProfile';
@@ -11,8 +12,9 @@ interface NavItem {
   text: string;
 }
 
-export const Navbar = () => {
+export const NavbarNew = () => {
   const pathname = usePathname();
+  const { data: session } = useSession();
   
   const tabs: NavItem[] = [
     {
@@ -37,12 +39,22 @@ export const Navbar = () => {
     }
   ];
   
+  // If not authenticated, don't render the navbar
+  if (!session) {
+    return null;
+  }
+  
   return (
+    <>
+      <div className="fixed right-4 top-4 z-50">
+        <UserProfile />
+      </div>
       <nav className={`${THEME.card} border-t ${THEME.border} z-40 flex justify-around py-2 shadow-lg`}>
         {tabs.map((tab, index) => (
           <NavItem key={index} url={tab.href} icon={tab.icon} label={tab.text} active={pathname === tab.href} theme={THEME} />
         ))}
       </nav>
+    </>
   );
 };
 

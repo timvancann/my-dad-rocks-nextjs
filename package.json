@@ -36,6 +36,7 @@
     "motion": "^11.14.4",
     "musicbrainz-api": "^0.20.0",
     "next": "15.1.6",
+    "next-auth": "^4.24.11",
     "next-sanity": "^9.8.39",
     "react": "19.0.0",
     "react-datepicker": "^7.5.0",

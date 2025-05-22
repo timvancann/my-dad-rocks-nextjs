@@ -1,11 +1,16 @@
 import { Footer } from '@/components/Footer';
+import { NavbarNew } from '@/components/NavbarNew';
 import PracticeProvider from '@/context/PracticeProvider';
 import { getAllSongs, getSetlist } from '@/lib/sanity';
+import { AuthProvider } from '@/providers/auth-provider';
 import { THEME } from '@/themes';
 import type { Metadata } from 'next';
 import { Noto_Sans } from 'next/font/google';
 import React from 'react';
 import './globals.css';
+import { UserProfile } from '@/components/UserProfile';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { Header } from '@/components/Header';
 
 const inter = Noto_Sans({ subsets: ['latin'] });
 
@@ -31,12 +36,17 @@ export default async function RootLayout({
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
       </head>
       <body suppressHydrationWarning={true} className={`${inter.className} h-screen ${THEME.bg} ${THEME.text}`}>
-        <div className={'flex flex-col'}>
-          <PracticeProvider setlist={setlist} allSongs={allSongs}>
-            <main className="mb-36 px-3 pt-4">{children}</main>
-          </PracticeProvider>
-          <Footer />
-        </div>
+        <AuthProvider>
+          <ProtectedRoute>
+          <div className={'flex flex-col'}>
+            <PracticeProvider setlist={setlist} allSongs={allSongs}>
+              <Header/>
+              <main className="mb-36 px-3 pt-4">{children}</main>
+              <Footer />
+            </PracticeProvider>
+          </div>
+         </ProtectedRoute> 
+        </AuthProvider>
       </body>
     </html>
   );
