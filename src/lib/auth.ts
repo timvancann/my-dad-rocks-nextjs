@@ -6,7 +6,8 @@ import AzureADProvider from 'next-auth/providers/azure-ad';
 const allowedEmails = [
   'timvancann@gmail.com',
   'pacramer01@gmail.com',
-  'lexheijden76@gmail.com'
+  'lexheijden76@gmail.com',
+  'Nwsbas@outlook.com'
 ];
 
 export const authOptions: NextAuthOptions = {
