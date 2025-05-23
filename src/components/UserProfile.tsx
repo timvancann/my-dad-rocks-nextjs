@@ -39,7 +39,7 @@ export function UserProfile() {
               <p className="text-xs truncate">{session.user?.email}</p>
             </div>
             <Button
-              onClick={() => signOut({ callbackUrl: '/auth/signin' })}
+              onClick={() => signOut({ callbackUrl: '/practice/auth/signin' })}
               className="flex w-full items-center justify-between px-4 py-2 text-sm text-rosePine-love hover:bg-rosePine-surface"
               variant="ghost"
             >

@@ -11,7 +11,7 @@ export function AuthLoading() {
 
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/auth/signin');
+      router.push('/practice/auth/signin');
     }
   }, [status, router]);
 

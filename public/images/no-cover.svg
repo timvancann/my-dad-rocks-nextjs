@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="250" height="250" viewBox="0 0 250 250">
+  <rect width="250" height="250" fill="#222222"/>
+  <text x="125" y="125" font-family="Arial, sans-serif" font-size="24" fill="#AAAAAA" text-anchor="middle" dominant-baseline="middle">No Cover</text>
+  <g fill="none" stroke="#555555" stroke-width="2">
+    <circle cx="125" cy="125" r="60"/>
+    <circle cx="125" cy="125" r="20"/>
+    <line x1="185" y1="125" x2="65" y2="125"/>
+  </g>
+</svg>

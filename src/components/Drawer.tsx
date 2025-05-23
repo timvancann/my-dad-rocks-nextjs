@@ -36,7 +36,7 @@ export const SongDetailDrawer = ({ song, removeFromSetlistFn, addToSetlistFn }: 
             </div>
             <Divider className={'my-1'} />
             <div className={'m-2 flex w-full flex-col gap-4'}>
-              <button className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-zinc-700" onClick={() => router.push(`/lyrics/${song._id}`)}>
+              <button className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-zinc-700" onClick={() => router.push(`/practice/lyrics/${song._id}`)}>
                 <FileText className="h-4 w-4 text-amber-400" /> Lyrics
               </button>
 

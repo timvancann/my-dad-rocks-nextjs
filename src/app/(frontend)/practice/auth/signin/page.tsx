@@ -6,7 +6,7 @@ import Image from 'next/image';
 
 export default function SignIn() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-950 p-4">
+    <div className="flex h-screen flex-col items-center justify-center bg-zinc-950 p-4">
       <div className="w-full max-w-md rounded-lg border border-zinc-800 bg-zinc-900 p-8 shadow-lg">
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-bold text-gray-100">
@@ -17,7 +17,7 @@ export default function SignIn() {
 
         <div className="flex flex-col gap-3">
           <Button 
-            onClick={() => signIn('google', { callbackUrl: '/' })} 
+            onClick={() => signIn('google', { callbackUrl: '/practice' })} 
             className="flex w-full items-center justify-center gap-2 bg-white py-2 text-gray-800 hover:bg-gray-100"
           >
             <Image src="/google-icon.svg" alt="Google Logo" width={20} height={20} />
@@ -25,7 +25,7 @@ export default function SignIn() {
           </Button>
           
           <Button 
-            onClick={() => signIn('azure-ad', { callbackUrl: '/' })} 
+            onClick={() => signIn('azure-ad', { callbackUrl: '/practice' })} 
             className="flex w-full items-center justify-center gap-2 bg-white py-2 text-gray-800 hover:bg-gray-100"
           >
             <Image src="/microsoft-icon.svg" alt="Microsoft Logo" width={20} height={20} />

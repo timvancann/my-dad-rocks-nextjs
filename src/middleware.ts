@@ -2,33 +2,33 @@ import { getToken } from 'next-auth/jwt';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function middleware(req: NextRequest) {
+  const path = req.nextUrl.pathname;
+  const isPublicPath =
+    path.startsWith('/practice/auth') ||
+    path.startsWith('/api/auth') ||
+    path === '/';
   // Get the token and determine authentication status
-  const token = await getToken({ 
-    req, 
-    secret: process.env.NEXTAUTH_SECRET 
+
+  const token = await getToken({
+    req,
+    secret: process.env.NEXTAUTH_SECRET
   });
-  
   const isAuthenticated = !!token;
 
   // Get the pathname of the request
-  const path = req.nextUrl.pathname;
 
   // Public paths that don't require authentication
-  const isPublicPath = 
-    path.startsWith('/auth') || 
-    path.startsWith('/api/auth') ||
-    path === '/';
 
   // Handle unauthenticated access to protected routes
   if (!isAuthenticated && !isPublicPath) {
     // Store the original URL to redirect back after authentication
     const callbackUrl = encodeURIComponent(req.nextUrl.pathname);
-    return NextResponse.redirect(new URL(`/auth/signin?callbackUrl=${callbackUrl}`, req.url));
+    return NextResponse.redirect(new URL(`/practice/auth/signin?callbackUrl=${callbackUrl}`, req.url));
   }
 
   // Redirect already authenticated users trying to access auth pages
-  if (isAuthenticated && path.startsWith('/auth')) {
-    return NextResponse.redirect(new URL('/', req.url));
+  if (isAuthenticated && path.startsWith('/practice/auth')) {
+    return NextResponse.redirect(new URL('/practice', req.url));
   }
 
   return NextResponse.next();

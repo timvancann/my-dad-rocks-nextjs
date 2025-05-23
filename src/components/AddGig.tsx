@@ -24,7 +24,7 @@ export const AddGig = () => {
     formData.append('date', formattedDate);
     const result = await createGig(prevState, formData);
     if (result.success) {
-      router.push('/gigs');
+      router.push('/practice/gigs');
     }
     return result;
   }, null);
@@ -91,7 +91,7 @@ export const AddGig = () => {
 const CancelButton = () => {
   const router = useRouter();
   return (
-    <button type={'reset'} onClick={() => router.push('/gigs')} className={'flex items-center gap-2 rounded-xl border border-rosePine-highlightMed bg-rosePine-base p-2 drop-shadow-lg'}>
+    <button type={'reset'} onClick={() => router.push('/practice/gigs')} className={'flex items-center gap-2 rounded-xl border border-rosePine-highlightMed bg-rosePine-base p-2 drop-shadow-lg'}>
       <p className={'text-xs'}>Annuleren</p>
       <MdCancel className={'h-6 w-6 text-rosePine-love'} />
     </button>

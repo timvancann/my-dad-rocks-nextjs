@@ -11,7 +11,7 @@ export const GigCard = ({ gig }: GigCardProps) => {
   const month = new Date(gig.time).toLocaleString('default', { month: 'short' });
   const day = new Date(gig.time).getDate();
   return (
-    <Link href={`/gigs/${gig._id}`} className={'cursor-pointer'}>
+    <Link href={`/practice/gigs/${gig._id}`} className={'cursor-pointer'}>
       <div className={`overflow-hidden rounded-lg ${upcoming ? THEME.card : 'bg-zinc-900/50'} border ${upcoming ? 'border-zinc-800' : 'border-zinc-800/50'} shadow-md`}>
         <div className="flex">
           {/* Date display */}

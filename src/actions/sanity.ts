@@ -173,7 +173,7 @@ export async function createGig(prevState: any, formData: FormData) {
       });
     });
 
-  revalidatePath('/gigs');
+  revalidatePath('/practice/gigs');
   return {
     success: true
   };
@@ -190,5 +190,5 @@ export async function removeGig(gig: GigType) {
 
   await client.delete(gig._id);
   await client.delete(gig.setlist._id);
-  redirect('/gigs');
+  redirect('/practice/gigs');
 }

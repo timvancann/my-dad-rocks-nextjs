@@ -7,7 +7,7 @@ import { THEME } from '@/themes';
 import type { Metadata } from 'next';
 import { Noto_Sans } from 'next/font/google';
 import React from 'react';
-import './globals.css';
+import '../../globals.css';
 import { UserProfile } from '@/components/UserProfile';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Header } from '@/components/Header';
@@ -38,14 +38,14 @@ export default async function RootLayout({
       <body suppressHydrationWarning={true} className={`${inter.className} h-screen ${THEME.bg} ${THEME.text}`}>
         <AuthProvider>
           <ProtectedRoute>
-          <div className={'flex flex-col'}>
-            <PracticeProvider setlist={setlist} allSongs={allSongs}>
-              <Header/>
-              <main className="mb-36 px-3 pt-4">{children}</main>
-              <Footer />
-            </PracticeProvider>
-          </div>
-         </ProtectedRoute> 
+            <div className={'flex flex-col'}>
+              <PracticeProvider setlist={setlist} allSongs={allSongs}>
+                <Header />
+                <main className="mb-36 px-3 pt-4">{children}</main>
+                <Footer />
+              </PracticeProvider>
+            </div>
+          </ProtectedRoute>
         </AuthProvider>
       </body>
     </html>

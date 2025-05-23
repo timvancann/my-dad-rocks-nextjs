@@ -34,7 +34,7 @@ export const authOptions: NextAuthOptions = {
     },
     async redirect({ url, baseUrl }) {
       // Check if the URL is relative (starts with /)
-      if (url.startsWith('/')) {
+      if (url.startsWith('/practice')) {
         // Redirect to the requested URL after sign-in
         return `${baseUrl}${url}`;
       }
@@ -58,7 +58,7 @@ export const authOptions: NextAuthOptions = {
     }
   },
   pages: {
-    signIn: '/auth/signin',
-    error: '/auth/error'
+    signIn: '/practice/auth/signin',
+    error: '/practice/auth/error'
   }
 };

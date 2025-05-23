@@ -103,7 +103,7 @@ export const Header = ({ username = 'Band Member', onSignOut }: HeaderProps) => 
                   </div>
 
                   <button
-                    onClick={() => signOut({ callbackUrl: '/auth/signin' })}
+                    onClick={() => signOut({ callbackUrl: '/practice/auth/signin' })}
                     className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-gray-100 transition-colors hover:bg-zinc-800"
                   >
                     <IoLogOutOutline className="h-4 w-4" />

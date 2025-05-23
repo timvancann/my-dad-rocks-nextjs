@@ -107,3 +107,19 @@ export async function getGig(id: string) {
 }[0]`;
   return await client.fetch<GigType>(qry, {}, { cache: 'no-store' });
 }
+
+// Add this function to src/lib/sanity.ts
+
+export async function getPublicGigs() {
+  const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+  
+  const qry = `
+  *[_type == "gig" && date >= "${today}"] | order(date asc) [0...5] {
+    _id,
+    title,
+    date,
+    address
+  }`;
+  
+  return await client.fetch<GigsType[]>(qry, {}, { cache: 'no-store' });
+}

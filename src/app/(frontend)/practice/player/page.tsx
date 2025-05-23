@@ -45,7 +45,7 @@ export default function Player() {
       <h2 className={`mb-1 text-2xl font-bold ${THEME.primary}`}>{selectedSong.title}</h2>
       <p className="mb-1 text-gray-300">{selectedSong.artist}</p>
       <div className="mt-8 flex w-full justify-center gap-8">
-        <Link className="p-2 text-gray-300" href={`/lyrics/${selectedSong._id}`}>
+        <Link className="p-2 text-gray-300" href={`/practice/lyrics/${selectedSong._id}`}>
           <FileText className="h-5 w-5" />
         </Link>
       </div>

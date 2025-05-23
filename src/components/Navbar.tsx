@@ -13,36 +13,36 @@ interface NavItem {
 
 export const Navbar = () => {
   const pathname = usePathname();
-  
+
   const tabs: NavItem[] = [
     {
-      href: '/',
+      href: '/practice',
       icon: <Home />,
       text: 'Oefenlijst'
     },
     {
-      href: '/repertoire',
+      href: '/practice/repertoire',
       icon: <ListMusic />,
       text: 'Repertoire'
     },
     {
-      href: '/gigs',
+      href: '/practice/gigs',
       icon: <Calendar />,
       text: 'Optredens'
     },
     {
-      href: '/player',
+      href: '/practice/player',
       icon: <Music4 />,
       text: 'Speler'
     }
   ];
-  
+
   return (
-      <nav className={`${THEME.card} border-t ${THEME.border} z-40 flex justify-around py-2 shadow-lg`}>
-        {tabs.map((tab, index) => (
-          <NavItem key={index} url={tab.href} icon={tab.icon} label={tab.text} active={pathname === tab.href} theme={THEME} />
-        ))}
-      </nav>
+    <nav className={`${THEME.card} border-t ${THEME.border} z-40 flex justify-around py-2 shadow-lg`}>
+      {tabs.map((tab, index) => (
+        <NavItem key={index} url={tab.href} icon={tab.icon} label={tab.text} active={pathname === tab.href} theme={THEME} />
+      ))}
+    </nav>
   );
 };
 
