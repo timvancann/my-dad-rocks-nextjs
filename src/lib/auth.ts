@@ -7,7 +7,7 @@ const allowedEmails = [
   'timvancann@gmail.com',
   'pacramer01@gmail.com',
   'lexheijden76@gmail.com',
-  'Nwsbas@outlook.com'
+  'nwsbas@outlook.com'
 ];
 
 export const authOptions: NextAuthOptions = {
