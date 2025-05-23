@@ -1,5 +1,4 @@
 import { Footer } from '@/components/Footer';
-import { NavbarNew } from '@/components/NavbarNew';
 import PracticeProvider from '@/context/PracticeProvider';
 import { getAllSongs, getSetlist } from '@/lib/sanity';
 import { AuthProvider } from '@/providers/auth-provider';
@@ -8,7 +7,6 @@ import type { Metadata } from 'next';
 import { Noto_Sans } from 'next/font/google';
 import React from 'react';
 import '../../globals.css';
-import { UserProfile } from '@/components/UserProfile';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Header } from '@/components/Header';
 
