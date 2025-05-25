@@ -2,6 +2,7 @@ import { Footer } from '@/components/Footer';
 import PracticeProvider from '@/context/PracticeProvider';
 import { getAllSongs, getSetlist } from '@/actions/supabase';
 import { AuthProvider } from '@/providers/auth-provider';
+import { TanstackProvider } from '@/providers/tanstack-provider';
 import { THEME } from '@/themes';
 import type { Metadata } from 'next';
 import { Noto_Sans } from 'next/font/google';
@@ -35,15 +36,17 @@ export default async function RootLayout({
       </head>
       <body suppressHydrationWarning={true} className={`${inter.className} h-screen ${THEME.bg} ${THEME.text}`}>
         <AuthProvider>
-          <ProtectedRoute>
-            <div className={'flex flex-col'}>
-              <PracticeProvider setlist={setlist} allSongs={allSongs}>
-                <Header />
-                <main className="mb-36 px-3 pt-4">{children}</main>
-                <Footer />
-              </PracticeProvider>
-            </div>
-          </ProtectedRoute>
+          <TanstackProvider>
+            <ProtectedRoute>
+              <div className={'flex flex-col'}>
+                <PracticeProvider setlist={setlist} allSongs={allSongs}>
+                  <Header />
+                  <main className="mb-36 px-3 pt-4">{children}</main>
+                  <Footer />
+                </PracticeProvider>
+              </div>
+            </ProtectedRoute>
+          </TanstackProvider>
         </AuthProvider>
       </body>
     </html>

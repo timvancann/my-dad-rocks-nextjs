@@ -33,6 +33,7 @@ export interface Database {
           difficulty_level: number | null
           tags: string[] | null
           notes: string | null
+          tabs_chords: string | null
           last_played_at: string | null
           created_at: string
           updated_at: string
@@ -52,6 +53,7 @@ export interface Database {
           difficulty_level?: number | null
           tags?: string[] | null
           notes?: string | null
+          tabs_chords?: string | null
           last_played_at?: string | null
           created_at?: string
           updated_at?: string
@@ -71,6 +73,7 @@ export interface Database {
           difficulty_level?: number | null
           tags?: string[] | null
           notes?: string | null
+          tabs_chords?: string | null
           last_played_at?: string | null
           created_at?: string
           updated_at?: string
@@ -296,6 +299,35 @@ export interface Database {
           quality_rating?: number | null
           notes?: string | null
           created_at?: string
+        }
+      }
+      song_links: {
+        Row: {
+          id: string
+          song_id: string
+          link_type: 'youtube' | 'youtube_music' | 'spotify' | 'other'
+          url: string
+          title: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          song_id: string
+          link_type: 'youtube' | 'youtube_music' | 'spotify' | 'other'
+          url: string
+          title?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          song_id?: string
+          link_type?: 'youtube' | 'youtube_music' | 'spotify' | 'other'
+          url?: string
+          title?: string | null
+          created_at?: string
+          updated_at?: string
         }
       }
     }
