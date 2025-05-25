@@ -11,6 +11,7 @@ import {
   updateSetlistSongs as updateSetlistSongsSupabase,
   getSongWithStats as getSongWithStatsSupabase,
   modifyLyrics as modifyLyricsSupabase,
+  updateSong as updateSongSupabase,
   createGig as createGigSupabase,
   createGigWithSetlist as createGigWithSetlistSupabase,
   updateGig as updateGigSupabase,
@@ -55,6 +56,10 @@ export async function getSongWithStats(id: string) {
 
 export async function modifyLyrics(songId: string, lyrics: string) {
   return modifyLyricsSupabase(songId, lyrics);
+}
+
+export async function updateSong(songId: string, updates: any) {
+  return updateSongSupabase(songId, updates);
 }
 
 export async function createGig(gig: any) {

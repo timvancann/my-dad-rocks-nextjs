@@ -514,6 +514,32 @@ export async function modifyLyrics(songId: string, lyrics: string) {
   }
 }
 
+export async function updateSong(songId: string, updates: {
+  key_signature?: string;
+  tempo_bpm?: number;
+  notes?: string;
+  difficulty_level?: number;
+  tags?: string[];
+}) {
+  const updateData: any = {};
+  
+  if (updates.key_signature !== undefined) updateData.key_signature = updates.key_signature;
+  if (updates.tempo_bpm !== undefined) updateData.tempo_bpm = updates.tempo_bpm;
+  if (updates.notes !== undefined) updateData.notes = updates.notes;
+  if (updates.difficulty_level !== undefined) updateData.difficulty_level = updates.difficulty_level;
+  if (updates.tags !== undefined) updateData.tags = updates.tags;
+  
+  const { error } = await supabase
+    .from('songs')
+    .update(updateData)
+    .eq('id', songId);
+  
+  if (error) {
+    console.error('Error updating song:', error);
+    throw error;
+  }
+}
+
 export async function addPause(pause: SongType, setlist: SetlistType) {
   // Get the max position in the setlist
   const { data: maxPosData } = await supabase
