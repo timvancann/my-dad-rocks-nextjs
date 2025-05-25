@@ -14,7 +14,7 @@ type AllSongsProps = {
 export const Repertoire = ({ filterSetlist, songs, addSong, setlist }: AllSongsProps) => {
   const addToSetlistFn = async (song: SongType) => {
     addSong(song);
-    updateSetlistSongs([...setlist.songs, song], setlist._id);
+    updateSetlistSongs(setlist._id, [...setlist.songs, song]);
   };
   const selectedSong = usePlayerStore((state) => state.currentSong);
 
