@@ -119,10 +119,6 @@ export function SongDetailsClient({ song: initialSong, stats: initialStats, id }
             <Music className="h-4 w-4" />
             Bekijk Songtekst
           </Link>
-          <Link href="/practice/player" className={`inline-flex items-center gap-2 px-6 py-3 ${THEME.highlight} hover:bg-zinc-700 ${THEME.text} rounded-md font-medium transition-colors border ${THEME.border}`}>
-            <Clock className="h-4 w-4" />
-            Oefen Modus
-          </Link>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
