@@ -2,7 +2,7 @@ import { GigsType, GigType, SetlistType, SongType } from './interface';
 import { supabase } from './supabase';
 
 // Convert Supabase data to match existing interfaces
-function mapSupabaseSongToSongType(song: any): SongType & { key_signature?: string; tempo_bpm?: number; tags?: string[] } {
+function mapSupabaseSongToSongType(song: any): SongType & { key_signature?: string; tempo_bpm?: number; tags?: string[]; tabs_chords?: string } {
   return {
     _id: song.id,
     id: song.id,
@@ -19,7 +19,8 @@ function mapSupabaseSongToSongType(song: any): SongType & { key_signature?: stri
     // Additional fields not in the interface but useful for display
     key_signature: song.key_signature,
     tempo_bpm: song.tempo_bpm,
-    tags: song.tags || []
+    tags: song.tags || [],
+    tabs_chords: song.tabs_chords
   } as any;
 }
 
@@ -457,12 +458,83 @@ export async function modifyLyrics(songId: string, lyrics: string) {
   }
 }
 
+export async function markSongPracticed(songId: string) {
+  const { error } = await supabase.rpc('mark_song_practiced', { p_song_id: songId });
+  
+  if (error) {
+    console.error('Error marking song as practiced:', error);
+    throw error;
+  }
+}
+
+export async function getSongLinks(songId: string) {
+  const { data, error } = await supabase
+    .from('song_links')
+    .select('*')
+    .eq('song_id', songId)
+    .order('link_type');
+  
+  if (error) {
+    console.error('Error fetching song links:', error);
+    throw error;
+  }
+  
+  return data;
+}
+
+export async function createSongLink(songId: string, link: { link_type: string; url: string; title?: string }) {
+  const { data, error } = await supabase
+    .from('song_links')
+    .insert({
+      song_id: songId,
+      ...link
+    })
+    .select()
+    .single();
+  
+  if (error) {
+    console.error('Error creating song link:', error);
+    throw error;
+  }
+  
+  return data;
+}
+
+export async function updateSongLink(linkId: string, updates: any) {
+  const { data, error } = await supabase
+    .from('song_links')
+    .update(updates)
+    .eq('id', linkId)
+    .select()
+    .single();
+  
+  if (error) {
+    console.error('Error updating song link:', error);
+    throw error;
+  }
+  
+  return data;
+}
+
+export async function deleteSongLink(linkId: string) {
+  const { error } = await supabase
+    .from('song_links')
+    .delete()
+    .eq('id', linkId);
+  
+  if (error) {
+    console.error('Error deleting song link:', error);
+    throw error;
+  }
+}
+
 export async function updateSong(
   songId: string,
   updates: {
     key_signature?: string;
     tempo_bpm?: number;
     notes?: string;
+    tabs_chords?: string;
     difficulty_level?: number;
     tags?: string[];
   }
@@ -472,6 +544,7 @@ export async function updateSong(
   if (updates.key_signature !== undefined) updateData.key_signature = updates.key_signature;
   if (updates.tempo_bpm !== undefined) updateData.tempo_bpm = updates.tempo_bpm;
   if (updates.notes !== undefined) updateData.notes = updates.notes;
+  if (updates.tabs_chords !== undefined) updateData.tabs_chords = updates.tabs_chords;
   if (updates.difficulty_level !== undefined) updateData.difficulty_level = updates.difficulty_level;
   if (updates.tags !== undefined) updateData.tags = updates.tags;
 

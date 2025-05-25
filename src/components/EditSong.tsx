@@ -1,19 +1,28 @@
 'use client';
-import { updateSong } from '@/actions/supabase';
+import { updateSong, getSongLinks, createSongLink, updateSongLink, deleteSongLink } from '@/actions/supabase';
 import { useRouter } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
-import { Hash, Music, X, Save, Tag, Plus, Minus } from 'lucide-react';
+import { Hash, Music, X, Save, Tag, Plus, Minus, Link, Youtube, Disc3, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { THEME } from '@/themes';
 import { SongType } from '@/lib/interface';
+import { FaSpotify, FaYoutube } from 'react-icons/fa';
+import { SiYoutubemusic } from 'react-icons/si';
 
 interface EditSongProps {
-  song: SongType & { key_signature?: string; tempo_bpm?: number; tags?: string[]; difficulty_level?: number; notes?: string };
+  song: SongType & { key_signature?: string; tempo_bpm?: number; tags?: string[]; difficulty_level?: number; notes?: string; tabs_chords?: string };
   onClose: () => void;
   onUpdate?: () => void;
+}
+
+interface SongLink {
+  id: string;
+  link_type: 'youtube' | 'youtube_music' | 'spotify' | 'other';
+  url: string;
+  title?: string;
 }
 
 const KEY_SIGNATURES = [
@@ -31,10 +40,14 @@ export const EditSong = ({ song, onClose, onUpdate }: EditSongProps) => {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newTag, setNewTag] = useState('');
+  const [songLinks, setSongLinks] = useState<SongLink[]>([]);
+  const [isLoadingLinks, setIsLoadingLinks] = useState(true);
+  const [newLink, setNewLink] = useState({ type: 'youtube', url: '', title: '' });
   const [formData, setFormData] = useState({
     key_signature: song.key_signature || '',
     tempo_bpm: song.tempo_bpm || '',
     notes: song.notes || '',
+    tabs_chords: song.tabs_chords || '',
     difficulty_level: song.difficulty_level || 1,
     tags: song.tags || []
   });
@@ -43,6 +56,22 @@ export const EditSong = ({ song, onClose, onUpdate }: EditSongProps) => {
   const [tapTimes, setTapTimes] = useState<number[]>([]);
   const [calculatedBPM, setCalculatedBPM] = useState<number | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
+  
+  // Load song links on mount
+  useEffect(() => {
+    loadSongLinks();
+  }, [song._id]);
+  
+  const loadSongLinks = async () => {
+    try {
+      const links = await getSongLinks(song._id);
+      setSongLinks(links || []);
+    } catch (error) {
+      console.error('Error loading song links:', error);
+    } finally {
+      setIsLoadingLinks(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -53,6 +82,7 @@ export const EditSong = ({ song, onClose, onUpdate }: EditSongProps) => {
         key_signature: formData.key_signature || null,
         tempo_bpm: formData.tempo_bpm ? parseInt(formData.tempo_bpm.toString()) : null,
         notes: formData.notes || null,
+        tabs_chords: formData.tabs_chords || null,
         difficulty_level: formData.difficulty_level,
         tags: formData.tags
       });
@@ -100,6 +130,40 @@ export const EditSong = ({ song, onClose, onUpdate }: EditSongProps) => {
 
   const renderStars = (level: number) => {
     return '★'.repeat(level) + '☆'.repeat(5 - level);
+  };
+  
+  const getLinkIcon = (type: string) => {
+    switch (type) {
+      case 'youtube': return <FaYoutube className="h-4 w-4 text-red-500" />;
+      case 'youtube_music': return <SiYoutubemusic className="h-4 w-4 text-red-500" />;
+      case 'spotify': return <FaSpotify className="h-4 w-4 text-green-500" />;
+      default: return <Link className="h-4 w-4" />;
+    }
+  };
+  
+  const handleAddLink = async () => {
+    if (!newLink.url) return;
+    
+    try {
+      const link = await createSongLink(song._id, {
+        link_type: newLink.type as any,
+        url: newLink.url,
+        title: newLink.title || undefined
+      });
+      setSongLinks([...songLinks, link]);
+      setNewLink({ type: 'youtube', url: '', title: '' });
+    } catch (error) {
+      console.error('Error adding link:', error);
+    }
+  };
+  
+  const handleDeleteLink = async (linkId: string) => {
+    try {
+      await deleteSongLink(linkId);
+      setSongLinks(songLinks.filter(l => l.id !== linkId));
+    } catch (error) {
+      console.error('Error deleting link:', error);
+    }
   };
 
   const handleTap = () => {
@@ -385,6 +449,93 @@ export const EditSong = ({ song, onClose, onUpdate }: EditSongProps) => {
               rows={4}
               placeholder="Notities over het nummer, speelstijl, moeilijke passages, etc..."
             />
+          </div>
+
+          {/* Tabs/Chords */}
+          <div className="space-y-2">
+            <Label htmlFor="tabs_chords">
+              <FileText className="inline h-4 w-4 mr-1" />
+              Tabs & Akkoorden
+            </Label>
+            <textarea
+              id="tabs_chords"
+              name="tabs_chords"
+              value={formData.tabs_chords}
+              onChange={handleChange}
+              className="w-full px-3 py-2 bg-zinc-800 text-white rounded-md border border-zinc-600 focus:outline-none focus:ring-2 focus:ring-rose-400 font-mono text-sm"
+              rows={8}
+              placeholder="Voeg akkoorden, tabs of speelnotaties toe..."
+            />
+          </div>
+
+          {/* External Links */}
+          <div className="space-y-4">
+            <Label>
+              <Link className="inline h-4 w-4 mr-1" />
+              Externe Links
+            </Label>
+            
+            {/* Existing Links */}
+            {!isLoadingLinks && (
+              <div className="space-y-2">
+                {songLinks.map((link) => (
+                  <div key={link.id} className="flex items-center gap-2 p-2 bg-zinc-800 rounded-md">
+                    {getLinkIcon(link.link_type)}
+                    <div className="flex-1">
+                      <a href={link.url} target="_blank" rel="noopener noreferrer" 
+                         className="text-sm text-blue-400 hover:text-blue-300">
+                        {link.title || link.url}
+                      </a>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteLink(link.id)}
+                      className="p-1 hover:text-red-400"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* Add New Link */}
+            <div className="space-y-2 p-3 bg-zinc-800 rounded-md">
+              <div className="flex gap-2">
+                <select
+                  value={newLink.type}
+                  onChange={(e) => setNewLink({...newLink, type: e.target.value})}
+                  className="px-3 py-2 bg-zinc-700 text-white rounded-md border border-zinc-600 focus:outline-none focus:ring-2 focus:ring-rose-400"
+                >
+                  <option value="youtube">YouTube</option>
+                  <option value="youtube_music">YouTube Music</option>
+                  <option value="spotify">Spotify</option>
+                  <option value="other">Anders</option>
+                </select>
+                <Input
+                  value={newLink.url}
+                  onChange={(e) => setNewLink({...newLink, url: e.target.value})}
+                  placeholder="URL"
+                  className="flex-1 bg-zinc-700 text-white border-zinc-600"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  value={newLink.title}
+                  onChange={(e) => setNewLink({...newLink, title: e.target.value})}
+                  placeholder="Titel (optioneel)"
+                  className="flex-1 bg-zinc-700 text-white border-zinc-600"
+                />
+                <Button
+                  type="button"
+                  onClick={handleAddLink}
+                  disabled={!newLink.url}
+                  className="px-4 bg-zinc-700 hover:bg-zinc-600"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           </div>
 
           {/* Action Buttons */}

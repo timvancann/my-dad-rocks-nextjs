@@ -1,14 +1,16 @@
 'use client';
 
-import { useState } from 'react';
-import { getSongWithStats } from '@/actions/supabase';
+import { useState, useEffect } from 'react';
+import { getSongWithStats, getSongLinks } from '@/actions/supabase';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { EditSong } from '@/components/EditSong';
 import { THEME } from '@/themes';
-import { Calendar, Clock, Guitar, Hash, Mic, Music, Star, Tag, Users, Edit, ArrowLeft } from 'lucide-react';
+import { Calendar, Clock, Guitar, Hash, Mic, Music, Star, Tag, Users, Edit, ArrowLeft, Link as LinkIcon, FileText } from 'lucide-react';
 import Link from 'next/link';
+import { FaSpotify, FaYoutube } from 'react-icons/fa';
+import { SiYoutubemusic } from 'react-icons/si';
 
 function getDifficultyColor(level: number) {
   const colors = ['text-green-600', 'text-blue-600', 'text-yellow-600', 'text-orange-600', 'text-red-600'];
@@ -32,9 +34,32 @@ export function SongDetailsClient({ song: initialSong, stats: initialStats, id }
   const [song, setSong] = useState(initialSong);
   const [stats, setStats] = useState(initialStats);
   const [loading, setLoading] = useState(false);
+  const [songLinks, setSongLinks] = useState<any[]>([]);
   
   // Get the raw song data to access new fields
   const rawSong = song as any;
+  
+  useEffect(() => {
+    loadSongLinks();
+  }, [id]);
+  
+  const loadSongLinks = async () => {
+    try {
+      const links = await getSongLinks(id);
+      setSongLinks(links || []);
+    } catch (error) {
+      console.error('Error loading song links:', error);
+    }
+  };
+  
+  const getLinkIcon = (type: string) => {
+    switch (type) {
+      case 'youtube': return <FaYoutube className="h-4 w-4 text-red-500" />;
+      case 'youtube_music': return <SiYoutubemusic className="h-4 w-4 text-red-500" />;
+      case 'spotify': return <FaSpotify className="h-4 w-4 text-green-500" />;
+      default: return <LinkIcon className="h-4 w-4" />;
+    }
+  };
 
   const refreshSongData = async () => {
     setLoading(true);
@@ -44,6 +69,7 @@ export function SongDetailsClient({ song: initialSong, stats: initialStats, id }
         setSong(result.song);
         setStats(result.stats);
       }
+      await loadSongLinks();
     } catch (error) {
       console.error('Error refreshing song:', error);
     } finally {
@@ -237,6 +263,58 @@ export function SongDetailsClient({ song: initialSong, stats: initialStats, id }
               </CardHeader>
               <CardContent>
                 <p className="whitespace-pre-wrap">{song.notes}</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Tabs & Chords */}
+          {rawSong.tabs_chords && (
+            <Card className="md:col-span-2">
+              <CardHeader>
+                <CardTitle>
+                  <FileText className="inline h-5 w-5 mr-2" />
+                  Tabs & Akkoorden
+                </CardTitle>
+                <CardDescription>Speelnotaties en akkoordenschema&apos;s</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <pre className="whitespace-pre-wrap font-mono text-sm bg-zinc-800 p-4 rounded-md overflow-x-auto">
+                  {rawSong.tabs_chords}
+                </pre>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* External Links */}
+          {songLinks.length > 0 && (
+            <Card className="md:col-span-2">
+              <CardHeader>
+                <CardTitle>
+                  <LinkIcon className="inline h-5 w-5 mr-2" />
+                  Externe Links
+                </CardTitle>
+                <CardDescription>Referenties en extra bronnen</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {songLinks.map((link) => (
+                    <a
+                      key={link.id}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-3 rounded-md border border-zinc-700 hover:bg-zinc-800 transition-colors"
+                    >
+                      {getLinkIcon(link.link_type)}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">
+                          {link.title || link.link_type.charAt(0).toUpperCase() + link.link_type.slice(1).replace('_', ' ')}
+                        </p>
+                        <p className="text-xs text-gray-400 truncate">{link.url}</p>
+                      </div>
+                    </a>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           )}

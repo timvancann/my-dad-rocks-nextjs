@@ -77,3 +77,28 @@ export async function updateGig(id: string, gig: any) {
 export async function addPause(pause: any, setlist: any) {
   return addPauseSupabase(pause, setlist);
 }
+
+export async function markSongPracticed(songId: string) {
+  const { markSongPracticed: markSongPracticedSupabase } = await import('@/lib/supabase-service');
+  return markSongPracticedSupabase(songId);
+}
+
+export async function getSongLinks(songId: string) {
+  const { getSongLinks: getSongLinksSupabase } = await import('@/lib/supabase-service');
+  return getSongLinksSupabase(songId);
+}
+
+export async function createSongLink(songId: string, link: { link_type: string; url: string; title?: string }) {
+  const { createSongLink: createSongLinkSupabase } = await import('@/lib/supabase-service');
+  return createSongLinkSupabase(songId, link);
+}
+
+export async function updateSongLink(linkId: string, updates: any) {
+  const { updateSongLink: updateSongLinkSupabase } = await import('@/lib/supabase-service');
+  return updateSongLinkSupabase(linkId, updates);
+}
+
+export async function deleteSongLink(linkId: string) {
+  const { deleteSongLink: deleteSongLinkSupabase } = await import('@/lib/supabase-service');
+  return deleteSongLinkSupabase(linkId);
+}

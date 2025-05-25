@@ -3,10 +3,10 @@
 import { SongType } from '@/lib/interface';
 import { usePlayerStore } from '@/store/store';
 import { THEME } from '@/themes';
-import { Clock, Hash, Mic, Music, StickyNote } from 'lucide-react';
+import { Clock, Mic, StickyNote } from 'lucide-react';
 import { useState } from 'react';
 import { TbGuitarPickFilled } from 'react-icons/tb';
-import { SongDetailDrawer } from './Drawer';
+import { SongMenu } from './SongMenu';
 
 interface SongCardProps {
   song: SongType;
@@ -56,43 +56,20 @@ export const SongCard = ({ song, playlist, removeFromSetlistFn, addToSetlistFn }
                   </div>
                 )}
               </div>
-              {/* Key and Tempo info - right aligned with backgrounds */}
-              <div className={`flex items-center gap-1.5 text-xs`}>
-                {(song as any).key_signature && (
-                  <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${THEME.highlight} ${THEME.text}`}>
-                    <Hash className="h-3 w-3 opacity-60" />
-                    {(song as any).key_signature}
-                  </span>
-                )}
-                {(song as any).tempo_bpm && (
-                  <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${THEME.highlight} ${THEME.text}`}>
-                    <Music className="h-3 w-3 opacity-60" />
-                    {(song as any).tempo_bpm}
-                  </span>
-                )}
-                {song.notes && (
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowNotes(!showNotes);
-                    }}
-                    className={`flex items-center gap-0.5 px-2 py-0.5 rounded-full ${showNotes ? THEME.primaryBg : THEME.highlight} ${showNotes ? 'text-white' : THEME.text} hover:${THEME.primaryBg} hover:text-white transition-colors`}
-                  >
-                    <StickyNote className="h-3 w-3" />
-                  </button>
-                )}
-              </div>
             </div>
           </div>
         </div>
-        <div className="flex flex-col">
-          <span className={`ml-1 flex items-center gap-0.5 whitespace-nowrap text-xs ${THEME.textSecondary}`}>
+        <div className="flex flex-col items-end">
+          <span className={`flex items-center gap-0.5 whitespace-nowrap text-xs ${THEME.textSecondary}`}>
             <Clock className="h-3 w-3" /> {new Date(song.duration * 1000).toISOString().slice(15, 19)}
           </span>
-          <div className={`mt-4 flex justify-end rounded-full ${THEME.textSecondary}`}>
-            <SongDetailDrawer setShowNotes={() => {
-              setShowNotes(!showNotes)}}
-            song={song} removeFromSetlistFn={removeFromSetlistFn} addToSetlistFn={addToSetlistFn} />
+          <div className="mt-1">
+            <SongMenu 
+              song={song} 
+              removeFromSetlistFn={removeFromSetlistFn} 
+              addToSetlistFn={addToSetlistFn}
+              onShowNotes={() => setShowNotes(!showNotes)}
+            />
           </div>
         </div>
       </div>
