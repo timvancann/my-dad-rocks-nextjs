@@ -7,8 +7,8 @@ import React from 'react';
 export default function GigList({ gigs }: { gigs: GigsType[] }) {
   const [edit, setEdit] = React.useState(false);
 
-  const upcomingGigs = gigs.filter((gig) => new Date(gig.date) > new Date()).sort((a, b) => new Date(a.time).getDate() - new Date(b.time).getDate());
-  const pastGigs = gigs.filter((gig) => new Date(gig.date) <= new Date()).sort((a, b) => new Date(a.time).getDate() - new Date(b.time).getDate());
+  const upcomingGigs = gigs.filter((gig) => new Date(gig.date) > new Date()).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const pastGigs = gigs.filter((gig) => new Date(gig.date) <= new Date()).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   return (
     <div className={''}>
       <div className="mb-8">

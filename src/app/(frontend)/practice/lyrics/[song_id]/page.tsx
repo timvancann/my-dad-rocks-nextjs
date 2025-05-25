@@ -1,5 +1,5 @@
 import DisplayLyrics from '@/components/Lyrics';
-import { getLyrics } from '@/lib/sanity';
+import { getLyrics } from '@/actions/supabase';
 
 export default async function Lyrics(props: { params: Promise<{ song_id: string }> }) {
   const params = await props.params;

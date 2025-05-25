@@ -23,14 +23,6 @@ export default function SignIn() {
             <Image src="/google-icon.svg" alt="Google Logo" width={20} height={20} />
             <span>Sign in with Google</span>
           </Button>
-          
-          <Button 
-            onClick={() => signIn('azure-ad', { callbackUrl: '/practice' })} 
-            className="flex w-full items-center justify-center gap-2 bg-white py-2 text-gray-800 hover:bg-gray-100"
-          >
-            <Image src="/microsoft-icon.svg" alt="Microsoft Logo" width={20} height={20} />
-            <span>Sign in with Outlook</span>
-          </Button>
         </div>
 
         <p className="mt-4 text-center text-sm text-gray-400">

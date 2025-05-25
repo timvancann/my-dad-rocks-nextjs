@@ -1,7 +1,7 @@
 'use client';
 
-import { modifyLyrics } from '@/actions/sanity';
-import { LyricType } from '@/lib/sanity';
+import { modifyLyrics } from '@/actions/supabase';
+import { LyricType } from '@/lib/interface';
 import { useState } from 'react';
 import { FaMinusCircle, FaPlusCircle } from 'react-icons/fa';
 

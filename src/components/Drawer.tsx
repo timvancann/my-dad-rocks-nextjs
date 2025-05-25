@@ -6,16 +6,17 @@ import { useRouter } from 'next/navigation';
 import React from 'react';
 import { Drawer } from 'vaul';
 import { Divider } from './Divider';
+import { TbListDetails } from 'react-icons/tb';
 
 type SongDetailDrawerProps = {
   song: SongType;
   removeFromSetlistFn?: (id: string) => void;
   addToSetlistFn?: (id: string) => void;
+  setShowNotes: () => void;
 };
-export const SongDetailDrawer = ({ song, removeFromSetlistFn, addToSetlistFn }: SongDetailDrawerProps) => {
+export const SongDetailDrawer = ({ song, removeFromSetlistFn, addToSetlistFn, setShowNotes }: SongDetailDrawerProps) => {
   const router = useRouter();
 
-  const toggleExpand = (id: string) => {};
   return (
     <Drawer.Root>
       <Drawer.Trigger>
@@ -44,8 +45,14 @@ export const SongDetailDrawer = ({ song, removeFromSetlistFn, addToSetlistFn }: 
               <button
                 className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-zinc-700"
                 onClick={() => {
-                  toggleExpand(song._id);
+                  router.push(`/practice/song/${song._id}`);
                 }}
+              >
+                <TbListDetails className="h-4 w-4 text-amber-400" /> Details
+              </button>
+              <button
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-zinc-700"
+                onClick={setShowNotes}
               >
                 <Info className="h-4 w-4 text-amber-400" /> Notities
               </button>

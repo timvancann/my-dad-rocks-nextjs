@@ -1,6 +1,6 @@
 import { Footer } from '@/components/Footer';
 import PracticeProvider from '@/context/PracticeProvider';
-import { getAllSongs, getSetlist } from '@/lib/sanity';
+import { getAllSongs, getSetlist } from '@/actions/supabase';
 import { AuthProvider } from '@/providers/auth-provider';
 import { THEME } from '@/themes';
 import type { Metadata } from 'next';

@@ -1,6 +1,6 @@
 'use client';
 
-import { addPause } from '@/actions/sanity';
+import { addPause } from '@/actions/supabase';
 import { SetlistType, SongType } from '@/lib/interface';
 import { THEME } from '@/themes';
 import { Coffee } from 'lucide-react';

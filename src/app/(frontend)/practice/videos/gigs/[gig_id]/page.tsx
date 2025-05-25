@@ -1,5 +1,5 @@
 import GigVideo from '@/components/GigVideo';
-import { getGig } from '@/lib/sanity';
+import { getGig } from '@/actions/supabase';
 
 export default async function Video(props: { params: Promise<{ gig_id: string }> }) {
   const params = await props.params;

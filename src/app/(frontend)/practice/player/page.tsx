@@ -50,7 +50,7 @@ export default function Player() {
         </Link>
       </div>
 
-      <div className="fixed bottom-12 left-0 right-0 px-5 pb-8 pt-3">
+      <div className="fixed bottom-36 left-0 right-0 px-5 pb-8 pt-3">
         {/* Progress bar */}
         <div className="mb-6">
           <div className="mb-1 flex justify-between text-xs text-gray-400">

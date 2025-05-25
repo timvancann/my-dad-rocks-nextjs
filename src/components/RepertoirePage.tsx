@@ -1,4 +1,4 @@
-import { updateSetlistSongs } from '@/actions/sanity';
+import { updateSetlistSongs } from '@/actions/supabase';
 import { SetlistType, SongType } from '@/lib/interface';
 import { usePlayerStore } from '@/store/store';
 import { THEME } from '@/themes';
