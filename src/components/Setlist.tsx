@@ -3,7 +3,7 @@
 import { SetlistType, SongType } from '@/lib/interface';
 import { LayoutGroup } from 'motion/react';
 
-import { removeSongFromSetlist, updateSetlistSongs } from '@/actions/sanity';
+import { removeSongFromSetlist, updateSetlistSongs } from '@/actions/supabase';
 import { SongCard } from '@/components/SongCard';
 import { usePlayerStore } from '@/store/store';
 import { THEME } from '@/themes';
@@ -24,7 +24,7 @@ export const Setlist = ({ setlist, removeSong, updateSongsInSetlist }: SetlistPr
 
   const removeFromSetlistFn = async (song: SongType) => {
     removeSong(song);
-    removeSongFromSetlist(setlist, song);
+    removeSongFromSetlist(setlist._id, song._id);
   };
 
   const getSongIndex = (id: UniqueIdentifier) => {
@@ -38,7 +38,7 @@ export const Setlist = ({ setlist, removeSong, updateSongsInSetlist }: SetlistPr
 
     const moved = arrayMove(setlist.songs, getSongIndex(active.id), getSongIndex(over.id));
     updateSongsInSetlist(moved);
-    updateSetlistSongs(moved, setlist._id);
+    updateSetlistSongs(setlist._id, moved);
   };
 
   return (
@@ -47,7 +47,7 @@ export const Setlist = ({ setlist, removeSong, updateSongsInSetlist }: SetlistPr
         <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd} sensors={sensors} id="builder-dnd">
           <SortableContext items={setlist.songs.map((s) => s._id)} strategy={verticalListSortingStrategy}>
             {setlist.songs.map((item, index) =>
-              item.title.startsWith('Pauze') ? (
+              (item as any)._type === 'pause' ? (
                 <ReorderablePauseCard key={index} song={item} setlist={setlist} removeFromSetlistFn={() => removeFromSetlistFn(item)} />
               ) : (
                 <ReorderableSongCard key={index} song={item} setlist={setlist} removeFromSetlistFn={() => removeFromSetlistFn(item)} />

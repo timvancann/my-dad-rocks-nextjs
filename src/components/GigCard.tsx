@@ -8,8 +8,8 @@ type GigCardProps = {
 };
 export const GigCard = ({ gig }: GigCardProps) => {
   const upcoming = new Date(gig.date) > new Date();
-  const month = new Date(gig.time).toLocaleString('default', { month: 'short' });
-  const day = new Date(gig.time).getDate();
+  const month = new Date(gig.date).toLocaleString('default', { month: 'short' });
+  const day = new Date(gig.date).getDate();
   return (
     <Link href={`/practice/gigs/${gig._id}`} className={'cursor-pointer'}>
       <div className={`overflow-hidden rounded-lg ${upcoming ? THEME.card : 'bg-zinc-900/50'} border ${upcoming ? 'border-zinc-800' : 'border-zinc-800/50'} shadow-md`}>

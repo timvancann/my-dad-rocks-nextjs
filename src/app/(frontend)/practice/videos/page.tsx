@@ -1,4 +1,4 @@
-import { getGigs } from '@/lib/sanity';
+import { getGigs } from '@/actions/supabase';
 
 export default async function Home() {
   const gigs = await getGigs();

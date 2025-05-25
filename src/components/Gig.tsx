@@ -2,46 +2,49 @@
 
 import { AddPause } from '@/components/AddPause';
 import { Setlist } from '@/components/Setlist';
+import { EditGig } from '@/components/EditGig';
 import GigProvider, { useGigStore } from '@/context/GigProvider';
 import { usePracticeStore } from '@/context/PracticeProvider';
 import { GigType } from '@/lib/interface';
 import { THEME } from '@/themes';
-import { ArrowLeft, Calendar, Clock, MapPin, Music } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, MapPin, Music, Edit } from 'lucide-react';
 import { Repertoire } from './RepertoirePage';
+import { useState } from 'react';
 
 type GigProps = {
   gig: GigType;
 };
 export const Gig = ({ gig }: GigProps) => {
   const allSongs = usePracticeStore((state) => state.allSongs);
+  const [showEditForm, setShowEditForm] = useState(false);
 
-  const totalDuration = Math.round(gig.setlist.songs.reduce((acc, song) => acc + (song.duration || 0), 0) / 60);
-  const totalSongs = gig.setlist.songs.length;
+  const songs = gig.setlist?.songs || [];
+  const totalDuration = Math.round(songs.reduce((acc, song) => acc + (song.duration || 0), 0) / 60);
+  const totalSongs = songs.length;
 
   const formatDate = (dateTime: string) => {
     const date = new Date(dateTime);
     return date.toLocaleDateString('nl-NL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   };
 
-  const formatTime = (dateTime: string) => {
-    const date = new Date(dateTime);
-    return date.toLocaleTimeString('nl-NL', {
-      timeStyle: 'short'
-    });
-  };
 
   return (
-    <div className="flex flex-col">
-      <header className="border-zinc-800/50 bg-zinc-950/95 bg-opacity-90 shadow-lg backdrop-blur-xl">
+    <>
+      {showEditForm && <EditGig gig={gig} onClose={() => setShowEditForm(false)} />}
+      <div className="flex flex-col">
+        <header className="border-zinc-800/50 bg-zinc-950/95 bg-opacity-90 shadow-lg backdrop-blur-xl">
         {/* Top navigation bar */}
         <div className="flex items-center justify-between px-4 py-3">
           <button className="rounded-full bg-zinc-800/70 p-1.5" onClick={() => window.history.back()}>
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h1 className={`text-xl font-bold ${THEME.primary}`}>Gig Details</h1>
-          <button className="rounded-full bg-zinc-800/70 p-1.5 opacity-0">
-            {/* Placeholder for alignment */}
-            <ArrowLeft className="h-5 w-5" />
+          <button 
+            onClick={() => setShowEditForm(true)}
+            className="rounded-full bg-zinc-800/70 p-1.5 hover:bg-zinc-700 transition-colors"
+            title="Bewerk gig"
+          >
+            <Edit className="h-5 w-5" />
           </button>
         </div>
 
@@ -62,10 +65,10 @@ export const Gig = ({ gig }: GigProps) => {
               {/* Date and time */}
               <div className="mt-1 flex items-center gap-1 text-sm">
                 <Calendar className={`h-3.5 w-3.5 ${THEME.secondary}`} />
-                <span className="text-gray-300">{formatDate(gig.time)}</span>
+                <span className="text-gray-300">{formatDate(gig.date)}</span>
                 <span className="mx-1 text-gray-500">•</span>
                 <Clock className={`h-3.5 w-3.5 ${THEME.secondary}`} />
-                <span className="text-gray-300">{formatTime(gig.time)}</span>
+                <span className="text-gray-300">{gig.time}</span>
               </div>
 
               {/* Venue and address */}
@@ -91,6 +94,13 @@ export const Gig = ({ gig }: GigProps) => {
               </div>
             </div>
           </div>
+          
+          {/* Notes section */}
+          {(gig as any).notes && (
+            <div className="mt-3 pt-3 border-t border-zinc-800">
+              <p className="text-sm text-gray-400 whitespace-pre-wrap">{(gig as any).notes}</p>
+            </div>
+          )}
         </div>
       </header>
       <div className="mb-3 flex items-center">
@@ -100,6 +110,7 @@ export const Gig = ({ gig }: GigProps) => {
         <Content />
       </GigProvider>
     </div>
+    </>
   );
 };
 

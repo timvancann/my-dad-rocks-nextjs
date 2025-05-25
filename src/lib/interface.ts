@@ -38,3 +38,9 @@ export interface GigsType {
   venue: string;
   video_playlist: string;
 }
+
+export type LyricType = {
+  title: string;
+  artist: string;
+  lyrics: string;
+}

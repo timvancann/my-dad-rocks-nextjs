@@ -1,5 +1,5 @@
 // src/app/page.tsx
-import { getPublicGigs } from '@/lib/sanity';
+import { getPublicGigs } from '@/actions/supabase';
 import { CalendarIcon, MapPinIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import { EnvelopeIcon } from '@heroicons/react/24/solid';
 import Image from 'next/image';

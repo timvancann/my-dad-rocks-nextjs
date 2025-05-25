@@ -1,4 +1,4 @@
-import { updateSetlistSongs } from '@/actions/sanity';
+import { updateSetlistSongs } from '@/actions/supabase';
 import { SetlistType, SongType } from '@/lib/interface';
 import { usePlayerStore } from '@/store/store';
 import { THEME } from '@/themes';
@@ -14,7 +14,7 @@ type AllSongsProps = {
 export const Repertoire = ({ filterSetlist, songs, addSong, setlist }: AllSongsProps) => {
   const addToSetlistFn = async (song: SongType) => {
     addSong(song);
-    updateSetlistSongs([...setlist.songs, song], setlist._id);
+    updateSetlistSongs(setlist._id, [...setlist.songs, song]);
   };
   const selectedSong = usePlayerStore((state) => state.currentSong);
 

@@ -37,3 +37,8 @@ next-env.d.ts
 
 .idea/
 sanity/
+scripts/
+supabase/
+*.md
+*.log
+!README.md
