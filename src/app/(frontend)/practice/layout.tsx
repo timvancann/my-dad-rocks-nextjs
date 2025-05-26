@@ -41,7 +41,7 @@ export default async function RootLayout({
               <div className={'flex flex-col'}>
                 <PracticeProvider setlist={setlist} allSongs={allSongs}>
                   <Header />
-                  <main className="mb-36 px-3 pt-4">{children}</main>
+                  <main className="mb-40 px-3 pt-4">{children}</main>
                   <Footer />
                 </PracticeProvider>
               </div>
