@@ -59,7 +59,7 @@ export const PlayerMini = () => {
         exit={{ y: 100 }}
         className={`fixed bottom-16 left-0 right-0 ${THEME.card} border-t backdrop-blur-xl ${THEME.border} z-40 shadow-lg`}
       >
-        <div className={`transition-all duration-300 ${isExpanded ? 'p-4' : 'p-2.5'}`}>
+        <div className={`transition-all duration-300 ${isExpanded ? 'p-4 pb-2' : 'p-2.5 pb-1'}`}>
           {/* Main player content */}
           <div className="flex items-center gap-3">
             {/* Album art with vinyl animation */}
@@ -78,9 +78,9 @@ export const PlayerMini = () => {
               <div className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 transform rounded-full border border-zinc-700 bg-zinc-900" />
             </div>
 
-            {/* Song info and progress */}
+            {/* Song info */}
             <div className="min-w-0 flex-1">
-              <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0 mr-2">
                   <h3 className={`truncate font-medium ${isExpanded ? 'text-base' : 'text-sm'}`}>
                     {selectedSong.title}
@@ -100,51 +100,13 @@ export const PlayerMini = () => {
                 </button>
               </div>
 
-              {/* Time and progress bar */}
-              <div className={`flex items-center gap-2 ${isExpanded ? 'mb-2' : ''}`}>
-                <span className={`${THEME.textSecondary} ${isExpanded ? 'text-sm' : 'text-xs'} tabular-nums`}>
-                  {formatTime(time)}
-                </span>
-                
-                {/* Seekable progress bar */}
-                <div 
-                  ref={progressBarRef}
-                  className={`flex-1 relative ${isExpanded ? 'h-2' : 'h-1'} bg-zinc-800 rounded-full cursor-pointer group`}
-                  onClick={handleSeek}
-                  onMouseDown={handleSeekStart}
-                  onMouseUp={handleSeekEnd}
-                  onMouseLeave={handleSeekEnd}
-                  onTouchStart={handleSeekStart}
-                  onTouchEnd={handleSeekEnd}
-                  onTouchMove={handleSeek}
-                >
-                  {/* Progress fill */}
-                  <div 
-                    className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-red-700 via-red-600 to-amber-500 pointer-events-none"
-                    style={{ width: `${progress}%` }}
-                  />
-                  
-                  {/* Seek handle */}
-                  <div 
-                    className={`absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg transition-opacity ${
-                      isSeeking || isExpanded ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-                    }`}
-                    style={{ left: `${progress}%`, transform: 'translate(-50%, -50%)' }}
-                  />
-                </div>
-                
-                <span className={`${THEME.textSecondary} ${isExpanded ? 'text-sm' : 'text-xs'} tabular-nums`}>
-                  {formatTime(duration)}
-                </span>
-              </div>
-
               {/* Additional info when expanded */}
               {isExpanded && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="flex items-center gap-4 text-xs"
+                  className="flex items-center gap-4 text-xs mt-2"
                 >
                   {selectedSong.dualGuitar && (
                     <span className={`${THEME.secondary}`}>🎸 Dual Guitar</span>
@@ -198,6 +160,47 @@ export const PlayerMini = () => {
               >
                 <SkipForward className={`${isExpanded ? 'h-5 w-5' : 'h-4 w-4'}`} />
               </button>
+            </div>
+          </div>
+
+          {/* Full-width progress bar below */}
+          <div className={`mt-3 -mx-2.5 ${isExpanded ? '-mx-4' : ''}`}>
+            {/* Time and progress bar */}
+            <div className="flex items-center gap-2 px-2.5">
+              <span className={`${THEME.textSecondary} ${isExpanded ? 'text-sm' : 'text-xs'} tabular-nums`}>
+                {formatTime(time)}
+              </span>
+              
+              {/* Seekable progress bar */}
+              <div 
+                ref={progressBarRef}
+                className={`flex-1 relative ${isExpanded ? 'h-2' : 'h-1.5'} bg-zinc-800 rounded-full cursor-pointer group`}
+                onClick={handleSeek}
+                onMouseDown={handleSeekStart}
+                onMouseUp={handleSeekEnd}
+                onMouseLeave={handleSeekEnd}
+                onTouchStart={handleSeekStart}
+                onTouchEnd={handleSeekEnd}
+                onTouchMove={handleSeek}
+              >
+                {/* Progress fill */}
+                <div 
+                  className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-red-700 via-red-600 to-amber-500 pointer-events-none"
+                  style={{ width: `${progress}%` }}
+                />
+                
+                {/* Seek handle */}
+                <div 
+                  className={`absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg transition-opacity ${
+                    isSeeking || isExpanded ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                  }`}
+                  style={{ left: `${progress}%`, transform: 'translate(-50%, -50%)' }}
+                />
+              </div>
+              
+              <span className={`${THEME.textSecondary} ${isExpanded ? 'text-sm' : 'text-xs'} tabular-nums`}>
+                {formatTime(duration)}
+              </span>
             </div>
           </div>
         </div>
