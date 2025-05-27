@@ -1,6 +1,14 @@
 repos:
   - repo: local
     hooks:
+      - id: pnpm-lock-check
+        name: Check pnpm lock file
+        entry: bash -c 'pnpm install --frozen-lockfile'
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]
+      
       - id: build-check
         name: Next.js Build Check
         entry: bash -c 'pnpm run build'
