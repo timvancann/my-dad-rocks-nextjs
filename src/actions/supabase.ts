@@ -4,12 +4,14 @@ import {
   getAllSongs as getAllSongsFromSupabase,
   getSetlist as getSetlistFromSupabase,
   getLyrics as getLyricsFromSupabase,
+  getLyricsBySlug as getLyricsBySlugFromSupabase,
   getGigs as getGigsFromSupabase,
   getGig as getGigFromSupabase,
   getPublicGigs as getPublicGigsFromSupabase,
   removeSongFromSetlist as removeSongFromSetlistSupabase,
   updateSetlistSongs as updateSetlistSongsSupabase,
   getSongWithStats as getSongWithStatsSupabase,
+  getSongWithStatsBySlug as getSongWithStatsBySlugSupabase,
   modifyLyrics as modifyLyricsSupabase,
   updateSong as updateSongSupabase,
   createGig as createGigSupabase,
@@ -28,6 +30,10 @@ export async function getSetlist(title: string) {
 
 export async function getLyrics(id: string) {
   return getLyricsFromSupabase(id);
+}
+
+export async function getLyricsBySlug(slug: string) {
+  return getLyricsBySlugFromSupabase(slug);
 }
 
 export async function getGigs() {
@@ -52,6 +58,10 @@ export async function updateSetlistSongs(setlistId: string, songs: any[]) {
 
 export async function getSongWithStats(id: string) {
   return getSongWithStatsSupabase(id);
+}
+
+export async function getSongWithStatsBySlug(slug: string) {
+  return getSongWithStatsBySlugSupabase(slug);
 }
 
 export async function modifyLyrics(songId: string, lyrics: string) {

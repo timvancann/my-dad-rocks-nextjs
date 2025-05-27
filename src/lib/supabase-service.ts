@@ -1,6 +1,16 @@
 import { GigsType, GigType, SetlistType, SongType } from './interface';
 import { supabase } from './supabase';
 
+// Generate URL-friendly slug from title
+export function generateSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '') // Remove special characters
+    .replace(/\s+/g, '-')     // Replace spaces with hyphens
+    .replace(/-+/g, '-')      // Replace multiple hyphens with single hyphen
+    .trim();
+}
+
 // Convert Supabase data to match existing interfaces
 function mapSupabaseSongToSongType(song: any): SongType & { key_signature?: string; tempo_bpm?: number; tags?: string[]; tabs_chords?: string } {
   return {
@@ -8,6 +18,7 @@ function mapSupabaseSongToSongType(song: any): SongType & { key_signature?: stri
     id: song.id,
     title: song.title,
     artist: song.artist || '',
+    slug: song.slug || generateSlug(song.title),
     artwork: song.artwork_url || '',
     audio: song.audio_url || '',
     last_played_at: song.last_played_at,
@@ -145,6 +156,58 @@ export async function getLyrics(id: string) {
   }
 
   return {
+    title: data.title,
+    artist: data.artist || '',
+    lyrics: data.lyrics || ''
+  };
+}
+
+// New slug-based functions
+export async function getSongBySlug(slug: string): Promise<SongType | null> {
+  const { data, error } = await supabase.from('songs').select('*').eq('slug', slug).single();
+
+  if (error) {
+    console.error('Error fetching song by slug:', error);
+    return null;
+  }
+
+  return mapSupabaseSongToSongType(data);
+}
+
+export async function getSongWithStatsBySlug(slug: string) {
+  // Get song details
+  const { data: songData, error: songError } = await supabase.from('songs').select('*').eq('slug', slug).single();
+
+  if (songError || !songData) {
+    console.error('Error fetching song by slug:', songError);
+    return null;
+  }
+
+  // Get song stats
+  const { data: statsData } = await supabase.from('song_stats').select('*').eq('song_id', songData.id).single();
+
+  return {
+    song: mapSupabaseSongToSongType(songData),
+    stats: statsData || {
+      times_played: 0,
+      times_practiced: 0,
+      mastery_level: 1,
+      last_practiced_at: null,
+      first_learned_at: null
+    }
+  };
+}
+
+export async function getLyricsBySlug(slug: string) {
+  const { data, error } = await supabase.from('songs').select('id, title, artist, lyrics').eq('slug', slug).single();
+
+  if (error) {
+    console.error('Error fetching lyrics by slug:', error);
+    return null;
+  }
+
+  return {
+    id: data.id,
     title: data.title,
     artist: data.artist || '',
     lyrics: data.lyrics || ''

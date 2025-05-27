@@ -1,4 +1,4 @@
-import { getSongWithStats } from '@/actions/supabase';
+import { getSongWithStatsBySlug } from '@/actions/supabase';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,22 +25,22 @@ function SongSkeleton() {
 }
 
 
-async function SongDetails({ id }: { id: string }) {
-  const result = await getSongWithStats(id);
+async function SongDetails({ slug }: { slug: string }) {
+  const result = await getSongWithStatsBySlug(slug);
   
   if (!result) {
     notFound();
   }
 
-  return <SongDetailsClient song={result.song} stats={result.stats} id={id} />;
+  return <SongDetailsClient song={result.song} stats={result.stats} id={result.song._id} />;
 }
 
-async function SongPageWrapper({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+async function SongPageWrapper({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   
   return (
     <Suspense fallback={<SongSkeleton />}>
-      <SongDetails id={id} />
+      <SongDetails slug={slug} />
     </Suspense>
   );
 }

@@ -121,7 +121,7 @@ export const SongMenu = ({ song, removeFromSetlistFn, addToSetlistFn, onShowNote
             icon={<FileText className="h-4 w-4" />}
             label="View Lyrics"
             onClick={() => {
-              router.push(`/practice/lyrics/${song._id}`);
+              router.push(`/practice/lyrics/${song.slug || song._id}`);
               setIsOpen(false);
             }}
             rightContent={<ChevronRight className="h-3 w-3 opacity-50" />}
@@ -131,7 +131,7 @@ export const SongMenu = ({ song, removeFromSetlistFn, addToSetlistFn, onShowNote
             icon={<TbListDetails className="h-4 w-4" />}
             label="Song Details"
             onClick={() => {
-              router.push(`/practice/song/${song._id}`);
+              router.push(`/practice/song/${song.slug || song._id}`);
               setIsOpen(false);
             }}
             rightContent={<ChevronRight className="h-3 w-3 opacity-50" />}

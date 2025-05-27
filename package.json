@@ -12,7 +12,8 @@
     "migrate:files": "tsx scripts/migrate-files-to-supabase.ts",
     "migrate:lyrics": "tsx scripts/migrate-lyrics.ts",
     "enrich:songs": "tsx scripts/enrich-songs.ts",
-    "report:songs": "tsx scripts/song-database-report.ts"
+    "report:songs": "tsx scripts/song-database-report.ts",
+    "add:slugs": "tsx scripts/add-slugs-to-songs.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.1.0",
@@ -23,12 +24,10 @@
     "@fortawesome/react-fontawesome": "^0.2.2",
     "@heroicons/react": "^2.1.4",
     "@hookform/resolvers": "^3.9.1",
-    "@portabletext/react": "^3.1.0",
     "@radix-ui/react-label": "^2.1.1",
     "@radix-ui/react-popover": "^1.1.3",
     "@radix-ui/react-slider": "^1.2.2",
     "@radix-ui/react-slot": "^1.1.1",
-    "@sanity/client": "^6.27.0",
     "@supabase/supabase-js": "^2.49.8",
     "@tanstack/react-query": "^5.64.2",
     "@tanstack/react-query-devtools": "^5.64.2",
@@ -43,7 +42,6 @@
     "musicbrainz-api": "^0.20.0",
     "next": "15.1.6",
     "next-auth": "^4.24.11",
-    "next-sanity": "^9.8.39",
     "react": "19.0.0",
     "react-datepicker": "^7.5.0",
     "react-day-picker": "^8.10.1",
@@ -52,7 +50,6 @@
     "react-icons": "^5.2.1",
     "react-tailwindcss-datepicker": "^1.7.2",
     "react-use-audio-player": "^2.2.0",
-    "sanity": "^3.71.1",
     "server-only": "^0.0.1",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",

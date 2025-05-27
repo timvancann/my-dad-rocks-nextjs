@@ -22,6 +22,7 @@ export interface Database {
           id: string
           title: string
           artist: string | null
+          slug: string | null
           artwork_url: string | null
           audio_url: string | null
           dual_guitar: boolean
@@ -42,6 +43,7 @@ export interface Database {
           id?: string
           title: string
           artist?: string | null
+          slug?: string | null
           artwork_url?: string | null
           audio_url?: string | null
           dual_guitar?: boolean
@@ -62,6 +64,7 @@ export interface Database {
           id?: string
           title?: string
           artist?: string | null
+          slug?: string | null
           artwork_url?: string | null
           audio_url?: string | null
           dual_guitar?: boolean

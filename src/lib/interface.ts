@@ -3,6 +3,7 @@ export interface SongType {
   _type?: string;
   title: string;
   artist?: string;
+  slug?: string;
   artwork: string;
   audio?: string;
   dualGuitar: boolean;
@@ -40,6 +41,7 @@ export interface GigsType {
 }
 
 export type LyricType = {
+  id?: string;
   title: string;
   artist: string;
   lyrics: string;
