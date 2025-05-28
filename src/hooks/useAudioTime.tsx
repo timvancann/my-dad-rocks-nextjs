@@ -52,6 +52,8 @@ export const usePlaylistPlayer = () => {
   const playlist = usePlayerStore((state) => state.playlist);
   const songIndex = usePlayerStore((state) => state.songIndex);
   const setSongIndex = usePlayerStore((state) => state.setSongIndex);
+  const isChangingSong = usePlayerStore((state) => state.isChangingSong);
+  const setIsChangingSong = usePlayerStore((state) => state.setIsChangingSong);
 
   const skipTrack = (increment: number) => {
     if (!selectedSong || !playlist.length) return;
@@ -82,20 +84,33 @@ export const usePlaylistPlayer = () => {
         nextTrack();
         return;
       }
-      let url = await getAudioFromCache(song._id, song.version || 0);
-      if (!url) {
-        url = await fetchAndCacheAudio(song, song.audio as string);
-      }
-      load(url, {
-        autoplay: true,
-        format: 'mp3',
-        html5: true,
-        onend: () => {
-          setSongIndex(songIndex + 1);
+      
+      // Stop current song immediately
+      stop();
+      setIsChangingSong(true);
+      
+      try {
+        let url = await getAudioFromCache(song._id, song.version || 0);
+        if (!url) {
+          url = await fetchAndCacheAudio(song, song.audio as string);
         }
-      });
+        load(url, {
+          autoplay: true,
+          format: 'mp3',
+          html5: true,
+          onload: () => {
+            setIsChangingSong(false);
+          },
+          onend: () => {
+            setSongIndex(songIndex + 1);
+          }
+        });
+      } catch (error) {
+        setIsChangingSong(false);
+        console.error('Error loading track:', error);
+      }
     },
-    [songIndex]
+    [songIndex, setIsChangingSong, stop]
   );
 
   useEffect(() => {
@@ -128,6 +143,7 @@ export const usePlaylistPlayer = () => {
     seekTrack,
     paused,
     duration,
-    isLoading
+    isLoading,
+    isChangingSong
   };
 };

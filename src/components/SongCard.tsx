@@ -19,6 +19,7 @@ export const SongCard = ({ song, playlist, removeFromSetlistFn, addToSetlistFn }
   const selectedSong = usePlayerStore((state) => state.currentSong);
   const setSongIndex = usePlayerStore((state) => state.setSongIndex);
   const setPlaylist = usePlayerStore((state) => state.setPlaylist);
+  const setIsChangingSong = usePlayerStore((state) => state.setIsChangingSong);
   const [showNotes, setShowNotes] = useState(false);
 
   const isSelected = selectedSong?._id === song._id;
@@ -29,6 +30,10 @@ export const SongCard = ({ song, playlist, removeFromSetlistFn, addToSetlistFn }
         <div
           className="flex grow cursor-pointer"
           onClick={() => {
+            // Only trigger loading if switching to a different song
+            if (selectedSong?._id !== song._id) {
+              setIsChangingSong(true);
+            }
             const currentIndex = playlist.findIndex((s) => s._id === song._id);
             setPlaylist(playlist);
             setSongIndex(currentIndex);

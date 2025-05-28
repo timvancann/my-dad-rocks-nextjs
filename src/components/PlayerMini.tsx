@@ -3,13 +3,13 @@
 import { useAudioTime, usePlaylistPlayer } from '@/hooks/useAudioTime';
 import { usePlayerStore } from '@/store/store';
 import { THEME } from '@/themes';
-import { Pause, Play, SkipBack, SkipForward, Volume2, Maximize2 } from 'lucide-react';
+import { Pause, Play, SkipBack, SkipForward, Volume2, Maximize2, Loader2 } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
 export const PlayerMini = () => {
   const selectedSong = usePlayerStore((state) => state.currentSong);
-  const { previousTrack, nextTrack, playPauseTrack, paused, duration, isLoading, seekTrack } = usePlaylistPlayer();
+  const { previousTrack, nextTrack, playPauseTrack, paused, duration, isLoading, seekTrack, isChangingSong } = usePlaylistPlayer();
 
   const [progress, setProgress] = useState(0);
   const [isSeeking, setIsSeeking] = useState(false);
@@ -62,20 +62,30 @@ export const PlayerMini = () => {
         <div className={`transition-all duration-300 ${isExpanded ? 'p-4 pb-2' : 'p-2.5 pb-1'}`}>
           {/* Main player content */}
           <div className="flex items-center gap-3">
-            {/* Album art with vinyl animation */}
+            {/* Album art with vinyl animation or loading indicator */}
             <div className={`relative transition-all duration-300 ${isExpanded ? 'w-16 h-16' : 'w-12 h-12'}`}>
-              <div 
-                className={`absolute -inset-[1px] ${!paused ? 'animate-spin' : ''} rounded-full bg-gradient-to-br from-amber-500 to-red-800`} 
-                style={{ animationDuration: '5s' }}
-              />
-              <div className="absolute left-1/2 top-1/2 z-20 h-3 w-3 -translate-x-1/2 -translate-y-1/2 transform rounded-full border border-zinc-700 bg-zinc-900" />
-              <img 
-                src={selectedSong.artwork} 
-                alt="Now Playing" 
-                className={`relative z-10 w-full h-full ${!paused ? 'animate-spin' : ''} rounded-full border-2 border-zinc-800`} 
-                style={{ animationDuration: '15s' }} 
-              />
-              <div className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 transform rounded-full border border-zinc-700 bg-zinc-900" />
+              {isChangingSong ? (
+                /* Loading state */
+                <div className={`w-full h-full rounded-full ${THEME.highlight} border-2 border-zinc-700 flex items-center justify-center`}>
+                  <Loader2 className={`${isExpanded ? 'h-6 w-6' : 'h-4 w-4'} animate-spin ${THEME.primary}`} />
+                </div>
+              ) : (
+                /* Normal album art */
+                <>
+                  <div 
+                    className={`absolute -inset-[1px] ${!paused ? 'animate-spin' : ''} rounded-full bg-gradient-to-br from-amber-500 to-red-800`} 
+                    style={{ animationDuration: '5s' }}
+                  />
+                  <div className="absolute left-1/2 top-1/2 z-20 h-3 w-3 -translate-x-1/2 -translate-y-1/2 transform rounded-full border border-zinc-700 bg-zinc-900" />
+                  <img 
+                    src={selectedSong.artwork} 
+                    alt="Now Playing" 
+                    className={`relative z-10 w-full h-full ${!paused ? 'animate-spin' : ''} rounded-full border-2 border-zinc-800`} 
+                    style={{ animationDuration: '15s' }} 
+                  />
+                  <div className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 transform rounded-full border border-zinc-700 bg-zinc-900" />
+                </>
+              )}
             </div>
 
             {/* Song info */}
