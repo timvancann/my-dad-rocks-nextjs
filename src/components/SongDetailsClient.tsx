@@ -11,6 +11,7 @@ import { Calendar, Clock, Guitar, Hash, Mic, Music, Star, Tag, Users, Edit, Arro
 import Link from 'next/link';
 import { FaSpotify, FaYoutube } from 'react-icons/fa';
 import { SiYoutubemusic } from 'react-icons/si';
+import { NavigationLink } from './NavigationButton';
 
 function getDifficultyColor(level: number) {
   const colors = ['text-green-600', 'text-blue-600', 'text-yellow-600', 'text-orange-600', 'text-red-600'];
@@ -94,13 +95,13 @@ export function SongDetailsClient({ song: initialSong, stats: initialStats, id }
             {song.artist && <p className="text-xl text-gray-400">{song.artist}</p>}
           </div>
           <div className="flex gap-2">
-            <Link 
+            <NavigationLink 
               href="/practice"
-              className={`inline-flex items-center gap-2 px-4 py-2 ${THEME.highlight} hover:bg-zinc-700 ${THEME.text} rounded-md font-medium transition-colors border ${THEME.border}`}
+              className={`px-4 py-2 ${THEME.highlight} hover:bg-zinc-700 ${THEME.text} rounded-md font-medium transition-colors border ${THEME.border}`}
+              icon={<ArrowLeft className="h-4 w-4" />}
             >
-              <ArrowLeft className="h-4 w-4" />
               Terug
-            </Link>
+            </NavigationLink>
             <Button
               onClick={() => setShowEditForm(true)}
               className={`inline-flex items-center gap-2 px-4 py-2 ${THEME.highlight} hover:bg-zinc-700 ${THEME.text} border ${THEME.border}`}
@@ -115,10 +116,13 @@ export function SongDetailsClient({ song: initialSong, stats: initialStats, id }
 
         {/* Quick Actions */}
         <div className="flex gap-4 mb-8">
-          <Link href={`/practice/lyrics/${id}`} className={`inline-flex items-center gap-2 px-6 py-3 ${THEME.primaryBg} hover:${THEME.primaryBgDark} text-white rounded-md font-medium transition-colors`}>
-            <Music className="h-4 w-4" />
+          <NavigationLink 
+            href={`/practice/lyrics/${id}`} 
+            className={`px-6 py-3 ${THEME.primaryBg} hover:${THEME.primaryBgDark} text-white rounded-md font-medium transition-colors`}
+            icon={<Music className="h-4 w-4" />}
+          >
             Bekijk Songtekst
-          </Link>
+          </NavigationLink>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">

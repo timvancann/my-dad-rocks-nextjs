@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { TbListDetails } from 'react-icons/tb';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { NavigationButton } from './NavigationButton';
 
 interface SongMenuProps {
   song: SongType;
@@ -117,25 +118,25 @@ export const SongMenu = ({ song, removeFromSetlistFn, addToSetlistFn, onShowNote
           <MenuDivider />
 
           {/* Navigation Actions */}
-          <MenuItem
+          <NavigationButton
+            href={`/practice/lyrics/${song.slug || song._id}`}
             icon={<FileText className="h-4 w-4" />}
-            label="View Lyrics"
-            onClick={() => {
-              router.push(`/practice/lyrics/${song.slug || song._id}`);
-              setIsOpen(false);
-            }}
+            onClick={() => setIsOpen(false)}
+            className={`${THEME.text} hover:${THEME.highlight} cursor-pointer`}
             rightContent={<ChevronRight className="h-3 w-3 opacity-50" />}
-          />
+          >
+            View Lyrics
+          </NavigationButton>
           
-          <MenuItem
+          <NavigationButton
+            href={`/practice/song/${song.slug || song._id}`}
             icon={<TbListDetails className="h-4 w-4" />}
-            label="Song Details"
-            onClick={() => {
-              router.push(`/practice/song/${song.slug || song._id}`);
-              setIsOpen(false);
-            }}
+            onClick={() => setIsOpen(false)}
+            className={`${THEME.text} hover:${THEME.highlight} cursor-pointer`}
             rightContent={<ChevronRight className="h-3 w-3 opacity-50" />}
-          />
+          >
+            Song Details
+          </NavigationButton>
 
           {onShowNotes && song.notes && (
             <MenuItem

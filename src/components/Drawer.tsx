@@ -7,6 +7,7 @@ import React from 'react';
 import { Drawer } from 'vaul';
 import { Divider } from './Divider';
 import { TbListDetails } from 'react-icons/tb';
+import { NavigationButton } from './NavigationButton';
 
 type SongDetailDrawerProps = {
   song: SongType;
@@ -37,19 +38,22 @@ export const SongDetailDrawer = ({ song, removeFromSetlistFn, addToSetlistFn, se
             </div>
             <Divider className={'my-1'} />
             <div className={'m-2 flex w-full flex-col gap-4'}>
-              <button className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-zinc-700" onClick={() => router.push(`/practice/lyrics/${song._id}`)}>
-                <FileText className="h-4 w-4 text-amber-400" /> Lyrics
-              </button>
+              <NavigationButton 
+                href={`/practice/lyrics/${song.slug || song._id}`}
+                icon={<FileText className="h-4 w-4 text-amber-400" />}
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-zinc-700"
+              >
+                Lyrics
+              </NavigationButton>
 
               {/* Notes toggle option */}
-              <button
+              <NavigationButton
+                href={`/practice/song/${song.slug || song._id}`}
+                icon={<TbListDetails className="h-4 w-4 text-amber-400" />}
                 className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-zinc-700"
-                onClick={() => {
-                  router.push(`/practice/song/${song._id}`);
-                }}
               >
-                <TbListDetails className="h-4 w-4 text-amber-400" /> Details
-              </button>
+                Details
+              </NavigationButton>
               <button
                 className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-zinc-700"
                 onClick={setShowNotes}
