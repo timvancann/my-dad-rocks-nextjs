@@ -24,11 +24,25 @@ export async function fetchAndCacheAudio(song: SongType, url: string): Promise<s
 export const useAudioTime = () => {
   const frameRef = useRef<number>(undefined);
   const [pos, setPos] = useState(0);
-  const { getPosition } = useGlobalAudioPlayer();
+  const { getPosition, seek } = useGlobalAudioPlayer();
+  const loopMarkers = usePlayerStore((state) => state.loopMarkers);
+  const isLoopEnabled = usePlayerStore((state) => state.isLoopEnabled);
 
   useEffect(() => {
     const animate = () => {
-      setPos(getPosition());
+      const currentPos = getPosition();
+      
+      // Check for loop logic
+      if (isLoopEnabled && 
+          loopMarkers.start !== null && 
+          loopMarkers.end !== null && 
+          currentPos >= loopMarkers.end) {
+        seek(loopMarkers.start);
+        setPos(loopMarkers.start);
+      } else {
+        setPos(currentPos);
+      }
+      
       frameRef.current = requestAnimationFrame(animate);
     };
 
@@ -39,7 +53,7 @@ export const useAudioTime = () => {
         cancelAnimationFrame(frameRef.current);
       }
     };
-  }, [getPosition]);
+  }, [getPosition, seek, isLoopEnabled, loopMarkers]);
 
   return pos;
 };
@@ -54,6 +68,10 @@ export const usePlaylistPlayer = () => {
   const setSongIndex = usePlayerStore((state) => state.setSongIndex);
   const isChangingSong = usePlayerStore((state) => state.isChangingSong);
   const setIsChangingSong = usePlayerStore((state) => state.setIsChangingSong);
+  const loopMarkers = usePlayerStore((state) => state.loopMarkers);
+  const isLoopEnabled = usePlayerStore((state) => state.isLoopEnabled);
+  const setLoopMarkers = usePlayerStore((state) => state.setLoopMarkers);
+  const setIsLoopEnabled = usePlayerStore((state) => state.setIsLoopEnabled);
   
   // Track loading state per song to prevent race conditions
   const loadingRef = useRef<string | null>(null);
@@ -76,8 +94,11 @@ export const usePlaylistPlayer = () => {
     
     if (nextSong && nextSong._id !== selectedSong?._id) {
       setSelectedSong(nextSong);
+      // Clear loop markers when changing songs
+      setLoopMarkers({ start: null, end: null });
+      setIsLoopEnabled(false);
     }
-  }, [songIndex, playlist, selectedSong, setSelectedSong]);
+  }, [songIndex, playlist, selectedSong, setSelectedSong, setLoopMarkers, setIsLoopEnabled]);
 
   const nextTrack = useCallback(() => {
     if (isChangingSong) return;

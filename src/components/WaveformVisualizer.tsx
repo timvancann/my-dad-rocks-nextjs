@@ -6,12 +6,19 @@ import { THEME } from '@/themes';
 import { SongType } from '@/lib/interface';
 import { db } from '@/lib/db';
 
+type LoopMarkers = {
+  start: number | null;
+  end: number | null;
+};
+
 interface WaveformVisualizerProps {
   song: SongType;
   isPlaying: boolean;
   currentTime: number;
   onSeek?: (time: number) => void;
   onReady?: (duration: number) => void;
+  loopMarkers?: LoopMarkers;
+  isLoopEnabled?: boolean;
 }
 
 export const WaveformVisualizer = ({ 
@@ -19,7 +26,9 @@ export const WaveformVisualizer = ({
   isPlaying, 
   currentTime,
   onSeek,
-  onReady 
+  onReady,
+  loopMarkers = { start: null, end: null },
+  isLoopEnabled = false
 }: WaveformVisualizerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -155,6 +164,42 @@ export const WaveformVisualizer = ({
         className={`w-full ${isLoading ? 'opacity-50' : ''}`}
         style={{ minHeight: '80px' }}
       />
+      
+      {/* Loop markers overlay */}
+      {wavesurfer && isReady && (
+        <>
+          {/* Loop region background */}
+          {loopMarkers.start !== null && loopMarkers.end !== null && (
+            <div 
+              className={`absolute top-0 bottom-0 ${isLoopEnabled ? 'bg-amber-500/20' : 'bg-zinc-500/20'} border-l-2 border-r-2 ${isLoopEnabled ? 'border-amber-500' : 'border-zinc-500'} pointer-events-none`}
+              style={{
+                left: `${(loopMarkers.start / wavesurfer.getDuration()) * 100}%`,
+                right: `${100 - (loopMarkers.end / wavesurfer.getDuration()) * 100}%`,
+              }}
+            />
+          )}
+          
+          {/* A marker */}
+          {loopMarkers.start !== null && (
+            <div 
+              className="absolute top-0 bottom-0 w-0.5 bg-green-500 pointer-events-none"
+              style={{ left: `${(loopMarkers.start / wavesurfer.getDuration()) * 100}%` }}
+            >
+              <div className="absolute -top-1 -left-2 bg-green-500 text-white text-xs px-1 rounded">A</div>
+            </div>
+          )}
+          
+          {/* B marker */}
+          {loopMarkers.end !== null && (
+            <div 
+              className="absolute top-0 bottom-0 w-0.5 bg-blue-500 pointer-events-none"
+              style={{ left: `${(loopMarkers.end / wavesurfer.getDuration()) * 100}%` }}
+            >
+              <div className="absolute -top-1 -left-2 bg-blue-500 text-white text-xs px-1 rounded">B</div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 };

@@ -3,8 +3,8 @@
 import { useAudioTime, usePlaylistPlayer } from '@/hooks/useAudioTime';
 import { usePlayerStore } from '@/store/store';
 import { THEME } from '@/themes';
-import { X, Play, Pause, SkipBack, SkipForward, Volume2, Mic } from 'lucide-react';
-import { useEffect, useState, useRef } from 'react';
+import { X, Play, Pause, SkipBack, SkipForward, Volume2, Mic, Repeat, RotateCcw } from 'lucide-react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { TbGuitarPickFilled } from 'react-icons/tb';
 import { WaveformVisualizer } from './WaveformVisualizer';
@@ -16,6 +16,10 @@ interface PlayerFullProps {
 
 export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
   const selectedSong = usePlayerStore((state) => state.currentSong);
+  const loopMarkers = usePlayerStore((state) => state.loopMarkers);
+  const setLoopMarkers = usePlayerStore((state) => state.setLoopMarkers);
+  const isLoopEnabled = usePlayerStore((state) => state.isLoopEnabled);
+  const setIsLoopEnabled = usePlayerStore((state) => state.setIsLoopEnabled);
   const { previousTrack, nextTrack, playPauseTrack, paused, duration, isLoading, seekTrack, isChangingSong } = usePlaylistPlayer();
   
   const time = useAudioTime();
@@ -24,6 +28,26 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
     if (!seconds || isNaN(seconds)) return '0:00';
     return new Date(seconds * 1000).toISOString().slice(15, 19);
   };
+
+  // Loop marker functions
+  const setMarkerA = useCallback(() => {
+    setLoopMarkers({ ...loopMarkers, start: time });
+  }, [loopMarkers, time, setLoopMarkers]);
+
+  const setMarkerB = useCallback(() => {
+    setLoopMarkers({ ...loopMarkers, end: time });
+  }, [loopMarkers, time, setLoopMarkers]);
+
+  const clearMarkers = useCallback(() => {
+    setLoopMarkers({ start: null, end: null });
+    setIsLoopEnabled(false);
+  }, [setLoopMarkers, setIsLoopEnabled]);
+
+  const toggleLoop = useCallback(() => {
+    if (loopMarkers.start !== null && loopMarkers.end !== null) {
+      setIsLoopEnabled(!isLoopEnabled);
+    }
+  }, [loopMarkers, isLoopEnabled, setIsLoopEnabled]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -47,12 +71,32 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
           e.preventDefault();
           onClose();
           break;
+        case 'a':
+        case 'A':
+          e.preventDefault();
+          setMarkerA();
+          break;
+        case 'b':
+        case 'B':
+          e.preventDefault();
+          setMarkerB();
+          break;
+        case 'l':
+        case 'L':
+          e.preventDefault();
+          toggleLoop();
+          break;
+        case 'c':
+        case 'C':
+          e.preventDefault();
+          clearMarkers();
+          break;
       }
     };
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [isOpen, playPauseTrack, previousTrack, nextTrack, onClose]);
+  }, [isOpen, playPauseTrack, previousTrack, nextTrack, onClose, setMarkerA, setMarkerB, toggleLoop, clearMarkers]);
 
   if (!selectedSong) return null;
 
@@ -147,6 +191,8 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
                     isPlaying={!paused && !isChangingSong}
                     currentTime={time}
                     onSeek={seekTrack}
+                    loopMarkers={loopMarkers}
+                    isLoopEnabled={isLoopEnabled}
                   />
                 </div>
                 <div className="flex items-center justify-between text-sm tabular-nums text-zinc-400">
@@ -156,7 +202,7 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
               </div>
 
               {/* Playback controls */}
-              <div className="flex items-center gap-6">
+              <div className="flex items-center gap-6 mb-4">
                 <button 
                   className={`p-3 ${THEME.text} hover:${THEME.primary} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`} 
                   onClick={previousTrack}
@@ -186,6 +232,58 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
                 >
                   <SkipForward className="h-8 w-8" />
                 </button>
+              </div>
+
+              {/* Loop controls */}
+              <div className="flex items-center justify-center gap-4">
+                <div className="flex items-center gap-2">
+                  <button 
+                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      loopMarkers.start !== null 
+                        ? `${THEME.primaryBg} text-white` 
+                        : `${THEME.highlight} ${THEME.text} hover:bg-zinc-700`
+                    }`}
+                    onClick={setMarkerA}
+                    title="Set A marker (A key)"
+                  >
+                    A: {loopMarkers.start !== null ? formatTime(loopMarkers.start) : '--:--'}
+                  </button>
+                  
+                  <button 
+                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      loopMarkers.end !== null 
+                        ? `${THEME.primaryBg} text-white` 
+                        : `${THEME.highlight} ${THEME.text} hover:bg-zinc-700`
+                    }`}
+                    onClick={setMarkerB}
+                    title="Set B marker (B key)"
+                  >
+                    B: {loopMarkers.end !== null ? formatTime(loopMarkers.end) : '--:--'}
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button 
+                    className={`p-2 rounded-md transition-colors ${
+                      isLoopEnabled 
+                        ? `${THEME.primaryBg} text-white shadow-lg` 
+                        : `${THEME.highlight} ${THEME.text} hover:bg-zinc-700`
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    onClick={toggleLoop}
+                    disabled={loopMarkers.start === null || loopMarkers.end === null}
+                    title={`${isLoopEnabled ? 'Disable' : 'Enable'} loop (L key)`}
+                  >
+                    <Repeat className="h-5 w-5" />
+                  </button>
+                  
+                  <button 
+                    className={`p-2 rounded-md ${THEME.highlight} ${THEME.text} hover:bg-zinc-700 transition-colors`}
+                    onClick={clearMarkers}
+                    title="Clear markers (C key)"
+                  >
+                    <RotateCcw className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
             </div>
           </motion.div>
