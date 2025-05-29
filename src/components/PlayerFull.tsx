@@ -7,6 +7,7 @@ import { X, Play, Pause, SkipBack, SkipForward, Volume2, Mic } from 'lucide-reac
 import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { TbGuitarPickFilled } from 'react-icons/tb';
+import { WaveformVisualizer } from './WaveformVisualizer';
 
 interface PlayerFullProps {
   isOpen: boolean;
@@ -17,37 +18,7 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
   const selectedSong = usePlayerStore((state) => state.currentSong);
   const { previousTrack, nextTrack, playPauseTrack, paused, duration, isLoading, seekTrack, isChangingSong } = usePlaylistPlayer();
   
-  const [progress, setProgress] = useState(0);
-  const [isSeeking, setIsSeeking] = useState(false);
-  const progressBarRef = useRef<HTMLDivElement>(null);
   const time = useAudioTime();
-
-  useEffect(() => {
-    if (duration > 0 && !isSeeking) {
-      setProgress((time / duration) * 100);
-    }
-  }, [time, duration, isSeeking]);
-
-  const handleSeek = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
-    if (!progressBarRef.current || !duration) return;
-    
-    const rect = progressBarRef.current.getBoundingClientRect();
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const x = clientX - rect.left;
-    const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
-    const seekTime = (percentage / 100) * duration;
-    
-    setProgress(percentage);
-    seekTrack(seekTime);
-  };
-
-  const handleSeekStart = () => {
-    setIsSeeking(true);
-  };
-
-  const handleSeekEnd = () => {
-    setIsSeeking(false);
-  };
 
   const formatTime = (seconds: number) => {
     if (!seconds || isNaN(seconds)) return '0:00';
@@ -168,33 +139,19 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
                 </div>
               </div>
 
-              {/* Progress bar */}
-              <div className="w-full max-w-2xl mb-6">
-                <div className="flex items-center gap-3">
-                  <span className="text-sm tabular-nums text-zinc-400">{formatTime(time)}</span>
-                  
-                  <div 
-                    ref={progressBarRef}
-                    className="flex-1 relative h-2 bg-zinc-800 rounded-full cursor-pointer group"
-                    onClick={handleSeek}
-                    onMouseDown={handleSeekStart}
-                    onMouseUp={handleSeekEnd}
-                    onMouseLeave={handleSeekEnd}
-                    onTouchStart={handleSeekStart}
-                    onTouchEnd={handleSeekEnd}
-                    onTouchMove={handleSeek}
-                  >
-                    <div 
-                      className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-red-700 via-red-600 to-amber-500"
-                      style={{ width: `${progress}%` }}
-                    />
-                    <div 
-                      className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg transition-opacity opacity-0 group-hover:opacity-100"
-                      style={{ left: `${progress}%`, transform: 'translate(-50%, -50%)' }}
-                    />
-                  </div>
-                  
-                  <span className="text-sm tabular-nums text-zinc-400">{formatTime(duration)}</span>
+              {/* Waveform visualizer */}
+              <div className="w-full max-w-4xl mb-6">
+                <div className="mb-2">
+                  <WaveformVisualizer 
+                    song={selectedSong}
+                    isPlaying={!paused && !isChangingSong}
+                    currentTime={time}
+                    onSeek={seekTrack}
+                  />
+                </div>
+                <div className="flex items-center justify-between text-sm tabular-nums text-zinc-400">
+                  <span>{formatTime(time)}</span>
+                  <span>{formatTime(duration)}</span>
                 </div>
               </div>
 
