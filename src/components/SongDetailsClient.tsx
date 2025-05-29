@@ -47,7 +47,6 @@ export function SongDetailsClient({ song: initialSong, stats: initialStats, id }
   const loadSongLinks = async () => {
     try {
       const links = await getSongLinks(id);
-      console.log('Loaded song links:', links);
       setSongLinks(links || []);
     } catch (error) {
       console.error('Error loading song links:', error);
