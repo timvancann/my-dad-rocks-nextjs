@@ -149,11 +149,13 @@ export const EditSong = ({ song, masteryLevel, onClose, onUpdate }: EditSongProp
     if (!newLink.url) return;
     
     try {
+      console.log('Adding link:', newLink);
       const link = await createSongLink(song._id, {
         link_type: newLink.type as any,
         url: newLink.url,
         title: newLink.title || undefined
       });
+      console.log('Link created:', link);
       setSongLinks([...songLinks, link]);
       setNewLink({ type: 'youtube', url: '', title: '' });
     } catch (error) {
