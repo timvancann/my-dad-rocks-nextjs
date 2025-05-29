@@ -3,7 +3,7 @@
 import { useAudioTime, usePlaylistPlayer } from '@/hooks/useAudioTime';
 import { usePlayerStore } from '@/store/store';
 import { THEME } from '@/themes';
-import { X, Play, Pause, SkipBack, SkipForward, Volume2, Mic, Repeat, RotateCcw } from 'lucide-react';
+import { X, Play, Pause, SkipBack, SkipForward, Volume2, Mic, Repeat, RotateCcw, ChevronsLeft } from 'lucide-react';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { TbGuitarPickFilled } from 'react-icons/tb';
@@ -49,6 +49,12 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
     }
   }, [loopMarkers, isLoopEnabled, setIsLoopEnabled]);
 
+  const playFromA = useCallback(() => {
+    if (loopMarkers.start !== null) {
+      seekTrack(loopMarkers.start);
+    }
+  }, [loopMarkers.start, seekTrack]);
+
   // Keyboard shortcuts
   useEffect(() => {
     if (!isOpen) return;
@@ -91,12 +97,17 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
           e.preventDefault();
           clearMarkers();
           break;
+        case 'r':
+        case 'R':
+          e.preventDefault();
+          playFromA();
+          break;
       }
     };
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [isOpen, playPauseTrack, previousTrack, nextTrack, onClose, setMarkerA, setMarkerB, toggleLoop, clearMarkers]);
+  }, [isOpen, playPauseTrack, previousTrack, nextTrack, onClose, setMarkerA, setMarkerB, toggleLoop, clearMarkers, playFromA]);
 
   if (!selectedSong) return null;
 
@@ -192,6 +203,7 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
                     currentTime={time}
                     onSeek={seekTrack}
                     loopMarkers={loopMarkers}
+                    setLoopMarkers={setLoopMarkers}
                     isLoopEnabled={isLoopEnabled}
                   />
                 </div>
@@ -282,6 +294,15 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
                     title="Clear markers (C key)"
                   >
                     <RotateCcw className="h-5 w-5" />
+                  </button>
+                  
+                  <button 
+                    className={`p-2 rounded-md ${THEME.highlight} ${THEME.text} hover:bg-zinc-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                    onClick={playFromA}
+                    disabled={loopMarkers.start === null}
+                    title="Play from A marker (R key)"
+                  >
+                    <ChevronsLeft className="h-5 w-5" />
                   </button>
                 </div>
               </div>
