@@ -125,12 +125,12 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="absolute top-20 left-4 right-4 bottom-4 md:top-24 md:left-8 md:right-8 md:bottom-8 lg:top-28 lg:left-16 lg:right-16 lg:bottom-16 bg-zinc-900 rounded-2xl overflow-hidden"
+            className="absolute top-16 sm:top-20 left-2 right-2 bottom-2 sm:left-4 sm:right-4 sm:bottom-4 md:top-24 md:left-8 md:right-8 md:bottom-8 lg:top-28 lg:left-16 lg:right-16 lg:bottom-16 bg-zinc-900 rounded-xl sm:rounded-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-10">
-              <h2 className="text-lg font-semibold">Now Playing</h2>
+            <div className="absolute top-0 left-0 right-0 p-4 sm:p-6 flex justify-between items-center z-10">
+              <h2 className="text-base sm:text-lg font-semibold">Now Playing</h2>
               <button
                 onClick={onClose}
                 className={`p-2 rounded-full ${THEME.highlight} hover:bg-zinc-700 transition-colors`}
@@ -140,34 +140,34 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
             </div>
 
             {/* Main content */}
-            <div className="h-full flex flex-col items-center justify-center p-6 pb-24">
+            <div className="h-full flex flex-col items-center justify-center p-4 sm:p-6 pb-16 sm:pb-20 overflow-y-auto overflow-x-hidden">
               {/* Album art */}
-              <div className="relative mb-6">
-                <div className={`w-48 h-48 md:w-64 md:h-64 lg:w-72 lg:h-72 relative ${isChangingSong ? 'opacity-50' : ''}`}>
-                  {/* Vinyl effect */}
+              <div className="relative mb-4 sm:mb-6">
+                <div className={`w-32 h-32 sm:w-48 sm:h-48 md:w-56 md:h-56 lg:w-64 lg:h-64 relative ${isChangingSong ? 'opacity-50' : ''}`}>
+                  {/* Vinyl effect - hidden on small screens */}
                   <div 
-                    className={`absolute -inset-2 ${!paused && !isChangingSong ? 'animate-spin' : ''} rounded-full bg-gradient-to-br from-amber-500 to-red-800`} 
+                    className={`absolute -inset-2 ${!paused && !isChangingSong ? 'animate-spin' : ''} rounded-full bg-gradient-to-br from-amber-500 to-red-800 hidden sm:block`} 
                     style={{ animationDuration: '5s' }}
                   />
-                  <div className="absolute left-1/2 top-1/2 z-20 h-8 w-8 -translate-x-1/2 -translate-y-1/2 transform rounded-full border-2 border-zinc-700 bg-zinc-900" />
+                  <div className="absolute left-1/2 top-1/2 z-20 h-6 sm:h-8 w-6 sm:w-8 -translate-x-1/2 -translate-y-1/2 transform rounded-full border-2 border-zinc-700 bg-zinc-900" />
                   <img 
                     src={selectedSong.artwork} 
                     alt={selectedSong.title} 
-                    className={`relative z-10 w-full h-full ${!paused && !isChangingSong ? 'animate-spin' : ''} rounded-full border-4 border-zinc-800 shadow-2xl`} 
+                    className={`relative z-10 w-full h-full ${!paused && !isChangingSong ? 'sm:animate-spin' : ''} rounded-full border-2 sm:border-4 border-zinc-800 shadow-xl sm:shadow-2xl`} 
                     style={{ animationDuration: '15s' }} 
                   />
                 </div>
                 {isChangingSong && (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="h-16 w-16 border-4 border-zinc-700 border-t-red-600 rounded-full animate-spin"></div>
+                    <div className="h-12 w-12 sm:h-16 sm:w-16 border-4 border-zinc-700 border-t-red-600 rounded-full animate-spin"></div>
                   </div>
                 )}
               </div>
 
               {/* Song info */}
-              <div className="text-center mb-6 max-w-md">
-                <h1 className="text-2xl md:text-3xl font-bold mb-2">{selectedSong.title}</h1>
-                <p className="text-lg md:text-xl text-zinc-400 mb-3">{selectedSong.artist}</p>
+              <div className="text-center mb-4 sm:mb-6 max-w-md">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2">{selectedSong.title}</h1>
+                <p className="text-base sm:text-lg md:text-xl text-zinc-400 mb-2 sm:mb-3">{selectedSong.artist}</p>
                 
                 {/* Metadata badges */}
                 <div className="flex items-center justify-center gap-3">
@@ -195,7 +195,7 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
               </div>
 
               {/* Waveform visualizer */}
-              <div className="w-full max-w-4xl mb-6">
+              <div className="w-full max-w-2xl mb-4 sm:mb-6">
                 <div className="mb-2">
                   <WaveformVisualizer 
                     song={selectedSong}
@@ -214,43 +214,44 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
               </div>
 
               {/* Playback controls */}
-              <div className="flex items-center gap-6 mb-4">
+              <div className="flex items-center gap-4 sm:gap-6 mb-4">
                 <button 
-                  className={`p-3 ${THEME.text} hover:${THEME.primary} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`} 
+                  className={`p-2 sm:p-3 ${THEME.text} hover:${THEME.primary} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`} 
                   onClick={previousTrack}
                   disabled={isChangingSong}
                 >
-                  <SkipBack className="h-8 w-8" />
+                  <SkipBack className="h-6 w-6 sm:h-8 sm:w-8" />
                 </button>
                 
                 <button 
-                  className={`${THEME.primaryBg} rounded-full p-5 text-white shadow-lg shadow-red-900/30 hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed`} 
+                  className={`${THEME.primaryBg} rounded-full p-3 sm:p-5 text-white shadow-lg shadow-red-900/30 hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed`} 
                   onClick={playPauseTrack}
                   disabled={isLoading || isChangingSong}
                 >
                   {(isLoading || isChangingSong) ? (
-                    <div className="h-8 w-8 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+                    <div className="h-6 w-6 sm:h-8 sm:w-8 border-3 border-white/30 border-t-white rounded-full animate-spin" />
                   ) : paused ? (
-                    <Play className="h-8 w-8 ml-1" />
+                    <Play className="h-6 w-6 sm:h-8 sm:w-8 ml-0.5 sm:ml-1" />
                   ) : (
-                    <Pause className="h-8 w-8" />
+                    <Pause className="h-6 w-6 sm:h-8 sm:w-8" />
                   )}
                 </button>
                 
                 <button 
-                  className={`p-3 ${THEME.text} hover:${THEME.primary} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`} 
+                  className={`p-2 sm:p-3 ${THEME.text} hover:${THEME.primary} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`} 
                   onClick={nextTrack}
                   disabled={isChangingSong}
                 >
-                  <SkipForward className="h-8 w-8" />
+                  <SkipForward className="h-6 w-6 sm:h-8 sm:w-8" />
                 </button>
               </div>
 
               {/* Loop controls */}
-              <div className="flex items-center justify-center gap-4">
-                <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full sm:w-auto">
+                {/* Marker buttons - full width on mobile */}
+                <div className="flex items-center gap-2 w-full sm:w-auto">
                   <button 
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    className={`flex-1 sm:flex-initial px-4 py-3 sm:px-3 sm:py-2 rounded-lg sm:rounded-md text-sm font-medium transition-colors ${
                       loopMarkers.start !== null 
                         ? `${THEME.primaryBg} text-white` 
                         : `${THEME.highlight} ${THEME.text} hover:bg-zinc-700`
@@ -262,7 +263,7 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
                   </button>
                   
                   <button 
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    className={`flex-1 sm:flex-initial px-4 py-3 sm:px-3 sm:py-2 rounded-lg sm:rounded-md text-sm font-medium transition-colors ${
                       loopMarkers.end !== null 
                         ? `${THEME.primaryBg} text-white` 
                         : `${THEME.highlight} ${THEME.text} hover:bg-zinc-700`
@@ -274,9 +275,10 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
                   </button>
                 </div>
 
+                {/* Action buttons - larger touch targets on mobile */}
                 <div className="flex items-center gap-2">
                   <button 
-                    className={`p-2 rounded-md transition-colors ${
+                    className={`p-3 sm:p-2 rounded-lg sm:rounded-md transition-colors ${
                       isLoopEnabled 
                         ? `${THEME.primaryBg} text-white shadow-lg` 
                         : `${THEME.highlight} ${THEME.text} hover:bg-zinc-700`
@@ -289,7 +291,7 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
                   </button>
                   
                   <button 
-                    className={`p-2 rounded-md ${THEME.highlight} ${THEME.text} hover:bg-zinc-700 transition-colors`}
+                    className={`p-3 sm:p-2 rounded-lg sm:rounded-md ${THEME.highlight} ${THEME.text} hover:bg-zinc-700 transition-colors`}
                     onClick={clearMarkers}
                     title="Clear markers (C key)"
                   >
@@ -297,7 +299,7 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
                   </button>
                   
                   <button 
-                    className={`p-2 rounded-md ${THEME.highlight} ${THEME.text} hover:bg-zinc-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                    className={`p-3 sm:p-2 rounded-lg sm:rounded-md ${THEME.highlight} ${THEME.text} hover:bg-zinc-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                     onClick={playFromA}
                     disabled={loopMarkers.start === null}
                     title="Play from A marker (R key)"
