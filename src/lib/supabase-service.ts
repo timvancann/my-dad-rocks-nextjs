@@ -629,6 +629,8 @@ export async function updateSong(
     notes?: string;
     tabs_chords?: string;
     tags?: string[];
+    dual_guitar?: boolean;
+    dual_vocal?: boolean;
   }
 ) {
   const updateData: any = {};
@@ -638,6 +640,8 @@ export async function updateSong(
   if (updates.notes !== undefined) updateData.notes = updates.notes;
   if (updates.tabs_chords !== undefined) updateData.tabs_chords = updates.tabs_chords;
   if (updates.tags !== undefined) updateData.tags = updates.tags;
+  if (updates.dual_guitar !== undefined) updateData.dual_guitar = updates.dual_guitar;
+  if (updates.dual_vocal !== undefined) updateData.dual_vocal = updates.dual_vocal;
 
   const { error } = await supabase.from('songs').update(updateData).eq('id', songId);
 

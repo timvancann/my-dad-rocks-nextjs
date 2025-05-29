@@ -2,7 +2,7 @@
 import { updateSong, getSongLinks, createSongLink, updateSongLink, deleteSongLink, updateSongMasteryLevel } from '@/actions/supabase';
 import { useRouter } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
-import { Hash, Music, X, Save, Tag, Plus, Minus, Link, Youtube, Disc3, FileText } from 'lucide-react';
+import { Hash, Music, X, Save, Tag, Plus, Minus, Link, Youtube, Disc3, FileText, Users, Guitar, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -50,7 +50,9 @@ export const EditSong = ({ song, masteryLevel, onClose, onUpdate }: EditSongProp
     notes: song.notes || '',
     tabs_chords: song.tabs_chords || '',
     difficulty_level: masteryLevel || 1,
-    tags: song.tags || []
+    tags: song.tags || [],
+    dualGuitar: song.dualGuitar || false,
+    dualVocal: song.dualVocal || false
   });
   
   // BPM Tap functionality
@@ -85,7 +87,9 @@ export const EditSong = ({ song, masteryLevel, onClose, onUpdate }: EditSongProp
         tempo_bpm: formData.tempo_bpm ? parseInt(formData.tempo_bpm.toString()) : null,
         notes: formData.notes || null,
         tabs_chords: formData.tabs_chords || null,
-        tags: formData.tags
+        tags: formData.tags,
+        dual_guitar: formData.dualGuitar,
+        dual_vocal: formData.dualVocal
       });
       
       // Update mastery level in song_stats table
@@ -102,10 +106,12 @@ export const EditSong = ({ song, masteryLevel, onClose, onUpdate }: EditSongProp
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
+    
     setFormData({
       ...formData,
-      [name]: name === 'difficulty_level' ? parseInt(value) : value
+      [name]: type === 'checkbox' ? checked : (name === 'difficulty_level' ? parseInt(value) : value)
     });
   };
 
@@ -379,6 +385,46 @@ export const EditSong = ({ song, masteryLevel, onClose, onUpdate }: EditSongProp
               <span className="text-sm text-gray-400">
                 {renderStars(formData.difficulty_level)}
               </span>
+            </div>
+          </div>
+
+          {/* Arrangement Options */}
+          <div className="space-y-4">
+            <Label>
+              <Users className="inline h-4 w-4 mr-1" />
+              Arrangement
+            </Label>
+            
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <input
+                  id="dualGuitar"
+                  name="dualGuitar"
+                  type="checkbox"
+                  checked={formData.dualGuitar}
+                  onChange={handleChange}
+                  className="w-4 h-4 text-rose-600 bg-zinc-800 border-zinc-600 rounded focus:ring-rose-500 focus:ring-2"
+                />
+                <label htmlFor="dualGuitar" className="text-sm font-medium flex items-center gap-1">
+                  <Guitar className="h-4 w-4" />
+                  Dubbele Gitaar
+                </label>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <input
+                  id="dualVocal"
+                  name="dualVocal"
+                  type="checkbox"
+                  checked={formData.dualVocal}
+                  onChange={handleChange}
+                  className="w-4 h-4 text-rose-600 bg-zinc-800 border-zinc-600 rounded focus:ring-rose-500 focus:ring-2"
+                />
+                <label htmlFor="dualVocal" className="text-sm font-medium flex items-center gap-1">
+                  <Mic className="h-4 w-4" />
+                  Dubbele Zang
+                </label>
+              </div>
             </div>
           </div>
 
