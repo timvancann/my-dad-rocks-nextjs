@@ -3,9 +3,10 @@
 import { useAudioTime, usePlaylistPlayer } from '@/hooks/useAudioTime';
 import { usePlayerStore } from '@/store/store';
 import { THEME } from '@/themes';
-import { Pause, Play, SkipBack, SkipForward, Volume2, Maximize2, Loader2 } from 'lucide-react';
+import { Pause, Play, SkipBack, SkipForward, Volume2, Maximize2, Loader2, Mic } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { TbGuitarPickFilled } from 'react-icons/tb';
 
 export const PlayerMini = () => {
   const selectedSong = usePlayerStore((state) => state.currentSong);
@@ -116,21 +117,25 @@ export const PlayerMini = () => {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="flex items-center gap-4 text-xs mt-2"
+                  className="flex items-center gap-3 text-xs mt-2"
                 >
                   {selectedSong.dualGuitar && (
-                    <span className={`${THEME.secondary}`}>🎸 Dual Guitar</span>
+                    <div className={`flex items-center gap-1 ${THEME.highlight} rounded-full px-2 py-1`}>
+                      <TbGuitarPickFilled className={`h-4 w-4 ${THEME.primary}`} />
+                    </div>
                   )}
                   {selectedSong.dualVocal && (
-                    <span className={`${THEME.secondary}`}>🎤 Dual Vocal</span>
+                    <div className={`flex items-center gap-1 ${THEME.highlight} rounded-full px-2 py-1`}>
+                      <Mic className={`h-4 w-4 ${THEME.secondary}`} />
+                    </div>
                   )}
                   {(selectedSong as any).tempo_bpm && (
-                    <span className={`${THEME.textSecondary}`}>
+                    <span className={`${THEME.textSecondary} ${THEME.highlight} rounded-full px-2.5 py-1`}>
                       {(selectedSong as any).tempo_bpm} BPM
                     </span>
                   )}
                   {(selectedSong as any).key_signature && (
-                    <span className={`${THEME.textSecondary}`}>
+                    <span className={`${THEME.textSecondary} ${THEME.highlight} rounded-full px-2.5 py-1`}>
                       Key: {(selectedSong as any).key_signature}
                     </span>
                   )}
