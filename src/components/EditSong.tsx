@@ -1,5 +1,5 @@
 'use client';
-import { updateSong, getSongLinks, createSongLink, updateSongLink, deleteSongLink } from '@/actions/supabase';
+import { updateSong, getSongLinks, createSongLink, updateSongLink, deleteSongLink, updateSongMasteryLevel } from '@/actions/supabase';
 import { useRouter } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
 import { Hash, Music, X, Save, Tag, Plus, Minus, Link, Youtube, Disc3, FileText } from 'lucide-react';
@@ -14,6 +14,7 @@ import { SiYoutubemusic } from 'react-icons/si';
 
 interface EditSongProps {
   song: SongType & { key_signature?: string; tempo_bpm?: number; tags?: string[]; difficulty_level?: number; notes?: string; tabs_chords?: string };
+  masteryLevel?: number;
   onClose: () => void;
   onUpdate?: () => void;
 }
@@ -36,7 +37,7 @@ const COMMON_TAGS = [
   'Energetic', 'Emotional', 'Guitar-driven', 'Bass-driven', 'Vocal Heavy', 'Instrumental'
 ];
 
-export const EditSong = ({ song, onClose, onUpdate }: EditSongProps) => {
+export const EditSong = ({ song, masteryLevel, onClose, onUpdate }: EditSongProps) => {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newTag, setNewTag] = useState('');
@@ -48,7 +49,7 @@ export const EditSong = ({ song, onClose, onUpdate }: EditSongProps) => {
     tempo_bpm: song.tempo_bpm || '',
     notes: song.notes || '',
     tabs_chords: song.tabs_chords || '',
-    difficulty_level: song.difficulty_level || 1,
+    difficulty_level: masteryLevel || 1,
     tags: song.tags || []
   });
   
@@ -78,14 +79,17 @@ export const EditSong = ({ song, onClose, onUpdate }: EditSongProps) => {
     setIsSubmitting(true);
     
     try {
+      // Update song details (without difficulty_level)
       await updateSong(song._id, {
         key_signature: formData.key_signature || null,
         tempo_bpm: formData.tempo_bpm ? parseInt(formData.tempo_bpm.toString()) : null,
         notes: formData.notes || null,
         tabs_chords: formData.tabs_chords || null,
-        difficulty_level: formData.difficulty_level,
         tags: formData.tags
       });
+      
+      // Update mastery level in song_stats table
+      await updateSongMasteryLevel(song._id, formData.difficulty_level);
       
       onUpdate?.();
       onClose();
@@ -378,14 +382,13 @@ export const EditSong = ({ song, onClose, onUpdate }: EditSongProps) => {
             </div>
           </div>
 
-          {/* Tags */}
-          <div className="space-y-4">
+          {/* Tags - Hidden for now */}
+          {/* <div className="space-y-4">
             <Label>
               <Tag className="inline h-4 w-4 mr-1" />
               Tags
             </Label>
             
-            {/* Current Tags */}
             <div className="flex flex-wrap gap-2">
               {formData.tags.map((tag) => (
                 <Badge key={tag} variant="secondary" className="flex items-center gap-1">
@@ -401,7 +404,6 @@ export const EditSong = ({ song, onClose, onUpdate }: EditSongProps) => {
               ))}
             </div>
 
-            {/* Add New Tag */}
             <div className="flex gap-2">
               <Input
                 value={newTag}
@@ -419,7 +421,6 @@ export const EditSong = ({ song, onClose, onUpdate }: EditSongProps) => {
               </Button>
             </div>
 
-            {/* Common Tags */}
             <div className="space-y-2">
               <p className="text-sm text-gray-400">Veel gebruikte tags:</p>
               <div className="flex flex-wrap gap-1">
@@ -435,7 +436,7 @@ export const EditSong = ({ song, onClose, onUpdate }: EditSongProps) => {
                 ))}
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Notes */}
           <div className="space-y-2">

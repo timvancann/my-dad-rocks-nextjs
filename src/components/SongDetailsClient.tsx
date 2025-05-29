@@ -83,6 +83,7 @@ export function SongDetailsClient({ song: initialSong, stats: initialStats, id }
       {showEditForm && (
         <EditSong 
           song={rawSong} 
+          masteryLevel={stats.mastery_level}
           onClose={() => setShowEditForm(false)} 
           onUpdate={refreshSongData}
         />
@@ -234,8 +235,8 @@ export function SongDetailsClient({ song: initialSong, stats: initialStats, id }
             </CardContent>
           </Card>
 
-          {/* Tags */}
-          {rawSong.tags && rawSong.tags.length > 0 && (
+          {/* Tags - Hidden for now */}
+          {/* {rawSong.tags && rawSong.tags.length > 0 && (
             <Card className="md:col-span-2">
               <CardHeader>
                 <CardTitle>Tags</CardTitle>
@@ -252,7 +253,7 @@ export function SongDetailsClient({ song: initialSong, stats: initialStats, id }
                 </div>
               </CardContent>
             </Card>
-          )}
+          )} */}
 
           {/* Notes */}
           {song.notes && (

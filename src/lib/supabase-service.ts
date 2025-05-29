@@ -370,6 +370,36 @@ export async function updateSongStats(songId: string, type: 'played' | 'practice
   }
 }
 
+export async function updateSongMasteryLevel(songId: string, masteryLevel: number) {
+  const { data: existingStats } = await supabase.from('song_stats').select('*').eq('song_id', songId).single();
+
+  if (existingStats) {
+    const { error } = await supabase
+      .from('song_stats')
+      .update({ mastery_level: masteryLevel })
+      .eq('song_id', songId);
+
+    if (error) {
+      console.error('Error updating mastery level:', error);
+      throw error;
+    }
+  } else {
+    // Create new stats entry with mastery level
+    const { error } = await supabase.from('song_stats').insert({
+      song_id: songId,
+      times_played: 0,
+      times_practiced: 0,
+      mastery_level: masteryLevel,
+      last_practiced_at: null
+    });
+
+    if (error) {
+      console.error('Error creating song stats:', error);
+      throw error;
+    }
+  }
+}
+
 export async function createGig(gig: Partial<GigsType>) {
   const { data, error } = await supabase
     .from('gigs')
@@ -598,7 +628,6 @@ export async function updateSong(
     tempo_bpm?: number;
     notes?: string;
     tabs_chords?: string;
-    difficulty_level?: number;
     tags?: string[];
   }
 ) {
@@ -608,7 +637,6 @@ export async function updateSong(
   if (updates.tempo_bpm !== undefined) updateData.tempo_bpm = updates.tempo_bpm;
   if (updates.notes !== undefined) updateData.notes = updates.notes;
   if (updates.tabs_chords !== undefined) updateData.tabs_chords = updates.tabs_chords;
-  if (updates.difficulty_level !== undefined) updateData.difficulty_level = updates.difficulty_level;
   if (updates.tags !== undefined) updateData.tags = updates.tags;
 
   const { error } = await supabase.from('songs').update(updateData).eq('id', songId);
