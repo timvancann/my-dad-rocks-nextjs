@@ -45,7 +45,7 @@ export const useAudioTime = () => {
 };
 
 export const usePlaylistPlayer = () => {
-  const { load, paused, togglePlayPause, duration, stop, seek, looping, isLoading } = useGlobalAudioPlayer();
+  const { load, paused, togglePlayPause, duration, stop, seek, isLoading } = useGlobalAudioPlayer();
 
   const selectedSong = usePlayerStore((state) => state.currentSong);
   const setSelectedSong = usePlayerStore((state) => state.setCurrentSong);
@@ -54,38 +54,57 @@ export const usePlaylistPlayer = () => {
   const setSongIndex = usePlayerStore((state) => state.setSongIndex);
   const isChangingSong = usePlayerStore((state) => state.isChangingSong);
   const setIsChangingSong = usePlayerStore((state) => state.setIsChangingSong);
+  
+  // Track loading state per song to prevent race conditions
+  const loadingRef = useRef<string | null>(null);
 
-  const skipTrack = (increment: number) => {
+  const skipTrack = useCallback((increment: number) => {
     if (!selectedSong || !playlist.length) return;
 
     const currentIndex = playlist.findIndex((song) => song._id === selectedSong._id);
-    const nextIndex = (currentIndex + increment) % playlist.length;
+    let nextIndex = (currentIndex + increment + playlist.length) % playlist.length;
+    
     setSongIndex(nextIndex);
-  };
+  }, [selectedSong, playlist, setSongIndex]);
 
+  // Update selected song when index changes
   useEffect(() => {
+    if (playlist.length === 0) return;
+    
     const nextIndex = songIndex % playlist.length;
     const nextSong = playlist[nextIndex];
-    setSelectedSong(nextSong);
-  }, [songIndex]);
+    
+    if (nextSong && nextSong._id !== selectedSong?._id) {
+      setSelectedSong(nextSong);
+    }
+  }, [songIndex, playlist, selectedSong, setSelectedSong]);
 
-  const nextTrack = () => {
+  const nextTrack = useCallback(() => {
+    if (isChangingSong) return;
     skipTrack(1);
-  };
+  }, [isChangingSong, skipTrack]);
 
-  const previousTrack = () => {
+  const previousTrack = useCallback(() => {
+    if (isChangingSong) return;
     skipTrack(-1);
-  };
+  }, [isChangingSong, skipTrack]);
 
   const playTrack = useCallback(
     async (song: SongType) => {
-      if (selectedSong === song) return;
-      if (!song.audio) {
-        nextTrack();
+      if (!song || !song.audio) {
+        console.error('Invalid song or no audio available');
         return;
       }
+
+      // Prevent loading the same song multiple times
+      if (loadingRef.current === song._id) {
+        return;
+      }
+
+      // Mark this song as loading
+      loadingRef.current = song._id;
       
-      // Stop current song immediately
+      // Stop current playback
       stop();
       setIsChangingSong(true);
       
@@ -94,37 +113,50 @@ export const usePlaylistPlayer = () => {
         if (!url) {
           url = await fetchAndCacheAudio(song, song.audio as string);
         }
-        load(url, {
-          autoplay: true,
-          format: 'mp3',
-          html5: true,
-          onload: () => {
-            setIsChangingSong(false);
-          },
-          onend: () => {
-            setSongIndex(songIndex + 1);
-          }
-        });
+        
+        // Only load if this is still the song we want to play
+        if (loadingRef.current === song._id) {
+          load(url, {
+            autoplay: true,
+            format: 'mp3',
+            html5: true,
+            onload: () => {
+              if (loadingRef.current === song._id) {
+                setIsChangingSong(false);
+                loadingRef.current = null;
+              }
+            },
+            onend: () => {
+              // Auto-advance to next track
+              setSongIndex(songIndex + 1);
+            }
+          });
+        }
       } catch (error) {
-        setIsChangingSong(false);
         console.error('Error loading track:', error);
+        setIsChangingSong(false);
+        loadingRef.current = null;
       }
     },
-    [songIndex, setIsChangingSong, stop]
+    [stop, load, setIsChangingSong, setSongIndex, songIndex]
   );
 
+  // Play track when selected song changes
   useEffect(() => {
     if (!selectedSong) return;
+    
     if (!selectedSong.audio) {
       nextTrack();
       return;
     }
+    
     playTrack(selectedSong);
-  }, [selectedSong]);
+  }, [selectedSong?._id]); // Only depend on song ID to avoid circular dependencies
 
-  const playPauseTrack = () => {
+  const playPauseTrack = useCallback(() => {
+    if (isChangingSong) return;
     togglePlayPause();
-  };
+  }, [isChangingSong, togglePlayPause]);
 
   const stopTrack = () => {
     stop();

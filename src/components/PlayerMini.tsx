@@ -141,20 +141,21 @@ export const PlayerMini = () => {
             {/* Playback controls */}
             <div className={`flex items-center ${isExpanded ? 'gap-3' : 'gap-2'} ml-2`}>
               <button 
-                className={`p-1.5 ${THEME.text} hover:${THEME.primary} transition-colors`} 
+                className={`p-1.5 ${THEME.text} hover:${THEME.primary} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`} 
                 onClick={previousTrack}
+                disabled={isChangingSong}
                 title="Previous"
               >
                 <SkipBack className={`${isExpanded ? 'h-5 w-5' : 'h-4 w-4'}`} />
               </button>
               
               <button 
-                className={`${THEME.primaryBg} rounded-full ${isExpanded ? 'p-2.5' : 'p-2'} text-white shadow-lg shadow-red-900/30 hover:scale-105 transition-transform`} 
+                className={`${THEME.primaryBg} rounded-full ${isExpanded ? 'p-2.5' : 'p-2'} text-white shadow-lg shadow-red-900/30 hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed`} 
                 onClick={playPauseTrack}
-                disabled={isLoading}
+                disabled={isLoading || isChangingSong}
                 title={paused ? 'Play' : 'Pause'}
               >
-                {isLoading ? (
+                {(isLoading || isChangingSong) ? (
                   <div className={`${isExpanded ? 'h-5 w-5' : 'h-4 w-4'} border-2 border-white/30 border-t-white rounded-full animate-spin`} />
                 ) : paused ? (
                   <Play className={`${isExpanded ? 'h-5 w-5' : 'h-4 w-4'} ml-0.5`} />
@@ -164,8 +165,9 @@ export const PlayerMini = () => {
               </button>
               
               <button 
-                className={`p-1.5 ${THEME.text} hover:${THEME.primary} transition-colors`} 
+                className={`p-1.5 ${THEME.text} hover:${THEME.primary} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`} 
                 onClick={nextTrack}
+                disabled={isChangingSong}
                 title="Next"
               >
                 <SkipForward className={`${isExpanded ? 'h-5 w-5' : 'h-4 w-4'}`} />
