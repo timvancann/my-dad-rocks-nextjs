@@ -117,3 +117,19 @@ export async function deleteSongLink(linkId: string) {
 export async function updateSongMasteryLevel(songId: string, masteryLevel: number) {
   return updateSongMasteryLevelSupabase(songId, masteryLevel);
 }
+
+export async function createSong(songData: {
+  title: string;
+  artist: string;
+  artwork_url?: string;
+  audio_url?: string;
+  duration_seconds?: number;
+}) {
+  const { createSong: createSongSupabase } = await import('@/lib/supabase-service');
+  return createSongSupabase(songData);
+}
+
+export async function deleteSong(songId: string) {
+  const { deleteSong: deleteSongSupabase } = await import('@/lib/supabase-service');
+  return deleteSongSupabase(songId);
+}

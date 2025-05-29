@@ -1,17 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getSongWithStats, getSongLinks } from '@/actions/supabase';
+import { getSongWithStats, getSongLinks, deleteSong } from '@/actions/supabase';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { EditSong } from '@/components/EditSong';
 import { THEME } from '@/themes';
-import { Calendar, Clock, Guitar, Hash, Mic, Music, Star, Tag, Users, Edit, ArrowLeft, Link as LinkIcon, FileText } from 'lucide-react';
+import { Calendar, Clock, Guitar, Hash, Mic, Music, Star, Tag, Users, Edit, ArrowLeft, Link as LinkIcon, FileText, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { FaSpotify, FaYoutube } from 'react-icons/fa';
 import { SiYoutubemusic } from 'react-icons/si';
 import { NavigationLink } from './NavigationButton';
+import { useRouter } from 'next/navigation';
 
 function getDifficultyColor(level: number) {
   const colors = ['text-green-600', 'text-blue-600', 'text-yellow-600', 'text-orange-600', 'text-red-600'];
@@ -31,10 +32,12 @@ interface SongDetailsClientProps {
 }
 
 export function SongDetailsClient({ song: initialSong, stats: initialStats, id }: SongDetailsClientProps) {
+  const router = useRouter();
   const [showEditForm, setShowEditForm] = useState(false);
   const [song, setSong] = useState(initialSong);
   const [stats, setStats] = useState(initialStats);
   const [loading, setLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [songLinks, setSongLinks] = useState<any[]>([]);
   
   // Get the raw song data to access new fields
@@ -75,6 +78,29 @@ export function SongDetailsClient({ song: initialSong, stats: initialStats, id }
       console.error('Error refreshing song:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteSong = async () => {
+    const confirmMessage = `Weet je zeker dat je "${song.title}" wilt verwijderen?\n\nDit verwijdert:\n• Het nummer uit alle setlists\n• Alle song links\n• Cover art en audio bestanden\n• Alle statistieken en notities\n\nDeze actie kan niet ongedaan worden gemaakt.`;
+    
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    setIsDeleting(true);
+    
+    try {
+      await deleteSong(id);
+      
+      // Navigate back to repertoire after successful deletion
+      router.push('/practice/repertoire');
+      
+    } catch (error) {
+      console.error('Error deleting song:', error);
+      alert('Er is een fout opgetreden bij het verwijderen van het nummer');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -350,6 +376,35 @@ export function SongDetailsClient({ song: initialSong, stats: initialStats, id }
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Danger Zone - Delete Song */}
+        <div className="mt-12 pt-8 border-t border-zinc-800">
+          <div className="bg-red-950/20 border border-red-900/50 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-red-400 mb-2">Gevaarlijke Zone</h3>
+            <p className="text-gray-400 text-sm mb-4">
+              Het verwijderen van dit nummer kan niet ongedaan worden gemaakt. 
+              Het nummer wordt verwijderd uit alle setlists en alle bijbehorende gegevens gaan verloren.
+            </p>
+            <Button
+              onClick={handleDeleteSong}
+              disabled={isDeleting || loading}
+              variant="destructive"
+              className="bg-red-600 hover:bg-red-700 text-white border-red-600"
+            >
+              {isDeleting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
+                  Bezig met verwijderen...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Nummer Verwijderen
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </div>
     </>

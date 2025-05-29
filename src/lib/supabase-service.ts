@@ -671,3 +671,140 @@ export async function addPause(pause: SongType, setlist: SetlistType) {
   }
 }
 
+export async function createSong(songData: {
+  title: string;
+  artist: string;
+  artwork_url?: string;
+  audio_url?: string;
+  duration_seconds?: number;
+}) {
+  const { data, error } = await supabase
+    .from('songs')
+    .insert({
+      title: songData.title,
+      artist: songData.artist,
+      slug: generateSlug(songData.title),
+      artwork_url: songData.artwork_url || null,
+      audio_url: songData.audio_url || null,
+      duration_seconds: songData.duration_seconds || null,
+      dual_guitar: false,
+      dual_vocal: false,
+      lyrics: null,
+      key_signature: null,
+      tempo_bpm: null,
+      tags: [],
+      notes: null,
+      tabs_chords: null,
+      last_played_at: null
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating song:', error);
+    throw error;
+  }
+
+  return mapSupabaseSongToSongType(data);
+}
+
+export async function deleteSong(songId: string) {
+  try {
+    // Get song data first to access file URLs for cleanup
+    const { data: songData } = await supabase
+      .from('songs')
+      .select('artwork_url, audio_url, title')
+      .eq('id', songId)
+      .single();
+
+    // 1. Delete from setlist_items (remove from all playlists)
+    const { error: setlistItemsError } = await supabase
+      .from('setlist_items')
+      .delete()
+      .eq('song_id', songId);
+
+    if (setlistItemsError) {
+      console.error('Error deleting setlist items:', setlistItemsError);
+    }
+
+    // 2. Delete song_links
+    const { error: linksError } = await supabase
+      .from('song_links')
+      .delete()
+      .eq('song_id', songId);
+
+    if (linksError) {
+      console.error('Error deleting song links:', linksError);
+    }
+
+    // 3. Delete song_stats
+    const { error: statsError } = await supabase
+      .from('song_stats')
+      .delete()
+      .eq('song_id', songId);
+
+    if (statsError) {
+      console.error('Error deleting song stats:', statsError);
+    }
+
+    // 4. Delete practice_session_songs if it exists
+    try {
+      const { error: practiceError } = await supabase
+        .from('practice_session_songs')
+        .delete()
+        .eq('song_id', songId);
+
+      if (practiceError) {
+        console.error('Error deleting practice session songs:', practiceError);
+      }
+    } catch (e) {
+      // Table might not exist, ignore
+    }
+
+    // 5. Delete the song itself
+    const { error: songError } = await supabase
+      .from('songs')
+      .delete()
+      .eq('id', songId);
+
+    if (songError) {
+      console.error('Error deleting song:', songError);
+      throw songError;
+    }
+
+    // 6. Delete files (artwork and audio)
+    if (songData) {
+      const filesToDelete = [];
+      
+      if (songData.artwork_url && songData.artwork_url.startsWith('/uploads/')) {
+        filesToDelete.push({ type: 'cover', url: songData.artwork_url });
+      }
+      
+      if (songData.audio_url && songData.audio_url.startsWith('/uploads/')) {
+        filesToDelete.push({ type: 'audio', url: songData.audio_url });
+      }
+
+      // Call delete files API if there are files to delete
+      if (filesToDelete.length > 0) {
+        try {
+          await fetch('/api/delete-files', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ files: filesToDelete })
+          });
+        } catch (e) {
+          console.error('Error deleting files:', e);
+          // Don't throw - files can be cleaned up manually
+        }
+      }
+    }
+
+    console.log(`Successfully deleted song: ${songData?.title}`);
+    return true;
+
+  } catch (error) {
+    console.error('Error in deleteSong:', error);
+    throw error;
+  }
+}
+
