@@ -1,0 +1,239 @@
+'use client';
+
+import { useAudioTime, usePlaylistPlayer } from '@/hooks/useAudioTime';
+import { usePlayerStore } from '@/store/store';
+import { THEME } from '@/themes';
+import { X, Play, Pause, SkipBack, SkipForward, Volume2, Mic } from 'lucide-react';
+import { useEffect, useState, useRef } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { TbGuitarPickFilled } from 'react-icons/tb';
+
+interface PlayerFullProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
+  const selectedSong = usePlayerStore((state) => state.currentSong);
+  const { previousTrack, nextTrack, playPauseTrack, paused, duration, isLoading, seekTrack, isChangingSong } = usePlaylistPlayer();
+  
+  const [progress, setProgress] = useState(0);
+  const [isSeeking, setIsSeeking] = useState(false);
+  const progressBarRef = useRef<HTMLDivElement>(null);
+  const time = useAudioTime();
+
+  useEffect(() => {
+    if (duration > 0 && !isSeeking) {
+      setProgress((time / duration) * 100);
+    }
+  }, [time, duration, isSeeking]);
+
+  const handleSeek = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+    if (!progressBarRef.current || !duration) return;
+    
+    const rect = progressBarRef.current.getBoundingClientRect();
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const x = clientX - rect.left;
+    const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
+    const seekTime = (percentage / 100) * duration;
+    
+    setProgress(percentage);
+    seekTrack(seekTime);
+  };
+
+  const handleSeekStart = () => {
+    setIsSeeking(true);
+  };
+
+  const handleSeekEnd = () => {
+    setIsSeeking(false);
+  };
+
+  const formatTime = (seconds: number) => {
+    if (!seconds || isNaN(seconds)) return '0:00';
+    return new Date(seconds * 1000).toISOString().slice(15, 19);
+  };
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyPress = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case ' ':
+          e.preventDefault();
+          playPauseTrack();
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          previousTrack();
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          nextTrack();
+          break;
+        case 'Escape':
+          e.preventDefault();
+          onClose();
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [isOpen, playPauseTrack, previousTrack, nextTrack, onClose]);
+
+  if (!selectedSong) return null;
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            className="absolute top-20 left-4 right-4 bottom-4 md:top-24 md:left-8 md:right-8 md:bottom-8 lg:top-28 lg:left-16 lg:right-16 lg:bottom-16 bg-zinc-900 rounded-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-10">
+              <h2 className="text-lg font-semibold">Now Playing</h2>
+              <button
+                onClick={onClose}
+                className={`p-2 rounded-full ${THEME.highlight} hover:bg-zinc-700 transition-colors`}
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Main content */}
+            <div className="h-full flex flex-col items-center justify-center p-6 pb-24">
+              {/* Album art */}
+              <div className="relative mb-6">
+                <div className={`w-48 h-48 md:w-64 md:h-64 lg:w-72 lg:h-72 relative ${isChangingSong ? 'opacity-50' : ''}`}>
+                  {/* Vinyl effect */}
+                  <div 
+                    className={`absolute -inset-2 ${!paused && !isChangingSong ? 'animate-spin' : ''} rounded-full bg-gradient-to-br from-amber-500 to-red-800`} 
+                    style={{ animationDuration: '5s' }}
+                  />
+                  <div className="absolute left-1/2 top-1/2 z-20 h-8 w-8 -translate-x-1/2 -translate-y-1/2 transform rounded-full border-2 border-zinc-700 bg-zinc-900" />
+                  <img 
+                    src={selectedSong.artwork} 
+                    alt={selectedSong.title} 
+                    className={`relative z-10 w-full h-full ${!paused && !isChangingSong ? 'animate-spin' : ''} rounded-full border-4 border-zinc-800 shadow-2xl`} 
+                    style={{ animationDuration: '15s' }} 
+                  />
+                </div>
+                {isChangingSong && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="h-16 w-16 border-4 border-zinc-700 border-t-red-600 rounded-full animate-spin"></div>
+                  </div>
+                )}
+              </div>
+
+              {/* Song info */}
+              <div className="text-center mb-6 max-w-md">
+                <h1 className="text-2xl md:text-3xl font-bold mb-2">{selectedSong.title}</h1>
+                <p className="text-lg md:text-xl text-zinc-400 mb-3">{selectedSong.artist}</p>
+                
+                {/* Metadata badges */}
+                <div className="flex items-center justify-center gap-3">
+                  {selectedSong.dualGuitar && (
+                    <div className={`flex items-center gap-1 ${THEME.highlight} rounded-full px-3 py-1.5`}>
+                      <TbGuitarPickFilled className={`h-5 w-5 ${THEME.primary}`} />
+                    </div>
+                  )}
+                  {selectedSong.dualVocal && (
+                    <div className={`flex items-center gap-1 ${THEME.highlight} rounded-full px-3 py-1.5`}>
+                      <Mic className={`h-5 w-5 ${THEME.secondary}`} />
+                    </div>
+                  )}
+                  {(selectedSong as any).tempo_bpm && (
+                    <span className={`${THEME.textSecondary} ${THEME.highlight} rounded-full px-3 py-1.5 text-sm`}>
+                      {(selectedSong as any).tempo_bpm} BPM
+                    </span>
+                  )}
+                  {(selectedSong as any).key_signature && (
+                    <span className={`${THEME.textSecondary} ${THEME.highlight} rounded-full px-3 py-1.5 text-sm`}>
+                      Key: {(selectedSong as any).key_signature}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Progress bar */}
+              <div className="w-full max-w-2xl mb-6">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm tabular-nums text-zinc-400">{formatTime(time)}</span>
+                  
+                  <div 
+                    ref={progressBarRef}
+                    className="flex-1 relative h-2 bg-zinc-800 rounded-full cursor-pointer group"
+                    onClick={handleSeek}
+                    onMouseDown={handleSeekStart}
+                    onMouseUp={handleSeekEnd}
+                    onMouseLeave={handleSeekEnd}
+                    onTouchStart={handleSeekStart}
+                    onTouchEnd={handleSeekEnd}
+                    onTouchMove={handleSeek}
+                  >
+                    <div 
+                      className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-red-700 via-red-600 to-amber-500"
+                      style={{ width: `${progress}%` }}
+                    />
+                    <div 
+                      className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg transition-opacity opacity-0 group-hover:opacity-100"
+                      style={{ left: `${progress}%`, transform: 'translate(-50%, -50%)' }}
+                    />
+                  </div>
+                  
+                  <span className="text-sm tabular-nums text-zinc-400">{formatTime(duration)}</span>
+                </div>
+              </div>
+
+              {/* Playback controls */}
+              <div className="flex items-center gap-6">
+                <button 
+                  className={`p-3 ${THEME.text} hover:${THEME.primary} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`} 
+                  onClick={previousTrack}
+                  disabled={isChangingSong}
+                >
+                  <SkipBack className="h-8 w-8" />
+                </button>
+                
+                <button 
+                  className={`${THEME.primaryBg} rounded-full p-5 text-white shadow-lg shadow-red-900/30 hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed`} 
+                  onClick={playPauseTrack}
+                  disabled={isLoading || isChangingSong}
+                >
+                  {(isLoading || isChangingSong) ? (
+                    <div className="h-8 w-8 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : paused ? (
+                    <Play className="h-8 w-8 ml-1" />
+                  ) : (
+                    <Pause className="h-8 w-8" />
+                  )}
+                </button>
+                
+                <button 
+                  className={`p-3 ${THEME.text} hover:${THEME.primary} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`} 
+                  onClick={nextTrack}
+                  disabled={isChangingSong}
+                >
+                  <SkipForward className="h-8 w-8" />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};

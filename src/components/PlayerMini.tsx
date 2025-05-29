@@ -3,10 +3,11 @@
 import { useAudioTime, usePlaylistPlayer } from '@/hooks/useAudioTime';
 import { usePlayerStore } from '@/store/store';
 import { THEME } from '@/themes';
-import { Pause, Play, SkipBack, SkipForward, Volume2, Maximize2, Loader2, Mic } from 'lucide-react';
+import { Pause, Play, SkipBack, SkipForward, Volume2, Maximize2, Loader2, Mic, Maximize } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { TbGuitarPickFilled } from 'react-icons/tb';
+import { PlayerFull } from './PlayerFull';
 
 export const PlayerMini = () => {
   const selectedSong = usePlayerStore((state) => state.currentSong);
@@ -15,6 +16,7 @@ export const PlayerMini = () => {
   const [progress, setProgress] = useState(0);
   const [isSeeking, setIsSeeking] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isFullPlayerOpen, setIsFullPlayerOpen] = useState(false);
   const progressBarRef = useRef<HTMLDivElement>(null);
   const time = useAudioTime();
 
@@ -53,7 +55,8 @@ export const PlayerMini = () => {
   if (!selectedSong) return null;
 
   return (
-    <AnimatePresence>
+    <>
+      <AnimatePresence>
       <motion.div 
         initial={{ y: 100 }}
         animate={{ y: 0 }}
@@ -101,14 +104,25 @@ export const PlayerMini = () => {
                   </p>
                 </div>
                 
-                {/* Expand/collapse button for mobile */}
-                <button
-                  onClick={() => setIsExpanded(!isExpanded)}
-                  className={`p-1.5 rounded-full ${THEME.highlight} lg:hidden`}
-                  title={isExpanded ? 'Collapse' : 'Expand'}
-                >
-                  <Maximize2 className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
-                </button>
+                <div className="flex items-center gap-2">
+                  {/* Full player button */}
+                  <button
+                    onClick={() => setIsFullPlayerOpen(true)}
+                    className={`p-1.5 rounded-full ${THEME.highlight} hover:bg-zinc-700 transition-colors`}
+                    title="Open full player"
+                  >
+                    <Maximize className="h-4 w-4" />
+                  </button>
+                  
+                  {/* Expand/collapse button for mobile */}
+                  <button
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className={`p-1.5 rounded-full ${THEME.highlight} lg:hidden`}
+                    title={isExpanded ? 'Collapse' : 'Expand'}
+                  >
+                    <Maximize2 className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                  </button>
+                </div>
               </div>
 
               {/* Additional info when expanded */}
@@ -223,5 +237,12 @@ export const PlayerMini = () => {
         </div>
       </motion.div>
     </AnimatePresence>
+    
+      {/* Full Player Modal */}
+      <PlayerFull 
+        isOpen={isFullPlayerOpen} 
+        onClose={() => setIsFullPlayerOpen(false)} 
+      />
+    </>
   );
 };
