@@ -131,8 +131,16 @@ export const WaveformVisualizer = ({
     wavesurfer.setTime(currentTime);
   }, [currentTime, wavesurfer, isReady]);
 
-  // Handle mouse events for dragging markers
+  // Handle mouse/touch events for dragging markers
   const handleMouseDown = useCallback((e: React.MouseEvent, markerType: 'start' | 'end') => {
+    if (!setLoopMarkers) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(markerType);
+  }, [setLoopMarkers]);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent, markerType: 'start' | 'end') => {
     if (!setLoopMarkers) return;
     
     e.preventDefault();
@@ -160,24 +168,55 @@ export const WaveformVisualizer = ({
     }
   }, [isDragging, wavesurfer, isReady, setLoopMarkers, loopMarkers]);
 
+  const handleTouchMove = useCallback((e: TouchEvent) => {
+    if (!isDragging || !containerRef.current || !wavesurfer || !isReady || !setLoopMarkers) return;
+    
+    const touch = e.touches[0];
+    if (!touch) return;
+    
+    const container = containerRef.current;
+    const rect = container.getBoundingClientRect();
+    const x = touch.clientX - rect.left;
+    const relativeX = x / rect.width;
+    const duration = wavesurfer.getDuration();
+    const time = relativeX * duration;
+    
+    // Clamp time to valid range
+    const clampedTime = Math.max(0, Math.min(time, duration));
+    
+    if (isDragging === 'start') {
+      setLoopMarkers({ ...loopMarkers, start: clampedTime });
+    } else if (isDragging === 'end') {
+      setLoopMarkers({ ...loopMarkers, end: clampedTime });
+    }
+  }, [isDragging, wavesurfer, isReady, setLoopMarkers, loopMarkers]);
+
   const handleMouseUp = useCallback(() => {
     setIsDragging(null);
   }, []);
 
-  // Add global mouse event listeners for dragging
+  const handleTouchEnd = useCallback(() => {
+    setIsDragging(null);
+  }, []);
+
+  // Add global mouse and touch event listeners for dragging
   useEffect(() => {
     if (isDragging) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
+      document.addEventListener('touchmove', handleTouchMove, { passive: false });
+      document.addEventListener('touchend', handleTouchEnd);
       document.body.style.cursor = 'ew-resize';
       
       return () => {
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
+        document.removeEventListener('touchmove', handleTouchMove);
+        document.removeEventListener('touchend', handleTouchEnd);
         document.body.style.cursor = '';
       };
     }
-  }, [isDragging, handleMouseMove, handleMouseUp]);
+  }, [isDragging, handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd]);
 
   // Handle seeking via manual click on container (but not when dragging)
   useEffect(() => {
@@ -254,13 +293,14 @@ export const WaveformVisualizer = ({
           {/* A marker */}
           {loopMarkers.start !== null && (
             <div 
-              className={`absolute top-0 bottom-0 ${setLoopMarkers ? 'cursor-ew-resize' : 'pointer-events-none'}`}
+              className={`absolute top-0 bottom-0 ${setLoopMarkers ? 'cursor-ew-resize touch-none' : 'pointer-events-none'}`}
               style={{ 
                 left: `${(loopMarkers.start / wavesurfer.getDuration()) * 100}%`,
                 width: '20px',
                 marginLeft: '-10px'
               }}
               onMouseDown={setLoopMarkers ? (e) => handleMouseDown(e, 'start') : undefined}
+              onTouchStart={setLoopMarkers ? (e) => handleTouchStart(e, 'start') : undefined}
             >
               <div className="absolute top-0 bottom-0 left-1/2 w-0.5 -translate-x-1/2 bg-green-500" />
               <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-green-500 text-white text-xs px-2 py-1 rounded font-medium">A</div>
@@ -273,13 +313,14 @@ export const WaveformVisualizer = ({
           {/* B marker */}
           {loopMarkers.end !== null && (
             <div 
-              className={`absolute top-0 bottom-0 ${setLoopMarkers ? 'cursor-ew-resize' : 'pointer-events-none'}`}
+              className={`absolute top-0 bottom-0 ${setLoopMarkers ? 'cursor-ew-resize touch-none' : 'pointer-events-none'}`}
               style={{ 
                 left: `${(loopMarkers.end / wavesurfer.getDuration()) * 100}%`,
                 width: '20px',
                 marginLeft: '-10px'
               }}
               onMouseDown={setLoopMarkers ? (e) => handleMouseDown(e, 'end') : undefined}
+              onTouchStart={setLoopMarkers ? (e) => handleTouchStart(e, 'end') : undefined}
             >
               <div className="absolute top-0 bottom-0 left-1/2 w-0.5 -translate-x-1/2 bg-blue-500" />
               <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-blue-500 text-white text-xs px-2 py-1 rounded font-medium">B</div>

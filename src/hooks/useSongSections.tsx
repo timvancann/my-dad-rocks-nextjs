@@ -14,7 +14,9 @@ export function useSongSections() {
     setLoading(true);
     try {
       const sections = await getSongSections(songId);
-      setSongSections(sections);
+      // Sort sections by start_time
+      const sortedSections = sections.sort((a, b) => a.start_time - b.start_time);
+      setSongSections(sortedSections);
     } catch (error) {
       console.error('Failed to load song sections:', error);
     } finally {
@@ -41,7 +43,9 @@ export function useSongSections() {
         color
       });
       
-      setSongSections([...songSections, newSection]);
+      // Add new section and sort by start_time
+      const updatedSections = [...songSections, newSection].sort((a, b) => a.start_time - b.start_time);
+      setSongSections(updatedSections);
       return newSection;
     } catch (error) {
       console.error('Failed to create song section:', error);
@@ -53,11 +57,12 @@ export function useSongSections() {
     try {
       const updatedSection = await updateSongSection(id, updates);
       
-      setSongSections(
-        songSections.map(section => 
-          section.id === id ? updatedSection : section
-        )
-      );
+      // Update section and sort by start_time
+      const updatedSections = songSections.map(section => 
+        section.id === id ? updatedSection : section
+      ).sort((a, b) => a.start_time - b.start_time);
+      
+      setSongSections(updatedSections);
       
       return updatedSection;
     } catch (error) {

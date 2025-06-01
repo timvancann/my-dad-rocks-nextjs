@@ -8,7 +8,7 @@ export async function getSongSections(songId: string): Promise<SongSection[]> {
     .from('song_sections')
     .select('*')
     .eq('song_id', songId)
-    .order('position', { ascending: true });
+    .order('start_time', { ascending: true });
 
   if (error) {
     console.error('Error fetching song sections:', error);

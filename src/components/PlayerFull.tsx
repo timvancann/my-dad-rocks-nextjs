@@ -28,7 +28,7 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
   
   const [newMarkerName, setNewMarkerName] = useState('');
   const [editingName, setEditingName] = useState('');
-  const [showMarkerList, setShowMarkerList] = useState(true);
+  const [showMarkerList, setShowMarkerList] = useState(false);
   const [draggedMarkerId, setDraggedMarkerId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartX, setDragStartX] = useState(0);
@@ -131,7 +131,7 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
     return (startTime / duration) * 100;
   }, [duration]);
 
-  // Mouse drag handling functions
+  // Mouse/Touch drag handling functions
   const handleMarkerMouseDown = useCallback((e: React.MouseEvent, markerId: string, startTime: number) => {
     e.preventDefault();
     e.stopPropagation();
@@ -142,11 +142,44 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
     setDragStartTime(startTime);
   }, []);
 
+  const handleMarkerTouchStart = useCallback((e: React.TouchEvent, markerId: string, startTime: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const touch = e.touches[0];
+    if (touch) {
+      setDraggedMarkerId(markerId);
+      setIsDragging(true);
+      setDragStartX(touch.clientX);
+      setDragStartTime(startTime);
+    }
+  }, []);
+
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isDragging || !draggedMarkerId || !waveformRef.current || !duration) return;
 
     const rect = waveformRef.current.getBoundingClientRect();
     const deltaX = e.clientX - dragStartX;
+    const deltaPercentage = deltaX / rect.width;
+    const deltaTime = deltaPercentage * duration;
+    
+    const newTime = Math.max(0, Math.min(duration, dragStartTime + deltaTime));
+    
+    // Update the marker position immediately for smooth dragging
+    const marker = sections.find(s => s.id === draggedMarkerId);
+    if (marker) {
+      marker.start_time = newTime;
+    }
+  }, [isDragging, draggedMarkerId, duration, dragStartX, dragStartTime, sections]);
+
+  const handleTouchMove = useCallback((e: TouchEvent) => {
+    if (!isDragging || !draggedMarkerId || !waveformRef.current || !duration) return;
+
+    const touch = e.touches[0];
+    if (!touch) return;
+
+    const rect = waveformRef.current.getBoundingClientRect();
+    const deltaX = touch.clientX - dragStartX;
     const deltaPercentage = deltaX / rect.width;
     const deltaTime = deltaPercentage * duration;
     
@@ -177,17 +210,39 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
     setDragStartTime(0);
   }, [isDragging, draggedMarkerId, sections, updateSection]);
 
-  // Mouse event listeners
+  const handleTouchEnd = useCallback(async () => {
+    if (!isDragging || !draggedMarkerId) return;
+
+    const marker = sections.find(s => s.id === draggedMarkerId);
+    if (marker) {
+      try {
+        await updateSection(draggedMarkerId, { start_time: marker.start_time });
+      } catch (error) {
+        console.error('Failed to update marker position:', error);
+      }
+    }
+
+    setIsDragging(false);
+    setDraggedMarkerId(null);
+    setDragStartX(0);
+    setDragStartTime(0);
+  }, [isDragging, draggedMarkerId, sections, updateSection]);
+
+  // Mouse and Touch event listeners
   useEffect(() => {
     if (isDragging) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
+      document.addEventListener('touchmove', handleTouchMove, { passive: false });
+      document.addEventListener('touchend', handleTouchEnd);
       return () => {
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
+        document.removeEventListener('touchmove', handleTouchMove);
+        document.removeEventListener('touchend', handleTouchEnd);
       };
     }
-  }, [isDragging, handleMouseMove, handleMouseUp]);
+  }, [isDragging, handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd]);
 
 
   if (!selectedSong) return null;
@@ -284,11 +339,12 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
                         
                         {/* Drag handle */}
                         <div 
-                          className={`w-3 h-3 rounded-full border border-white opacity-80 group-hover:opacity-100 transition-all cursor-grab active:cursor-grabbing flex items-center justify-center mt-0.5 ${
+                          className={`w-3 h-3 rounded-full border border-white opacity-80 group-hover:opacity-100 transition-all cursor-grab active:cursor-grabbing flex items-center justify-center mt-0.5 touch-none ${
                             draggedMarkerId === section.id ? 'scale-125 opacity-100' : ''
                           }`}
                           style={{ backgroundColor: section.color }}
                           onMouseDown={(e) => handleMarkerMouseDown(e, section.id, section.start_time)}
+                          onTouchStart={(e) => handleMarkerTouchStart(e, section.id, section.start_time)}
                           onClick={(e) => {
                             e.stopPropagation();
                             if (!isDragging) {
