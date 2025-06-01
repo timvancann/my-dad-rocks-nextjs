@@ -3,11 +3,12 @@
 import { useAudioTime, usePlaylistPlayer } from '@/hooks/useAudioTime';
 import { usePlayerStore } from '@/store/store';
 import { THEME } from '@/themes';
-import { X, Play, Pause, SkipBack, SkipForward, Volume2, Mic, Repeat, RotateCcw, ChevronsLeft } from 'lucide-react';
+import { X, Play, Pause, SkipBack, SkipForward, Volume2, Mic, Repeat, RotateCcw, ChevronsLeft, Plus, Edit3, Trash2, MoreHorizontal, ChevronDown, ChevronUp, GripVertical } from 'lucide-react';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { TbGuitarPickFilled } from 'react-icons/tb';
 import { WaveformVisualizer } from './WaveformVisualizer';
+import { useSongSections } from '@/hooks/useSongSections';
 
 interface PlayerFullProps {
   isOpen: boolean;
@@ -23,6 +24,16 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
   const { previousTrack, nextTrack, playPauseTrack, paused, duration, isLoading, seekTrack, isChangingSong } = usePlaylistPlayer();
   
   const time = useAudioTime();
+  const { sections, loading: sectionsLoading, editingMarkerId, setEditingMarkerId, addSection, updateSection, removeSection, jumpToSection } = useSongSections();
+  
+  const [newMarkerName, setNewMarkerName] = useState('');
+  const [editingName, setEditingName] = useState('');
+  const [showMarkerList, setShowMarkerList] = useState(true);
+  const [draggedMarkerId, setDraggedMarkerId] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStartX, setDragStartX] = useState(0);
+  const [dragStartTime, setDragStartTime] = useState(0);
+  const waveformRef = useRef<HTMLDivElement>(null);
 
   const formatTime = (seconds: number) => {
     if (!seconds || isNaN(seconds)) return '0:00';
@@ -55,59 +66,129 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
     }
   }, [loopMarkers.start, seekTrack]);
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    if (!isOpen) return;
+  // Section marker functions
+  const handleAddMarker = useCallback(async () => {
+    if (!newMarkerName.trim()) return;
+    
+    try {
+      await addSection(newMarkerName.trim(), time);
+      setNewMarkerName('');
+    } catch (error) {
+      console.error('Failed to add marker:', error);
+    }
+  }, [newMarkerName, time, addSection]);
 
-    const handleKeyPress = (e: KeyboardEvent) => {
-      switch (e.key) {
-        case ' ':
-          e.preventDefault();
-          playPauseTrack();
-          break;
-        case 'ArrowLeft':
-          e.preventDefault();
-          previousTrack();
-          break;
-        case 'ArrowRight':
-          e.preventDefault();
-          nextTrack();
-          break;
-        case 'Escape':
-          e.preventDefault();
-          onClose();
-          break;
-        case 'a':
-        case 'A':
-          e.preventDefault();
-          setMarkerA();
-          break;
-        case 'b':
-        case 'B':
-          e.preventDefault();
-          setMarkerB();
-          break;
-        case 'l':
-        case 'L':
-          e.preventDefault();
-          toggleLoop();
-          break;
-        case 'c':
-        case 'C':
-          e.preventDefault();
-          clearMarkers();
-          break;
-        case 'r':
-        case 'R':
-          e.preventDefault();
-          playFromA();
-          break;
+  const handleQuickAddMarker = useCallback(async () => {
+    try {
+      const newSection = await addSection(`Marker ${formatTime(time)}`, time);
+      if (newSection) {
+        setEditingMarkerId(newSection.id);
+        setEditingName(newSection.name);
       }
+    } catch (error) {
+      console.error('Failed to add marker:', error);
+    }
+  }, [time, addSection, setEditingMarkerId, formatTime]);
+
+  const handleEditMarker = useCallback(async (id: string) => {
+    if (!editingName.trim()) return;
+    
+    try {
+      await updateSection(id, { name: editingName.trim() });
+      setEditingMarkerId(null);
+      setEditingName('');
+    } catch (error) {
+      console.error('Failed to update marker:', error);
+    }
+  }, [editingName, updateSection, setEditingMarkerId]);
+
+  const handleDeleteMarker = useCallback(async (id: string) => {
+    try {
+      await removeSection(id);
+    } catch (error) {
+      console.error('Failed to delete marker:', error);
+    }
+  }, [removeSection]);
+
+  const startEditing = useCallback((section: any) => {
+    setEditingMarkerId(section.id);
+    setEditingName(section.name);
+  }, [setEditingMarkerId]);
+
+  // Listen for seek events from section markers
+  useEffect(() => {
+    const handleSeekTo = (event: any) => {
+      seekTrack(event.detail);
     };
 
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [isOpen, playPauseTrack, previousTrack, nextTrack, onClose, setMarkerA, setMarkerB, toggleLoop, clearMarkers, playFromA]);
+    window.addEventListener('seekTo', handleSeekTo);
+    return () => window.removeEventListener('seekTo', handleSeekTo);
+  }, [seekTrack]);
+
+  // Calculate marker position percentage
+  const getMarkerPosition = useCallback((startTime: number) => {
+    if (!duration) return 0;
+    return (startTime / duration) * 100;
+  }, [duration]);
+
+  // Mouse drag handling functions
+  const handleMarkerMouseDown = useCallback((e: React.MouseEvent, markerId: string, startTime: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    setDraggedMarkerId(markerId);
+    setIsDragging(true);
+    setDragStartX(e.clientX);
+    setDragStartTime(startTime);
+  }, []);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isDragging || !draggedMarkerId || !waveformRef.current || !duration) return;
+
+    const rect = waveformRef.current.getBoundingClientRect();
+    const deltaX = e.clientX - dragStartX;
+    const deltaPercentage = deltaX / rect.width;
+    const deltaTime = deltaPercentage * duration;
+    
+    const newTime = Math.max(0, Math.min(duration, dragStartTime + deltaTime));
+    
+    // Update the marker position immediately for smooth dragging
+    const marker = sections.find(s => s.id === draggedMarkerId);
+    if (marker) {
+      marker.start_time = newTime;
+    }
+  }, [isDragging, draggedMarkerId, duration, dragStartX, dragStartTime, sections]);
+
+  const handleMouseUp = useCallback(async () => {
+    if (!isDragging || !draggedMarkerId) return;
+
+    const marker = sections.find(s => s.id === draggedMarkerId);
+    if (marker) {
+      try {
+        await updateSection(draggedMarkerId, { start_time: marker.start_time });
+      } catch (error) {
+        console.error('Failed to update marker position:', error);
+      }
+    }
+
+    setIsDragging(false);
+    setDraggedMarkerId(null);
+    setDragStartX(0);
+    setDragStartTime(0);
+  }, [isDragging, draggedMarkerId, sections, updateSection]);
+
+  // Mouse event listeners
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, handleMouseMove, handleMouseUp]);
+
 
   if (!selectedSong) return null;
 
@@ -140,32 +221,9 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
             </div>
 
             {/* Main content */}
-            <div className="h-full flex flex-col items-center justify-center p-4 sm:p-6 pb-16 sm:pb-20 overflow-y-auto overflow-x-hidden">
-              {/* Album art */}
-              <div className="relative mb-4 sm:mb-6">
-                <div className={`w-32 h-32 sm:w-48 sm:h-48 md:w-56 md:h-56 lg:w-64 lg:h-64 relative ${isChangingSong ? 'opacity-50' : ''}`}>
-                  {/* Vinyl effect - hidden on small screens */}
-                  <div 
-                    className={`absolute -inset-2 ${!paused && !isChangingSong ? 'animate-spin' : ''} rounded-full bg-gradient-to-br from-amber-500 to-red-800 hidden sm:block`} 
-                    style={{ animationDuration: '5s' }}
-                  />
-                  <div className="absolute left-1/2 top-1/2 z-20 h-6 sm:h-8 w-6 sm:w-8 -translate-x-1/2 -translate-y-1/2 transform rounded-full border-2 border-zinc-700 bg-zinc-900" />
-                  <img 
-                    src={selectedSong.artwork} 
-                    alt={selectedSong.title} 
-                    className={`relative z-10 w-full h-full ${!paused && !isChangingSong ? 'sm:animate-spin' : ''} rounded-full border-2 sm:border-4 border-zinc-800 shadow-xl sm:shadow-2xl`} 
-                    style={{ animationDuration: '15s' }} 
-                  />
-                </div>
-                {isChangingSong && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="h-12 w-12 sm:h-16 sm:w-16 border-4 border-zinc-700 border-t-red-600 rounded-full animate-spin"></div>
-                  </div>
-                )}
-              </div>
-
+            <div className="h-full flex flex-col items-center p-4 sm:p-6 pb-16 sm:pb-20 overflow-y-auto overflow-x-hidden pt-16 sm:pt-20">
               {/* Song info */}
-              <div className="text-center mb-4 sm:mb-6 max-w-md">
+              <div className="text-center mb-6 sm:mb-8">
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2">{selectedSong.title}</h1>
                 <p className="text-base sm:text-lg md:text-xl text-zinc-400 mb-2 sm:mb-3">{selectedSong.artist}</p>
                 
@@ -195,8 +253,8 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
               </div>
 
               {/* Waveform visualizer */}
-              <div className="w-full max-w-2xl mb-4 sm:mb-6">
-                <div className="mb-2">
+              <div className="w-full max-w-4xl mb-4 sm:mb-6">
+                <div ref={waveformRef} className="mb-2 relative">
                   <WaveformVisualizer 
                     song={selectedSong}
                     isPlaying={!paused && !isChangingSong}
@@ -206,6 +264,48 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
                     setLoopMarkers={setLoopMarkers}
                     isLoopEnabled={isLoopEnabled}
                   />
+                  
+                  {/* Visual markers below waveform */}
+                  <div className="relative h-8 mt-2 border-t border-zinc-700">
+                    {sections.map((section) => (
+                      <div
+                        key={section.id}
+                        className="absolute flex flex-col items-center group select-none"
+                        style={{ 
+                          left: `calc(${getMarkerPosition(section.start_time)}% - 6px)`,
+                          top: '2px'
+                        }}
+                      >
+                        {/* Marker line */}
+                        <div 
+                          className="w-0.5 h-4 opacity-80 group-hover:opacity-100 transition-opacity"
+                          style={{ backgroundColor: section.color }}
+                        />
+                        
+                        {/* Drag handle */}
+                        <div 
+                          className={`w-3 h-3 rounded-full border border-white opacity-80 group-hover:opacity-100 transition-all cursor-grab active:cursor-grabbing flex items-center justify-center mt-0.5 ${
+                            draggedMarkerId === section.id ? 'scale-125 opacity-100' : ''
+                          }`}
+                          style={{ backgroundColor: section.color }}
+                          onMouseDown={(e) => handleMarkerMouseDown(e, section.id, section.start_time)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!isDragging) {
+                              jumpToSection(section);
+                            }
+                          }}
+                        >
+                          <div className="w-1 h-1 bg-white rounded-full opacity-70" />
+                        </div>
+                        
+                        {/* Marker label on hover */}
+                        <div className="absolute top-full mt-1 px-2 py-1 bg-black/90 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+                          {section.name}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
                 <div className="flex items-center justify-between text-sm tabular-nums text-zinc-400">
                   <span>{formatTime(time)}</span>
@@ -213,8 +313,121 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
                 </div>
               </div>
 
+              {/* Section Markers */}
+              <div className="w-full max-w-4xl mb-4 sm:mb-6">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-semibold">Section Markers</h3>
+                    <button
+                      onClick={() => setShowMarkerList(!showMarkerList)}
+                      className={`p-1 rounded ${THEME.highlight} hover:bg-zinc-700 transition-colors`}
+                    >
+                      {showMarkerList ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  <button
+                    onClick={handleQuickAddMarker}
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${THEME.primaryBg} text-white hover:bg-red-700 flex items-center gap-1.5`}
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add at {formatTime(time)}
+                  </button>
+                </div>
+                
+                {showMarkerList && (
+                  <div>
+                    {/* Add new marker with custom name */}
+                    <div className="flex gap-2 mb-4">
+                      <input
+                        type="text"
+                        value={newMarkerName}
+                        onChange={(e) => setNewMarkerName(e.target.value)}
+                        placeholder="Custom marker name (optional)"
+                        className="flex-1 px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-600"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            handleAddMarker();
+                          }
+                        }}
+                      />
+                      <button
+                        onClick={handleAddMarker}
+                        disabled={!newMarkerName.trim()}
+                        className={`px-4 py-2 rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${THEME.primaryBg} text-white hover:bg-red-700`}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    {/* Markers list */}
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                      {sectionsLoading ? (
+                        <div className="flex items-center justify-center py-4">
+                          <div className="h-6 w-6 border-2 border-zinc-700 border-t-red-600 rounded-full animate-spin"></div>
+                        </div>
+                      ) : sections.length === 0 ? (
+                        <p className="text-zinc-400 text-sm text-center py-4">No markers yet. Add one at the current time!</p>
+                      ) : (
+                        sections.map((section) => (
+                          <div key={section.id} className="flex items-center gap-2 p-2 bg-zinc-800 rounded-md">
+                            <div 
+                              className="w-3 h-3 rounded-full border-2 border-white" 
+                              style={{ backgroundColor: section.color }}
+                            />
+                            
+                            {editingMarkerId === section.id ? (
+                              <input
+                                type="text"
+                                value={editingName}
+                                onChange={(e) => setEditingName(e.target.value)}
+                                className="flex-1 px-2 py-1 bg-zinc-700 border border-zinc-600 rounded text-sm focus:outline-none focus:ring-1 focus:ring-red-600"
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    handleEditMarker(section.id);
+                                  } else if (e.key === 'Escape') {
+                                    setEditingMarkerId(null);
+                                    setEditingName('');
+                                  }
+                                }}
+                                onBlur={() => handleEditMarker(section.id)}
+                                autoFocus
+                              />
+                            ) : (
+                              <span 
+                                className="flex-1 text-sm cursor-pointer hover:text-white"
+                                onClick={() => startEditing(section)}
+                              >
+                                {section.name}
+                              </span>
+                            )}
+                            
+                            <span className="text-xs text-zinc-400 tabular-nums">
+                              {formatTime(section.start_time)}
+                            </span>
+                            
+                            <button
+                              onClick={() => jumpToSection(section)}
+                              className="px-2 py-1 text-xs bg-zinc-700 hover:bg-zinc-600 rounded transition-colors"
+                            >
+                              Jump
+                            </button>
+                            
+                            <button
+                              onClick={() => handleDeleteMarker(section.id)}
+                              className="p-1 text-zinc-400 hover:text-red-400 transition-colors"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Playback controls */}
-              <div className="flex items-center gap-4 sm:gap-6 mb-4">
+              <div className="flex items-center justify-center gap-4 sm:gap-6 mb-4">
                 <button 
                   className={`p-2 sm:p-3 ${THEME.text} hover:${THEME.primary} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`} 
                   onClick={previousTrack}
@@ -247,7 +460,7 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
               </div>
 
               {/* Loop controls */}
-              <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full sm:w-auto">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full sm:w-auto">
                 {/* Marker buttons - full width on mobile */}
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                   <button 
@@ -257,7 +470,7 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
                         : `${THEME.highlight} ${THEME.text} hover:bg-zinc-700`
                     }`}
                     onClick={setMarkerA}
-                    title="Set A marker (A key)"
+                    title="Set A marker"
                   >
                     A: {loopMarkers.start !== null ? formatTime(loopMarkers.start) : '--:--'}
                   </button>
@@ -269,7 +482,7 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
                         : `${THEME.highlight} ${THEME.text} hover:bg-zinc-700`
                     }`}
                     onClick={setMarkerB}
-                    title="Set B marker (B key)"
+                    title="Set B marker"
                   >
                     B: {loopMarkers.end !== null ? formatTime(loopMarkers.end) : '--:--'}
                   </button>
@@ -285,7 +498,7 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
                     } disabled:opacity-50 disabled:cursor-not-allowed`}
                     onClick={toggleLoop}
                     disabled={loopMarkers.start === null || loopMarkers.end === null}
-                    title={`${isLoopEnabled ? 'Disable' : 'Enable'} loop (L key)`}
+                    title={`${isLoopEnabled ? 'Disable' : 'Enable'} loop`}
                   >
                     <Repeat className="h-5 w-5" />
                   </button>
@@ -293,7 +506,7 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
                   <button 
                     className={`p-3 sm:p-2 rounded-lg sm:rounded-md ${THEME.highlight} ${THEME.text} hover:bg-zinc-700 transition-colors`}
                     onClick={clearMarkers}
-                    title="Clear markers (C key)"
+                    title="Clear markers"
                   >
                     <RotateCcw className="h-5 w-5" />
                   </button>
@@ -302,7 +515,7 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
                     className={`p-3 sm:p-2 rounded-lg sm:rounded-md ${THEME.highlight} ${THEME.text} hover:bg-zinc-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                     onClick={playFromA}
                     disabled={loopMarkers.start === null}
-                    title="Play from A marker (R key)"
+                    title="Play from A marker"
                   >
                     <ChevronsLeft className="h-5 w-5" />
                   </button>

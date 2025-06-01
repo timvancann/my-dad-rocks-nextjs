@@ -1,4 +1,5 @@
 import { SongType } from '@/lib/interface';
+import { SongSection } from '@/types/song-section';
 import { create } from 'zustand';
 
 type LoopMarkers = {
@@ -21,6 +22,8 @@ type PlayerContext = {
   setIsLoopEnabled: (enabled: boolean) => void;
   isFullscreen: boolean;
   setIsFullscreen: (fullscreen: boolean) => void;
+  songSections: SongSection[];
+  setSongSections: (sections: SongSection[]) => void;
 };
 
 export const usePlayerStore = create<PlayerContext>((set) => ({
@@ -31,11 +34,13 @@ export const usePlayerStore = create<PlayerContext>((set) => ({
   loopMarkers: { start: null, end: null },
   isLoopEnabled: false,
   isFullscreen: false,
+  songSections: [],
   setSongIndex: (index: number) => set({ songIndex: index }),
   setCurrentSong: (song: SongType | null) => set({ currentSong: song }),
   setPlaylist: (playlist: SongType[]) => set({ playlist }),
   setIsChangingSong: (changing: boolean) => set({ isChangingSong: changing }),
   setLoopMarkers: (markers: LoopMarkers) => set({ loopMarkers: markers }),
   setIsLoopEnabled: (enabled: boolean) => set({ isLoopEnabled: enabled }),
-  setIsFullscreen: (isFullscreen: boolean) => set({ isFullscreen })
+  setIsFullscreen: (isFullscreen: boolean) => set({ isFullscreen }),
+  setSongSections: (sections: SongSection[]) => set({ songSections: sections })
 }));
