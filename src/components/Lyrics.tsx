@@ -4,6 +4,7 @@ import { modifyLyrics } from '@/actions/supabase';
 import { LyricType } from '@/lib/interface';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { usePlayerStore } from '@/store/store';
 import { THEME } from '@/themes';
 import {
   ChevronLeft,
@@ -14,7 +15,9 @@ import {
   ZoomOut,
   Loader2,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  Maximize,
+  Minimize
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
@@ -22,6 +25,7 @@ import { motion, AnimatePresence } from 'motion/react';
 
 export default function DisplayLyrics({ song, songId }: { song: LyricType; songId: string }) {
   const router = useRouter();
+  const { isFullscreen, setIsFullscreen } = usePlayerStore();
   const [edit, setEdit] = useState(false);
   const [lyrics, setLyrics] = useState(song.lyrics);
   const [textSize, setTextSize] = useState(16); // Base font size in pixels
@@ -72,6 +76,74 @@ export default function DisplayLyrics({ song, songId }: { song: LyricType; songI
     setTextSize(prev => Math.max(minTextSize, Math.min(maxTextSize, prev + delta)));
   };
 
+  const enterFullscreen = useCallback(async () => {
+    try {
+      const element = document.documentElement;
+      if (element.requestFullscreen) {
+        await element.requestFullscreen();
+      } else if ((element as any).webkitRequestFullscreen) {
+        await (element as any).webkitRequestFullscreen();
+      } else if ((element as any).mozRequestFullScreen) {
+        await (element as any).mozRequestFullScreen();
+      } else if ((element as any).msRequestFullscreen) {
+        await (element as any).msRequestFullscreen();
+      }
+      setIsFullscreen(true);
+    } catch (err) {
+      console.error('Error entering fullscreen:', err);
+    }
+  }, [setIsFullscreen]);
+
+  const exitFullscreen = useCallback(async () => {
+    try {
+      if (document.exitFullscreen) {
+        await document.exitFullscreen();
+      } else if ((document as any).webkitExitFullscreen) {
+        await (document as any).webkitExitFullscreen();
+      } else if ((document as any).mozCancelFullScreen) {
+        await (document as any).mozCancelFullScreen();
+      } else if ((document as any).msExitFullscreen) {
+        await (document as any).msExitFullscreen();
+      }
+      setIsFullscreen(false);
+    } catch (err) {
+      console.error('Error exiting fullscreen:', err);
+    }
+  }, [setIsFullscreen]);
+
+  const toggleFullscreen = useCallback(() => {
+    if (isFullscreen) {
+      exitFullscreen();
+    } else {
+      enterFullscreen();
+    }
+  }, [isFullscreen, enterFullscreen, exitFullscreen]);
+
+  // Fullscreen change listener
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isCurrentlyFullscreen = !!(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).mozFullScreenElement ||
+        (document as any).msFullscreenElement
+      );
+      setIsFullscreen(isCurrentlyFullscreen);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+    };
+  }, [setIsFullscreen]);
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -80,26 +152,49 @@ export default function DisplayLyrics({ song, songId }: { song: LyricType; songI
         e.preventDefault();
         handleSave();
       }
-      // Escape to cancel edit
-      if (e.key === 'Escape' && edit) {
+      // Escape to cancel edit or exit fullscreen
+      if (e.key === 'Escape') {
         e.preventDefault();
-        handleCancel();
+        if (edit) {
+          handleCancel();
+        } else if (isFullscreen) {
+          exitFullscreen();
+        }
       }
       // Ctrl/Cmd + E to toggle edit mode
       if ((e.ctrlKey || e.metaKey) && e.key === 'e' && !edit) {
         e.preventDefault();
         setEdit(true);
       }
+      // F11 to toggle fullscreen
+      if (e.key === 'F11') {
+        e.preventDefault();
+        toggleFullscreen();
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [edit, lyrics, handleSave, handleCancel]);
+  }, [edit, lyrics, handleSave, handleCancel, isFullscreen, exitFullscreen, toggleFullscreen]);
 
   return (
     <div className="min-h-screen">
+      {/* Floating exit fullscreen button */}
+      {isFullscreen && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={exitFullscreen}
+          className="fixed top-4 right-4 z-50 bg-black/50 hover:bg-black/70 text-white border border-white/20 rounded-full w-12 h-12"
+          title="Exit fullscreen (Esc)"
+        >
+          <X className="h-5 w-5" />
+        </Button>
+      )}
+
       {/* Mobile-optimized header */}
-      <div className={`sticky top-0 z-10 ${THEME.bg} border-b ${THEME.border} shadow-sm`}>
+      {!isFullscreen && (
+        <div className={`sticky top-0 z-10 ${THEME.bg} border-b ${THEME.border} shadow-sm`}>
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <Button
@@ -143,6 +238,17 @@ export default function DisplayLyrics({ song, songId }: { song: LyricType; songI
                 </Button>
               </div>
 
+              {/* Fullscreen button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleFullscreen}
+                title={isFullscreen ? "Exit fullscreen (Esc)" : "Enter fullscreen (F11)"}
+                className="hover:bg-zinc-700"
+              >
+                {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+              </Button>
+
               {/* Edit button */}
               {!edit && (
                 <Button
@@ -157,10 +263,11 @@ export default function DisplayLyrics({ song, songId }: { song: LyricType; songI
             </div>
           </div>
         </div>
-      </div>
+        </div>
+      )}
 
       {/* Main content */}
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
+      <div className={isFullscreen ? "w-full h-screen flex flex-col justify-start p-8 pt-16 overflow-y-auto" : "container mx-auto px-4 py-6 max-w-4xl"}>
         <AnimatePresence mode="wait">
           {!edit ? (
             <motion.div
@@ -170,16 +277,59 @@ export default function DisplayLyrics({ song, songId }: { song: LyricType; songI
               exit={{ opacity: 0 }}
               className="relative"
             >
-              <Card className={`p-6 sm:p-8 ${THEME.bg} border ${THEME.border}`}>
-                <div
-                  className={`whitespace-pre-wrap ${THEME.text} leading-relaxed`}
-                  style={{ fontSize: `${textSize}px` }}
-                >
-                  {lyrics || (
-                    <span className={THEME.textSecondary}>No lyrics available for this song.</span>
-                  )}
+              {isFullscreen ? (
+                <div className="w-full flex flex-col">
+                  {/* Fullscreen font controls */}
+                  <div className="flex items-center justify-center gap-4 mb-8">
+                    <div className="flex items-center gap-2 bg-black/30 rounded-lg p-2 backdrop-blur-sm">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => adjustTextSize(-2)}
+                        disabled={textSize <= minTextSize}
+                        title="Decrease text size"
+                        className="text-white hover:bg-white/20"
+                      >
+                        <ZoomOut className="h-5 w-5" />
+                      </Button>
+                      <span className="text-white text-sm w-16 text-center">
+                        {Math.round((textSize / 16) * 100)}%
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => adjustTextSize(2)}
+                        disabled={textSize >= maxTextSize}
+                        title="Increase text size"
+                        className="text-white hover:bg-white/20"
+                      >
+                        <ZoomIn className="h-5 w-5" />
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {/* Lyrics content */}
+                  <div
+                    className={`whitespace-pre-wrap ${THEME.text} leading-relaxed text-center max-w-none w-full flex-1`}
+                    style={{ fontSize: `${textSize + 8}px` }}
+                  >
+                    {lyrics || (
+                      <span className={THEME.textSecondary}>No lyrics available for this song.</span>
+                    )}
+                  </div>
                 </div>
-              </Card>
+              ) : (
+                <Card className={`p-6 sm:p-8 ${THEME.bg} border ${THEME.border}`}>
+                  <div
+                    className={`whitespace-pre-wrap ${THEME.text} leading-relaxed`}
+                    style={{ fontSize: `${textSize}px` }}
+                  >
+                    {lyrics || (
+                      <span className={THEME.textSecondary}>No lyrics available for this song.</span>
+                    )}
+                  </div>
+                </Card>
+              )}
             </motion.div>
           ) : (
             <motion.div
@@ -248,13 +398,15 @@ export default function DisplayLyrics({ song, songId }: { song: LyricType; songI
         </AnimatePresence>
 
         {/* Mobile-friendly tips */}
-        <div className={`mt-4 text-center text-sm ${THEME.textSecondary}`}>
-          {!edit ? (
-            <p>Tip: Use the zoom controls to adjust text size • Press Ctrl/Cmd+E to edit</p>
-          ) : (
-            <p>Tip: Press Ctrl/Cmd+S to save • Esc to cancel</p>
-          )}
-        </div>
+        {!isFullscreen && (
+          <div className={`mt-4 text-center text-sm ${THEME.textSecondary}`}>
+            {!edit ? (
+              <p>Tip: Use the zoom controls to adjust text size • Press F11 or click maximize to go fullscreen • Press Ctrl/Cmd+E to edit</p>
+            ) : (
+              <p>Tip: Press Ctrl/Cmd+S to save • Esc to cancel</p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

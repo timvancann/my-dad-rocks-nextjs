@@ -19,6 +19,8 @@ type PlayerContext = {
   setLoopMarkers: (markers: LoopMarkers) => void;
   isLoopEnabled: boolean;
   setIsLoopEnabled: (enabled: boolean) => void;
+  isFullscreen: boolean;
+  setIsFullscreen: (fullscreen: boolean) => void;
 };
 
 export const usePlayerStore = create<PlayerContext>((set) => ({
@@ -28,10 +30,12 @@ export const usePlayerStore = create<PlayerContext>((set) => ({
   isChangingSong: false,
   loopMarkers: { start: null, end: null },
   isLoopEnabled: false,
+  isFullscreen: false,
   setSongIndex: (index: number) => set({ songIndex: index }),
   setCurrentSong: (song: SongType | null) => set({ currentSong: song }),
   setPlaylist: (playlist: SongType[]) => set({ playlist }),
   setIsChangingSong: (changing: boolean) => set({ isChangingSong: changing }),
   setLoopMarkers: (markers: LoopMarkers) => set({ loopMarkers: markers }),
-  setIsLoopEnabled: (enabled: boolean) => set({ isLoopEnabled: enabled })
+  setIsLoopEnabled: (enabled: boolean) => set({ isLoopEnabled: enabled }),
+  setIsFullscreen: (isFullscreen: boolean) => set({ isFullscreen })
 }));

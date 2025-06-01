@@ -8,6 +8,7 @@ import { IoLogOutOutline, IoPersonCircleOutline } from 'react-icons/io5';
 import { FcGoogle } from 'react-icons/fc';
 import { getAuthProvider, getProviderDisplayName } from '@/lib/authUtils';
 import { FaMicrosoft } from 'react-icons/fa';
+import { usePlayerStore } from '@/store/store';
 
 interface HeaderProps {
   username?: string;
@@ -17,11 +18,11 @@ interface HeaderProps {
 export const Header = ({ username = 'Band Member', onSignOut }: HeaderProps) => {
   const router = useRouter();
   const { data: session } = useSession();
+  const { isFullscreen } = usePlayerStore();
   const [showUserMenu, setShowUserMenu] = useState(false);
 
-  if (!session) {
+  if (!session || isFullscreen) {
     return null;
-
   }
 
   const handleSignOut = () => {
