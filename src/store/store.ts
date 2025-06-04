@@ -24,6 +24,8 @@ type PlayerContext = {
   setIsFullscreen: (fullscreen: boolean) => void;
   songSections: SongSection[];
   setSongSections: (sections: SongSection[]) => void;
+  isDarkMode: boolean;
+  setIsDarkMode: (darkMode: boolean) => void;
 };
 
 export const usePlayerStore = create<PlayerContext>((set) => ({
@@ -35,6 +37,7 @@ export const usePlayerStore = create<PlayerContext>((set) => ({
   isLoopEnabled: false,
   isFullscreen: false,
   songSections: [],
+  isDarkMode: true,
   setSongIndex: (index: number) => set({ songIndex: index }),
   setCurrentSong: (song: SongType | null) => set({ currentSong: song }),
   setPlaylist: (playlist: SongType[]) => set({ playlist }),
@@ -42,5 +45,6 @@ export const usePlayerStore = create<PlayerContext>((set) => ({
   setLoopMarkers: (markers: LoopMarkers) => set({ loopMarkers: markers }),
   setIsLoopEnabled: (enabled: boolean) => set({ isLoopEnabled: enabled }),
   setIsFullscreen: (isFullscreen: boolean) => set({ isFullscreen }),
-  setSongSections: (sections: SongSection[]) => set({ songSections: sections })
+  setSongSections: (sections: SongSection[]) => set({ songSections: sections }),
+  setIsDarkMode: (isDarkMode: boolean) => set({ isDarkMode })
 }));
