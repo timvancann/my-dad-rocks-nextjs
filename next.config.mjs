@@ -14,7 +14,22 @@ const withPWA = withPWAInit({
         cacheName: 'supabase-api',
         expiration: {
           maxEntries: 100,
-          maxAgeSeconds: 60 * 60 * 24, // 24 hours
+          maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days for API data
+        },
+        cacheableResponse: {
+          statuses: [0, 200]
+        }
+      }
+    },
+    // Lyrics pages - Cache first for offline reading
+    {
+      urlPattern: /^https?.*\/practice\/lyrics\/.*$/,
+      handler: 'CacheFirst',
+      options: {
+        cacheName: 'lyrics-cache',
+        expiration: {
+          maxEntries: 100,
+          maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days for lyrics
         },
         cacheableResponse: {
           statuses: [0, 200]
@@ -63,7 +78,22 @@ const withPWA = withPWAInit({
         }
       }
     },
-    // App routes - NetworkFirst for freshness but offline fallback
+    // Song detail pages - Cache first for offline access
+    {
+      urlPattern: /^https?.*\/practice\/song\/.*$/,
+      handler: 'CacheFirst',
+      options: {
+        cacheName: 'song-pages',
+        expiration: {
+          maxEntries: 100,
+          maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
+        },
+        cacheableResponse: {
+          statuses: [0, 200]
+        }
+      }
+    },
+    // Other app routes - NetworkFirst for freshness but offline fallback
     {
       urlPattern: /^https?.*\/practice\/.*/,
       handler: 'NetworkFirst',
