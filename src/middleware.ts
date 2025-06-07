@@ -47,6 +47,6 @@ export const config = {
      * 6. service worker files (sw.js, workbox-*.js)
      * 7. manifest.json and other PWA files
      */
-    '/((?!api/auth|_next/static|_next/image|favicon.ico|sw\\.js|workbox.*\\.js|manifest\\.json|android-chrome.*\\.png|apple-touch-icon\\.png|favicon-.*\\.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'
+    '/((?!api/auth|_next/static|_next/image|favicon.ico|sw\\.js|test-sw\\.js|custom-sw\\.js|workbox.*\\.js|manifest\\.json|android-chrome.*\\.png|apple-touch-icon\\.png|favicon-.*\\.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'
   ]
 };
