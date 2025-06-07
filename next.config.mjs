@@ -4,7 +4,9 @@ const withPWA = withPWAInit({
   dest: "public",
   register: true,
   skipWaiting: true,
-  disable: false, // Enable PWA in development for testing
+  disable: process.env.NODE_ENV === 'development' ? false : false, // Always enabled
+  sw: '/sw.js',
+  scope: '/',
   runtimeCaching: [
     {
       urlPattern: /^https?.*/, // Match all requests
@@ -21,6 +23,7 @@ const withPWA = withPWAInit({
     }
   ],
   buildExcludes: [/middleware-manifest\.json$/],
+  publicExcludes: ['!robots.txt', '!sitemap*.xml'],
 });
 
 /** @type {import('next').NextConfig} */
