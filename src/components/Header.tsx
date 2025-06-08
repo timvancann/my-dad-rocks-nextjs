@@ -4,11 +4,12 @@ import { signOut, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import Image from 'next/image';
-import { IoLogOutOutline, IoPersonCircleOutline } from 'react-icons/io5';
+import { IoLogOutOutline, IoPersonCircleOutline, IoCheckboxOutline } from 'react-icons/io5';
 import { FcGoogle } from 'react-icons/fc';
 import { getAuthProvider, getProviderDisplayName } from '@/lib/authUtils';
 import { FaMicrosoft } from 'react-icons/fa';
 import { usePlayerStore } from '@/store/store';
+import Link from 'next/link';
 
 interface HeaderProps {
   username?: string;
@@ -102,6 +103,15 @@ export const Header = ({ username = 'Band Member', onSignOut }: HeaderProps) => 
                       })()}
                     </div>
                   </div>
+
+                  <Link
+                    href="/practice/checklist"
+                    onClick={() => setShowUserMenu(false)}
+                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-gray-100 transition-colors hover:bg-zinc-800"
+                  >
+                    <IoCheckboxOutline className="h-4 w-4" />
+                    My Checklist
+                  </Link>
 
                   <button
                     onClick={() => signOut({ callbackUrl: '/practice/auth/signin' })}
