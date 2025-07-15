@@ -2,12 +2,7 @@ import { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 
 // List of allowed email addresses
-const allowedEmails = [
-  'timvancann@gmail.com',
-  'pacramer01@gmail.com',
-  'lexheijden76@gmail.com',
-  'nwsbas@outlook.com'
-];
+const allowedEmails = ['timvancann@gmail.com', 'pacramer01@gmail.com', 'lexheijden76@gmail.com', 'nwsbas@outlook.com', 'hetcaf@gmail.com'];
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -18,7 +13,7 @@ export const authOptions: NextAuthOptions = {
   ],
   session: {
     strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 30 * 24 * 60 * 60 // 30 days
   },
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
