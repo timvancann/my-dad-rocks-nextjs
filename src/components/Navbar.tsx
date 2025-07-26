@@ -1,6 +1,6 @@
 'use client';
 import { THEME } from '@/themes';
-import { Calendar, Home, ListMusic } from 'lucide-react';
+import { Calendar, Home, ListMusic, Lightbulb } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { UserProfile } from './UserProfile';
@@ -29,6 +29,11 @@ export const Navbar = () => {
       href: '/practice/gigs',
       icon: <Calendar />,
       text: 'Optredens'
+    },
+    {
+      href: '/practice/proposals',
+      icon: <Lightbulb />,
+      text: 'Voorstellen'
     }
   ];
 

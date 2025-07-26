@@ -130,7 +130,24 @@ const withPWA = withPWAInit({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['lh3.googleusercontent.com', 'coverartarchive.org', 'owjfnhmdikxkltvrizzj.supabase.co']
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'coverartarchive.org',
+      },
+      {
+        protocol: 'https',
+        hostname: 'owjfnhmdikxkltvrizzj.supabase.co',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.scdn.co',
+      },
+    ],
   }
 };
 

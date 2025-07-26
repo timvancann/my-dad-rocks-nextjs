@@ -18,7 +18,8 @@ import {
   createGigWithSetlist as createGigWithSetlistSupabase,
   updateGig as updateGigSupabase,
   addPause as addPauseSupabase,
-  updateSongMasteryLevel as updateSongMasteryLevelSupabase
+  updateSongMasteryLevel as updateSongMasteryLevelSupabase,
+  getProposals as getProposalsFromSupabase
 } from '@/lib/supabase-service';
 
 export async function getAllSongs() {
@@ -132,4 +133,8 @@ export async function createSong(songData: {
 export async function deleteSong(songId: string) {
   const { deleteSong: deleteSongSupabase } = await import('@/lib/supabase-service');
   return deleteSongSupabase(songId);
+}
+
+export async function getProposals() {
+  return getProposalsFromSupabase();
 }

@@ -1,4 +1,4 @@
-import { GigsType, GigType, SetlistType, SongType } from './interface';
+import { GigsType, GigType, SetlistType, SongType, ProposalType } from './interface';
 import { supabase } from './supabase';
 
 // Generate URL-friendly slug from title
@@ -806,5 +806,26 @@ export async function deleteSong(songId: string) {
     console.error('Error in deleteSong:', error);
     throw error;
   }
+}
+
+export async function getProposals(): Promise<ProposalType[]> {
+  const { data, error } = await supabase
+    .from('proposals')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching proposals:', error);
+    return [];
+  }
+
+  return (data || []).map((proposal) => ({
+    _id: proposal.id,
+    band: proposal.band || '',
+    title: proposal.title || '',
+    album: proposal.album || '',
+    coverart: proposal.coverart || '',
+    created_at: proposal.created_at
+  }));
 }
 

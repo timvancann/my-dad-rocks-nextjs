@@ -46,3 +46,12 @@ export type LyricType = {
   artist: string;
   lyrics: string;
 }
+
+export interface ProposalType {
+  _id: string;
+  band: string;
+  title: string;
+  album: string;
+  coverart: string;
+  created_at?: string;
+}
