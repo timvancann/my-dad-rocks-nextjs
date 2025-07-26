@@ -1,6 +1,8 @@
 import { getProposals } from '@/actions/supabase';
 import { ProposalsList } from '@/components/ProposalsList';
 
+export const revalidate = 0; // Disable caching
+
 export default async function ProposalsPage() {
   const proposals = await getProposals();
 
