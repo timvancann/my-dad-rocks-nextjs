@@ -54,4 +54,5 @@ export interface ProposalType {
   album: string;
   coverart: string;
   created_at?: string;
+  uri?: string;
 }

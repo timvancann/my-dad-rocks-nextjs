@@ -10,9 +10,17 @@ interface ProposalsListProps {
 }
 
 const ProposalCard = ({ proposal }: { proposal: ProposalType }) => {
+  const handleClick = () => {
+    if (proposal.uri) {
+      window.open(proposal.uri, '_blank');
+    }
+  };
 
   return (
-    <div className={`${THEME.card} ${THEME.border} border rounded-lg overflow-hidden hover:border-amber-400/50 transition-colors flex items-center gap-4 p-3`}>
+    <div 
+      onClick={handleClick}
+      className={`${THEME.card} ${THEME.border} border rounded-lg overflow-hidden hover:border-amber-400/50 transition-colors flex items-center gap-4 p-3 ${proposal.uri ? 'cursor-pointer' : ''}`}
+    >
       <div className="relative w-16 h-16 flex-shrink-0 bg-zinc-800 rounded-md overflow-hidden">
         {proposal.coverart ? (
           <Image

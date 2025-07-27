@@ -825,7 +825,8 @@ export async function getProposals(): Promise<ProposalType[]> {
     title: proposal.title || '',
     album: proposal.album || '',
     coverart: proposal.coverart || '',
-    created_at: proposal.created_at
+    created_at: proposal.created_at,
+    uri: proposal.uri || null
   }));
 }
 
