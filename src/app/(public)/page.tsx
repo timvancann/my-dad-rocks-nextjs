@@ -1,13 +1,14 @@
 // src/app/page.tsx
-import { getPublicGigs } from '@/actions/supabase';
+import { getPublicGigs, getPublicSongs } from '@/actions/supabase';
 import { CalendarIcon, MapPinIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import { EnvelopeIcon } from '@heroicons/react/24/solid';
 import Image from 'next/image';
 import { THEME } from '@/themes';
-import { YoutubeIcon } from 'lucide-react';
+import { YoutubeIcon, Music } from 'lucide-react';
 
 export default async function PublicPage() {
   const upcomingGigs = await getPublicGigs();
+  const songs = await getPublicSongs();
 
   return (
     <div className={`min-h-screen ${THEME.bg} ${THEME.text}`}>
@@ -88,6 +89,40 @@ export default async function PublicPage() {
                 🏠 Gevestigd in Zaltbommel, zijn wij gepassioneerde muzikanten die zich richten op het leveren
                 van authentieke, energieke optredens die de muziek vieren waar we allemaal mee zijn opgegroeid. 🎸
               </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Repertoire Section */}
+      <section className="px-6 py-16 relative">
+        <div className="mx-auto max-w-6xl">
+          <div className="flex items-center justify-center gap-3 mb-12">
+            <Music className={`h-8 w-8 ${THEME.primary}`} />
+            <h2 className={`text-4xl font-bold ${THEME.secondary} bg-gradient-to-r from-red-500 to-red-700 bg-clip-text text-transparent`}>Ons Repertoire</h2>
+            <Music className={`h-8 w-8 ${THEME.primary}`} />
+          </div>
+          <div className={`text-center mb-8 ${THEME.textSecondary}`}>
+            <p className="text-lg">🎸 {songs.length} nummers die we live voor je spelen! 🎸</p>
+          </div>
+          <div className={`rounded-xl ${THEME.border} ${THEME.card} p-8 border bg-gradient-to-br from-red-900/5 to-gray-900/5`}>
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+              {songs.map((song, index) => (
+                <div
+                  key={index}
+                  className={`p-4 rounded-lg border ${THEME.border} hover:border-red-500/50 transition-all duration-300 hover:bg-red-900/10 hover:scale-105 hover:shadow-lg hover:shadow-red-500/10`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`rounded-full ${THEME.primaryBg}/20 p-2`}>
+                      <Music className={`h-4 w-4 ${THEME.primary}`} />
+                    </div>
+                    <div className="flex-1 text-left">
+                      <h3 className={`font-semibold ${THEME.text}`}>{song.title}</h3>
+                      <p className={`text-sm ${THEME.textSecondary}`}>{song.artist}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>

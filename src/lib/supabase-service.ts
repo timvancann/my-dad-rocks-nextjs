@@ -408,7 +408,7 @@ export async function createGig(gig: Partial<GigsType>) {
       date: gig.date,
       venue_name: gig.venue,
       venue_address: gig.address,
-      start_time: gig.time,
+      start_time: gig.time || null,
       video_playlist_url: gig.video_playlist
     })
     .select()
@@ -427,8 +427,7 @@ export async function createGigWithSetlist(gig: Partial<GigsType> & { notes?: st
   const { data: setlistData, error: setlistError } = await supabase
     .from('setlists')
     .insert({
-      title: `Setlist - ${gig.title}`,
-      gig_date: gig.date
+      title: `Setlist - ${gig.title}`
     })
     .select()
     .single();
@@ -446,7 +445,7 @@ export async function createGigWithSetlist(gig: Partial<GigsType> & { notes?: st
       date: gig.date,
       venue_name: gig.venue,
       venue_address: gig.address,
-      start_time: gig.time,
+      start_time: gig.time || null,
       video_playlist_url: gig.video_playlist,
       setlist_id: setlistData.id,
       notes: gig.notes
@@ -828,5 +827,20 @@ export async function getProposals(): Promise<ProposalType[]> {
     created_at: proposal.created_at,
     uri: proposal.uri || null
   }));
+}
+
+export async function getPublicSongs() {
+  const { data, error } = await supabase
+    .from('songs')
+    .select('title, artist')
+    .order('artist', { ascending: true })
+    .order('title', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching public songs', error);
+    return [];
+  }
+
+  return data || [];
 }
 

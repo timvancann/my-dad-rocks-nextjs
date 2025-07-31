@@ -19,7 +19,8 @@ import {
   updateGig as updateGigSupabase,
   addPause as addPauseSupabase,
   updateSongMasteryLevel as updateSongMasteryLevelSupabase,
-  getProposals as getProposalsFromSupabase
+  getProposals as getProposalsFromSupabase,
+  getPublicSongs as getPublicSongsFromSupabase
 } from '@/lib/supabase-service';
 
 export async function getAllSongs() {
@@ -137,4 +138,8 @@ export async function deleteSong(songId: string) {
 
 export async function getProposals() {
   return getProposalsFromSupabase();
+}
+
+export async function getPublicSongs() {
+  return getPublicSongsFromSupabase();
 }
