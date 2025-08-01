@@ -3,6 +3,9 @@
 import { useEffect } from 'react';
 import { Workbox } from 'workbox-window';
 
+// Increment this version to force service worker update
+const SW_VERSION = '1.0.1';
+
 async function cacheAllSongsAndLyrics() {
   try {
     console.log('Starting background cache of all songs and lyrics...');
@@ -79,8 +82,25 @@ export function ServiceWorkerRegistration() {
       }
 
       try {
+        // Check for version mismatch and clear caches if needed
+        const lastVersion = localStorage.getItem('sw-version');
+        if (lastVersion && lastVersion !== SW_VERSION) {
+          console.log(`Service worker version changed from ${lastVersion} to ${SW_VERSION}, clearing caches...`);
+          
+          // Clear all caches
+          if ('caches' in window) {
+            caches.keys().then(names => {
+              names.forEach(name => {
+                caches.delete(name);
+                console.log(`Cleared cache: ${name}`);
+              });
+            });
+          }
+        }
+        localStorage.setItem('sw-version', SW_VERSION);
+
         // Create workbox instance manually since next-pwa doesn't do this automatically
-        const wb = new Workbox('/sw.js');
+        const wb = new Workbox(`/sw.js?v=${SW_VERSION}`);
 
         // Add event listeners to handle PWA lifecycle events
         wb.addEventListener('installed', (event) => {
@@ -102,13 +122,12 @@ export function ServiceWorkerRegistration() {
 
         wb.addEventListener('waiting', (event) => {
           console.log('Service worker waiting:', event);
-          // You could show a prompt to reload for updates here
-          if (confirm('New app update is available! Click OK to refresh.')) {
-            wb.addEventListener('controlling', () => {
-              window.location.reload();
-            });
-            wb.messageSkipWaiting();
-          }
+          // Auto-update without prompting
+          console.log('Auto-updating service worker...');
+          wb.addEventListener('controlling', () => {
+            window.location.reload();
+          });
+          wb.messageSkipWaiting();
         });
 
         // Register the service worker

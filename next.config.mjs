@@ -6,19 +6,20 @@ const withPWA = withPWAInit({
   skipWaiting: true,
   disable: false, // Enable PWA in development for testing
   runtimeCaching: [
-    // API routes - Cache first for better offline experience
+    // API routes - Network first for fresh data, fall back to cache offline
     {
       urlPattern: /^https:\/\/.*\.supabase\.co\/.*$/,
-      handler: 'CacheFirst',
+      handler: 'NetworkFirst',
       options: {
         cacheName: 'supabase-api',
         expiration: {
           maxEntries: 100,
-          maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days for API data
+          maxAgeSeconds: 60 * 60 * 24, // 1 day for API data
         },
         cacheableResponse: {
           statuses: [0, 200]
-        }
+        },
+        networkTimeoutSeconds: 5 // Try network for 5 seconds before falling back to cache
       }
     },
     // Lyrics pages - Cache first for offline reading
