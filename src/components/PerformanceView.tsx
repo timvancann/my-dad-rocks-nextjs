@@ -20,18 +20,18 @@ export default function PerformanceView() {
     setIsDarkMode
   } = usePlayerStore();
 
-  const [textSize, setTextSize] = useState(24); // Larger default for performance
+  const defaultTextSize = 8;
+  const [textSize, setTextSize] = useState(defaultTextSize); // Larger default for performance
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentLyrics, setCurrentLyrics] = useState<LyricType | null>(null);
   const [isLoadingLyrics, setIsLoadingLyrics] = useState(false);
-  
-  const minTextSize = 16;
-  const maxTextSize = 48;
-  const defaultTextSize = 24;
+
+  const minTextSize = 4;
+  const maxTextSize = 40;
 
   // Get current song
   const currentSong = performancePlaylist[currentPerformanceIndex];
-  
+
   // Navigation state
   const hasPrevious = currentPerformanceIndex > 0;
   const hasNext = currentPerformanceIndex < performancePlaylist.length - 1;
@@ -59,7 +59,7 @@ export default function PerformanceView() {
   // Fetch lyrics for current song
   const fetchLyrics = useCallback(async (songId: string) => {
     if (!songId) return;
-    
+
     setIsLoadingLyrics(true);
     try {
       const lyrics = await getLyrics(songId);
@@ -158,7 +158,7 @@ export default function PerformanceView() {
         e.preventDefault();
         exitPerformanceMode();
       }
-      
+
       if (e.key === 'ArrowLeft' && hasPrevious) {
         e.preventDefault();
         navigateToPrevious();
@@ -167,12 +167,12 @@ export default function PerformanceView() {
         e.preventDefault();
         navigateToNext();
       }
-      
+
       if (e.key === ' ' && hasNext) {
         e.preventDefault();
         navigateToNext();
       }
-      
+
       if (e.key === '+' || e.key === '=') {
         e.preventDefault();
         adjustTextSize(2);
@@ -200,10 +200,10 @@ export default function PerformanceView() {
     <div className={`fixed inset-0 z-50 ${isDarkMode ? 'bg-zinc-950' : 'bg-white'} ${isDarkMode ? 'text-white' : 'text-gray-900'} overflow-hidden`}>
       {/* Progress Bar at top */}
       <div className="fixed top-0 left-0 right-0 z-50 h-1 bg-zinc-800">
-        <div 
+        <div
           className="h-full bg-red-600 transition-all duration-300"
-          style={{ 
-            width: `${((currentPerformanceIndex + 1) / totalSongs) * 100}%` 
+          style={{
+            width: `${((currentPerformanceIndex + 1) / totalSongs) * 100}%`
           }}
         />
       </div>
@@ -373,7 +373,7 @@ export default function PerformanceView() {
             </div>
 
             {/* Lyrics content */}
-            <div 
+            <div
               className={`w-full max-w-none flex-1 text-center leading-relaxed ${isDarkMode ? 'text-white' : 'text-gray-900'} min-h-[60vh] flex items-center justify-center`}
               style={{ lineHeight: '1.6' }}
             >
@@ -384,8 +384,8 @@ export default function PerformanceView() {
                 </div>
               ) : currentLyrics?.lyrics ? (
                 <div className="w-full text-center">
-                  <ChordSheetViewer 
-                    lyrics={currentLyrics.lyrics} 
+                  <ChordSheetViewer
+                    lyrics={currentLyrics.lyrics}
                     className={`${isDarkMode ? 'text-white' : 'text-gray-900'}`}
                     style={{ fontSize: `${textSize + 8}px` }}
                   />
