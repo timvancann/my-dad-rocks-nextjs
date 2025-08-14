@@ -83,5 +83,5 @@
 }
 
 .lyrics-viewer .label {
-    @apply font-bold tracking-wider mt-20;
+    @apply font-bold tracking-wider mt-8;
 }
