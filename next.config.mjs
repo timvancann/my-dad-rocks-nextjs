@@ -4,7 +4,7 @@ const withPWA = withPWAInit({
   dest: "public",
   register: true,
   skipWaiting: true,
-  disable: false, // Enable PWA in development for testing
+  disable: process.env.NODE_ENV === 'development', // Disable PWA in development
   runtimeCaching: [
     // API routes - Network first for fresh data, fall back to cache offline
     {

@@ -3,7 +3,6 @@
 import { SongType } from '@/lib/interface';
 import { markSongPracticed } from '@/actions/supabase';
 import { useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { THEME } from '@/themes';
 import { 
@@ -16,11 +15,13 @@ import {
   CheckCircle2, 
   CirclePlus, 
   Trash2,
-  ChevronRight
+  ChevronRight,
+  Play
 } from 'lucide-react';
 import { TbListDetails } from 'react-icons/tb';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { NavigationButton } from './NavigationButton';
+import { usePlayerStore } from '@/store/store';
 
 interface SongMenuProps {
   song: SongType;
@@ -30,11 +31,12 @@ interface SongMenuProps {
 }
 
 export const SongMenu = ({ song, removeFromSetlistFn, addToSetlistFn, onShowNotes }: SongMenuProps) => {
-  const router = useRouter();
   const queryClient = useQueryClient();
   const [isPracticeMarking, setIsPracticeMarking] = useState(false);
   const [showPracticeSuccess, setShowPracticeSuccess] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  
+  const { setPerformancePlaylist, setCurrentPerformanceIndex, setIsPerformanceMode } = usePlayerStore();
 
   const handleMarkPracticed = async () => {
     setIsPracticeMarking(true);
@@ -53,6 +55,14 @@ export const SongMenu = ({ song, removeFromSetlistFn, addToSetlistFn, onShowNote
     } finally {
       setIsPracticeMarking(false);
     }
+  };
+
+  const handlePerformanceMode = () => {
+    // Set up performance state with just this song
+    setPerformancePlaylist([song]);
+    setCurrentPerformanceIndex(0);
+    setIsPerformanceMode(true);
+    setIsOpen(false);
   };
 
   const MenuDivider = () => (
@@ -137,6 +147,13 @@ export const SongMenu = ({ song, removeFromSetlistFn, addToSetlistFn, onShowNote
           >
             Song Details
           </NavigationButton>
+
+          <MenuItem
+            icon={<Play className="h-4 w-4" />}
+            label="Performance Mode"
+            onClick={handlePerformanceMode}
+            rightContent={<ChevronRight className="h-3 w-3 opacity-50" />}
+          />
 
           {onShowNotes && song.notes && (
             <MenuItem

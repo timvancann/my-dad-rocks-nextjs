@@ -26,6 +26,12 @@ type PlayerContext = {
   setSongSections: (sections: SongSection[]) => void;
   isDarkMode: boolean;
   setIsDarkMode: (darkMode: boolean) => void;
+  performancePlaylist: SongType[];
+  setPerformancePlaylist: (songs: SongType[]) => void;
+  currentPerformanceIndex: number;
+  setCurrentPerformanceIndex: (index: number) => void;
+  isPerformanceMode: boolean;
+  setIsPerformanceMode: (enabled: boolean) => void;
 };
 
 export const usePlayerStore = create<PlayerContext>((set) => ({
@@ -38,6 +44,9 @@ export const usePlayerStore = create<PlayerContext>((set) => ({
   isFullscreen: false,
   songSections: [],
   isDarkMode: true,
+  performancePlaylist: [],
+  currentPerformanceIndex: 0,
+  isPerformanceMode: false,
   setSongIndex: (index: number) => set({ songIndex: index }),
   setCurrentSong: (song: SongType | null) => set({ currentSong: song }),
   setPlaylist: (playlist: SongType[]) => set({ playlist }),
@@ -46,5 +55,8 @@ export const usePlayerStore = create<PlayerContext>((set) => ({
   setIsLoopEnabled: (enabled: boolean) => set({ isLoopEnabled: enabled }),
   setIsFullscreen: (isFullscreen: boolean) => set({ isFullscreen }),
   setSongSections: (sections: SongSection[]) => set({ songSections: sections }),
-  setIsDarkMode: (isDarkMode: boolean) => set({ isDarkMode })
+  setIsDarkMode: (isDarkMode: boolean) => set({ isDarkMode }),
+  setPerformancePlaylist: (songs: SongType[]) => set({ performancePlaylist: songs }),
+  setCurrentPerformanceIndex: (index: number) => set({ currentPerformanceIndex: index }),
+  setIsPerformanceMode: (enabled: boolean) => set({ isPerformanceMode: enabled })
 }));

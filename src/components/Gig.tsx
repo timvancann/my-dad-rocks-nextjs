@@ -9,8 +9,10 @@ import { usePracticeStore } from '@/context/PracticeProvider';
 import { GigType, SongType } from '@/lib/interface';
 import { updateSetlistSongs } from '@/actions/supabase';
 import { THEME } from '@/themes';
-import { ArrowLeft, Calendar, Clock, MapPin, Music, Edit } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, MapPin, Music, Edit, Play } from 'lucide-react';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { usePlayerStore } from '@/store/store';
 
 type GigProps = {
   gig: GigType;
@@ -18,6 +20,8 @@ type GigProps = {
 export const Gig = ({ gig }: GigProps) => {
   const allSongs = usePracticeStore((state) => state.allSongs);
   const [showEditForm, setShowEditForm] = useState(false);
+  const router = useRouter();
+  const { setPerformancePlaylist, setCurrentPerformanceIndex, setIsPerformanceMode } = usePlayerStore();
 
   const songs = gig.setlist?.songs || [];
   const totalDuration = Math.round(songs.reduce((acc, song) => acc + (song.duration || 0), 0) / 60);
@@ -26,6 +30,20 @@ export const Gig = ({ gig }: GigProps) => {
   const formatDate = (dateTime: string) => {
     const date = new Date(dateTime);
     return date.toLocaleDateString('nl-NL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  };
+
+  const handleStartPerformance = () => {
+    // Filter out breaks/pauses from the setlist
+    const performanceSongs = songs.filter(song => song._type !== 'pause');
+    
+    if (performanceSongs.length === 0) {
+      return;
+    }
+
+    // Set up performance state and enable performance mode
+    setPerformancePlaylist(performanceSongs);
+    setCurrentPerformanceIndex(0);
+    setIsPerformanceMode(true);
   };
 
 
@@ -104,6 +122,20 @@ export const Gig = ({ gig }: GigProps) => {
           )}
         </div>
       </header>
+      
+      {/* Start Performance Button */}
+      {songs.filter(song => song._type !== 'pause').length > 0 && (
+        <div className="mx-4 mb-4">
+          <button
+            onClick={handleStartPerformance}
+            className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold transition-all duration-200 ${THEME.primaryBg} hover:${THEME.primaryBgLight} text-white hover:scale-105 active:scale-95 shadow-lg`}
+          >
+            <Play className="h-5 w-5" />
+            <span>Start Performance</span>
+          </button>
+        </div>
+      )}
+
       <div className="mb-3 flex items-center">
         <h2 className={`text-base font-bold ${THEME.primary} mr-2 uppercase tracking-wider`}>Setlist</h2>
       </div>

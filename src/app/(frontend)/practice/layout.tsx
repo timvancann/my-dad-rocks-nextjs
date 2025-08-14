@@ -13,6 +13,7 @@ import { Header } from '@/components/Header';
 import { NetworkStatus } from '@/components/NetworkStatus';
 import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistration';
 import { OfflineDataInitializer } from '@/components/OfflineDataInitializer';
+import PerformanceView from '@/components/PerformanceView';
 
 const inter = Noto_Sans({ subsets: ['latin'] });
 
@@ -52,6 +53,7 @@ export default async function RootLayout({
                     <Header />
                     <main className="mb-40 px-3 pt-4">{children}</main>
                     <Footer />
+                    <PerformanceView />
                   </PracticeProvider>
                 </div>
               </OfflineDataInitializer>
