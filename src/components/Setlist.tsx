@@ -10,16 +10,18 @@ import { THEME } from '@/themes';
 import { closestCenter, DndContext, DragEndEvent, PointerSensor, TouchSensor, UniqueIdentifier, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Coffee, GripVertical, Trash2 } from 'lucide-react';
+import { Coffee, GripVertical, Plus, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { MdDragIndicator } from 'react-icons/md';
 
 type SetlistProps = {
   setlist: SetlistType;
   removeSong: (song: SongType) => void;
   updateSongsInSetlist: (songs: SongType[]) => void;
+  onAddSong?: () => void;
 };
 
-export const Setlist = ({ setlist, removeSong, updateSongsInSetlist }: SetlistProps) => {
+export const Setlist = ({ setlist, removeSong, updateSongsInSetlist, onAddSong }: SetlistProps) => {
   const sensors = useSensors(useSensor(PointerSensor, {}), useSensor(TouchSensor, {}));
 
   const removeFromSetlistFn = async (song: SongType) => {
@@ -43,6 +45,20 @@ export const Setlist = ({ setlist, removeSong, updateSongsInSetlist }: SetlistPr
 
   return (
     <div className="flex flex-col space-y-2">
+      {/* Add Song Button */}
+      {onAddSong && (
+        <div className="mb-3">
+          <Button
+            onClick={onAddSong}
+            className={`w-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-zinc-600 text-gray-200`}
+            variant="outline"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Nummer toevoegen
+          </Button>
+        </div>
+      )}
+      
       <LayoutGroup>
         <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd} sensors={sensors} id="builder-dnd">
           <SortableContext items={setlist.songs.map((s) => s._id)} strategy={verticalListSortingStrategy}>

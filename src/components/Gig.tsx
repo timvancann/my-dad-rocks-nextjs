@@ -3,12 +3,13 @@
 import { AddPause } from '@/components/AddPause';
 import { Setlist } from '@/components/Setlist';
 import { EditGig } from '@/components/EditGig';
+import { AddSongModal } from '@/components/AddSongModal';
 import GigProvider, { useGigStore } from '@/context/GigProvider';
 import { usePracticeStore } from '@/context/PracticeProvider';
-import { GigType } from '@/lib/interface';
+import { GigType, SongType } from '@/lib/interface';
+import { updateSetlistSongs } from '@/actions/supabase';
 import { THEME } from '@/themes';
 import { ArrowLeft, Calendar, Clock, MapPin, Music, Edit } from 'lucide-react';
-import { Repertoire } from './RepertoirePage';
 import { useState } from 'react';
 
 type GigProps = {
@@ -116,20 +117,33 @@ export const Gig = ({ gig }: GigProps) => {
 
 const Content = () => {
   const store = useGigStore((state) => state);
-  const allSongs = usePracticeStore((state) => state.allSongs);
-  const availableSongs = allSongs.filter((song) => !store.setlist.songs.some((s) => s._id === song._id)).length;
+
+  const handleAddSongToSetlist = async (song: SongType) => {
+    store.addSong(song);
+    await updateSetlistSongs(store.setlist._id, [...store.setlist.songs, song]);
+    // Don't close modal - let user continue adding songs
+  };
 
   return (
     <>
-      <Setlist setlist={store.setlist} removeSong={store.removeSong} updateSongsInSetlist={store.updateSongsInSetlist} />
+      <Setlist 
+        setlist={store.setlist} 
+        removeSong={store.removeSong} 
+        updateSongsInSetlist={store.updateSongsInSetlist}
+        onAddSong={store.openAddSongModal}
+      />
+      
+      <AddSongModal
+        isOpen={store.isAddSongModalOpen}
+        onClose={store.closeAddSongModal}
+        availableSongs={store.allSongs}
+        excludeSongs={store.setlist.songs}
+        onAddSong={handleAddSongToSetlist}
+      />
+      
       <div className="flex justify-end">
         <AddPause addSong={store.addSong} setlist={store.setlist} />
       </div>
-      <div className="mb-3 flex items-center">
-        <h2 className="mr-2 text-base font-bold uppercase tracking-wider text-gray-400">Overige nummers</h2>
-        <div className="rounded bg-zinc-800 px-1.5 py-0.5 text-xs font-medium text-gray-400">{availableSongs}</div>
-      </div>
-      <Repertoire songs={store.allSongs} setlist={store.setlist} addSong={store.addSong} filterSetlist={true} />
     </>
   );
 };

@@ -1,13 +1,22 @@
 'use client';
 
 import { Setlist } from '@/components/Setlist';
+import { AddSongModal } from '@/components/AddSongModal';
 import { usePracticeStore } from '@/context/PracticeProvider';
+import { updateSetlistSongs } from '@/actions/supabase';
+import { SongType } from '@/lib/interface';
 import { THEME } from '@/themes';
 
 export default function Home() {
   const store = usePracticeStore((state) => state);
   const totalDuration = store.setlist.songs.reduce((acc, song) => acc + (song.duration || 0), 0);
   const roundedDuration = Math.round(totalDuration / 60);
+
+  const handleAddSongToSetlist = async (song: SongType) => {
+    store.addSong(song);
+    await updateSetlistSongs(store.setlist._id, [...store.setlist.songs, song]);
+    // Don't close modal - let user continue adding songs
+  };
 
   return (
     <div className="flex flex-col">
@@ -20,7 +29,21 @@ export default function Home() {
           • {store.setlist.songs.length} songs • {roundedDuration} min
         </span>
       </div>
-      <Setlist setlist={store.setlist} removeSong={store.removeSong} updateSongsInSetlist={store.updateSongsInSetlist} />
+      
+      <Setlist 
+        setlist={store.setlist} 
+        removeSong={store.removeSong} 
+        updateSongsInSetlist={store.updateSongsInSetlist}
+        onAddSong={store.openAddSongModal}
+      />
+      
+      <AddSongModal
+        isOpen={store.isAddSongModalOpen}
+        onClose={store.closeAddSongModal}
+        availableSongs={store.allSongs}
+        excludeSongs={store.setlist.songs}
+        onAddSong={handleAddSongToSetlist}
+      />
     </div>
   );
 }
