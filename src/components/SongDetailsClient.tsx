@@ -8,7 +8,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { EditSong } from '@/components/EditSong';
 import { THEME } from '@/themes';
 import { Calendar, Clock, Guitar, Hash, Mic, Music, Star, Tag, Users, Edit, ArrowLeft, Link as LinkIcon, FileText, Trash2 } from 'lucide-react';
-import Link from 'next/link';
 import { FaSpotify, FaYoutube } from 'react-icons/fa';
 import { SiYoutubemusic } from 'react-icons/si';
 import { NavigationLink } from './NavigationButton';
@@ -144,7 +143,7 @@ export function SongDetailsClient({ song: initialSong, stats: initialStats, id }
         {/* Quick Actions */}
         <div className="flex gap-4 mb-8">
           <NavigationLink 
-            href={`/practice/lyrics/${id}`} 
+            href={`/practice/lyrics/${song.slug}`} 
             className={`px-6 py-3 ${THEME.primaryBg} hover:${THEME.primaryBgDark} text-white rounded-md font-medium transition-colors`}
             icon={<Music className="h-4 w-4" />}
           >

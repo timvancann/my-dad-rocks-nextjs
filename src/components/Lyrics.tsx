@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
+import { ChordSheetViewer } from './ChordSheetViewer';
 
 export default function DisplayLyrics({ song, songId }: { song: LyricType; songId: string }) {
   const router = useRouter();
@@ -307,22 +308,6 @@ export default function DisplayLyrics({ song, songId }: { song: LyricType; songI
               </div>
 
               <div className="flex items-center gap-2">
-                {/* Text size controls */}
-                <div className="flex items-center gap-2 rounded-lg bg-zinc-800 p-1">
-                  <Button variant="ghost" size="icon" onClick={() => adjustTextSize(-2)} disabled={textSize <= minTextSize} title="Decrease text size">
-                    <ZoomOut />
-                  </Button>
-                  <span className={`hidden text-xs sm:inline ${THEME.textSecondary} w-12 text-center`}>{Math.round((textSize / 16) * 100)}%</span>
-                  <Button variant="ghost" size="icon" onClick={() => adjustTextSize(2)} disabled={textSize >= maxTextSize} title="Increase text size">
-                    <ZoomIn />
-                  </Button>
-                </div>
-
-                {/* Fullscreen button */}
-                <Button variant="ghost" size="icon" onClick={toggleFullscreen} title={isFullscreen ? 'Exit fullscreen (Esc)' : 'Enter fullscreen (F11)'} className="hover:bg-zinc-700">
-                  {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
-                </Button>
-
                 {/* Edit button */}
                 {!edit && (
                   <Button onClick={() => setEdit(true)} size="sm" className={`${THEME.primaryBg} hover:${THEME.primaryBgDark} text-white`}>
@@ -389,14 +374,30 @@ export default function DisplayLyrics({ song, songId }: { song: LyricType; songI
                   </div>
 
                   {/* Lyrics content */}
-                  <div className={`w-full max-w-none flex-1 whitespace-pre-wrap text-center leading-relaxed ${isDarkMode ? 'text-white' : 'text-gray-900'}`} style={{ fontSize: `${textSize + 8}px` }}>
-                    {lyrics || <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>No lyrics available for this song.</span>}
+                  <div className={`w-full max-w-none flex-1 text-center leading-relaxed ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    {lyrics ? (
+                      <ChordSheetViewer 
+                        lyrics={lyrics} 
+                        className={`${isDarkMode ? 'text-white' : 'text-gray-900'}`}
+                        style={{ fontSize: `${textSize + 8}px` }}
+                      />
+                    ) : (
+                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>No lyrics available for this song.</span>
+                    )}
                   </div>
                 </div>
               ) : (
                 <Card className={`p-6 sm:p-8 ${THEME.bg} border ${THEME.border}`}>
-                  <div className={`whitespace-pre-wrap ${THEME.text} leading-relaxed`} style={{ fontSize: `${textSize}px` }}>
-                    {lyrics || <span className={THEME.textSecondary}>No lyrics available for this song.</span>}
+                  <div className={`${THEME.text} leading-relaxed`} style={{ fontSize: `${textSize}px` }}>
+                    {lyrics ? (
+                      <ChordSheetViewer 
+                        lyrics={lyrics} 
+                        className={THEME.text}
+                        style={{ fontSize: `${textSize}px` }}
+                      />
+                    ) : (
+                      <span className={THEME.textSecondary}>No lyrics available for this song.</span>
+                    )}
                   </div>
                 </Card>
               )}

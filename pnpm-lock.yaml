@@ -56,6 +56,9 @@ importers:
       '@wavesurfer/react':
         specifier: ^1.0.11
         version: 1.0.11(react@19.0.0)(wavesurfer.js@7.9.5)
+      chordsheetjs:
+        specifier: ^12.3.1
+        version: 12.3.1
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -2018,6 +2021,10 @@ packages:
   chokidar@3.6.0:
     resolution: {integrity: sha512-7VT13fmjotKpGipCW9JEQAusEPE+Ei8nl6/g4FBAmIm0GOOLMua9NDDo/DWp0ZAxCr3cPq5ZpBqmPAQgDda2Pw==}
     engines: {node: '>= 8.10.0'}
+
+  chordsheetjs@12.3.1:
+    resolution: {integrity: sha512-gfV0NnPUiosuC13AuEg5gWdeqiFQ+MB02rbxlsFG5xRvjgeWSxuhEenw0RF0B8xrl5lkxDOfbd47yEpa85pTFA==}
+    engines: {node: '>=16'}
 
   chrome-trace-event@1.0.4:
     resolution: {integrity: sha512-rNjApaLzuwaOTjCiT8lSDdGN1APCiqkChLMJxJPWLunPAt5fy8xgU9/jNOchV84wfIxrA0lRQB7oCT8jrn/wrQ==}
@@ -6160,6 +6167,8 @@ snapshots:
       readdirp: 3.6.0
     optionalDependencies:
       fsevents: 2.3.3
+
+  chordsheetjs@12.3.1: {}
 
   chrome-trace-event@1.0.4: {}
 

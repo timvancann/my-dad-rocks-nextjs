@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight, X, RotateCcw, ZoomIn, ZoomOut, Loader2, Sun,
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'motion/react';
+import { ChordSheetViewer } from './ChordSheetViewer';
 
 export default function PerformanceView() {
   const {
@@ -122,18 +123,8 @@ export default function PerformanceView() {
     }
   }, [setIsPerformanceMode, isFullscreen, exitFullscreen]);
 
-  // Auto-enter fullscreen on mount
-  useEffect(() => {
-    const attemptFullscreen = async () => {
-      try {
-        await enterFullscreen();
-      } catch (error) {
-        console.log('Fullscreen not available or denied, continuing in normal mode');
-      }
-    };
-    
-    attemptFullscreen();
-  }, [enterFullscreen]);
+  // Note: Fullscreen can only be triggered by user interaction
+  // We don't auto-enter fullscreen to avoid browser errors
 
   // Fullscreen change listener
   useEffect(() => {
@@ -383,8 +374,8 @@ export default function PerformanceView() {
 
             {/* Lyrics content */}
             <div 
-              className={`w-full max-w-none flex-1 whitespace-pre-wrap text-center leading-relaxed ${isDarkMode ? 'text-white' : 'text-gray-900'} min-h-[60vh] flex items-center justify-center`}
-              style={{ fontSize: `${textSize + 8}px`, lineHeight: '1.6' }}
+              className={`w-full max-w-none flex-1 text-center leading-relaxed ${isDarkMode ? 'text-white' : 'text-gray-900'} min-h-[60vh] flex items-center justify-center`}
+              style={{ lineHeight: '1.6' }}
             >
               {isLoadingLyrics ? (
                 <div className={`flex flex-col items-center gap-4 ${isDarkMode ? 'text-white/70' : 'text-gray-600'}`}>
@@ -393,7 +384,11 @@ export default function PerformanceView() {
                 </div>
               ) : currentLyrics?.lyrics ? (
                 <div className="w-full text-center">
-                  {currentLyrics.lyrics}
+                  <ChordSheetViewer 
+                    lyrics={currentLyrics.lyrics} 
+                    className={`${isDarkMode ? 'text-white' : 'text-gray-900'}`}
+                    style={{ fontSize: `${textSize + 8}px` }}
+                  />
                 </div>
               ) : (
                 <div className={`text-center ${isDarkMode ? 'text-white/70' : 'text-gray-600'}`}>
