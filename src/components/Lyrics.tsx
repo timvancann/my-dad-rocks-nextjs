@@ -4,7 +4,7 @@ import { modifyLyrics } from '@/actions/supabase';
 import { LyricType } from '@/lib/interface';
 import { usePlayerStore } from '@/store/store';
 import { THEME } from '@/themes';
-import { AlertCircle, CheckCircle, ChevronLeft, ChevronRight, Edit2, Loader2, Maximize, Minimize, Moon, RotateCcw, Save, Sun, X, ZoomIn, ZoomOut } from 'lucide-react';
+import { AlertCircle, CheckCircle, ChevronLeft, ChevronRight, Edit2, Loader2, Maximize, Minimize, Moon, RotateCcw, Save, Sun, X, ZoomIn, ZoomOut, Volume2, VolumeX, Eye, EyeOff } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
@@ -23,9 +23,76 @@ export default function DisplayLyrics({ song, songId }: { song: LyricType; songI
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [error, setError] = useState<string | null>(null);
   const [scrollPosition, setScrollPosition] = useState(0);
+  const [isVisualClickEnabled, setIsVisualClickEnabled] = useState(false);
+  const [isAudibleClickEnabled, setIsAudibleClickEnabled] = useState(false);
+  const [metronomeInterval, setMetronomeInterval] = useState<NodeJS.Timeout | null>(null);
+  const [visualPulse, setVisualPulse] = useState(false);
 
   const minTextSize = 12;
   const maxTextSize = 32;
+
+  // Get tempo from song data, default to 120 BPM if not available
+  const songTempo = (song as any).tempo_bpm || 120;
+
+  // Create audio context for metronome clicks
+  const createClick = useCallback(() => {
+    if (typeof window !== 'undefined' && isAudibleClickEnabled) {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = 800; // High pitch click
+      oscillator.type = 'square';
+      
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.1);
+    }
+  }, [isAudibleClickEnabled]);
+
+  // Metronome tick function
+  const tick = useCallback(() => {
+    if (isVisualClickEnabled) {
+      setVisualPulse(true);
+      setTimeout(() => setVisualPulse(false), 100);
+    }
+    if (isAudibleClickEnabled) {
+      createClick();
+    }
+  }, [isVisualClickEnabled, isAudibleClickEnabled, createClick]);
+
+  // Metronome management effect
+  useEffect(() => {
+    if (isVisualClickEnabled || isAudibleClickEnabled) {
+      const interval = 60000 / songTempo; // Convert BPM to milliseconds
+      const intervalId = setInterval(tick, interval);
+      setMetronomeInterval(intervalId);
+      
+      return () => {
+        clearInterval(intervalId);
+        setMetronomeInterval(null);
+      };
+    } else {
+      if (metronomeInterval) {
+        clearInterval(metronomeInterval);
+        setMetronomeInterval(null);
+      }
+    }
+  }, [isVisualClickEnabled, isAudibleClickEnabled, songTempo, tick]);
+
+  // Cleanup metronome on unmount
+  useEffect(() => {
+    return () => {
+      if (metronomeInterval) {
+        clearInterval(metronomeInterval);
+      }
+    };
+  }, [metronomeInterval]);
 
   // Calculate current song index and navigation availability
   // Navigation only works when coming from a playlist context (clicking a song card)
@@ -226,6 +293,46 @@ export default function DisplayLyrics({ song, songId }: { song: LyricType; songI
           >
             {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </Button>
+
+          {/* Click toggles */}
+          <div className="fixed right-4 bottom-4 z-50 flex flex-col gap-2">
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsVisualClickEnabled(!isVisualClickEnabled)}
+                className={`h-12 w-12 rounded-full border border-white/20 text-white hover:bg-black/70 ${
+                  isVisualClickEnabled ? 'bg-rose-600/80' : 'bg-black/50'
+                }`}
+                title={isVisualClickEnabled ? 'Disable visual click' : 'Enable visual click'}
+              >
+                {isVisualClickEnabled ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsAudibleClickEnabled(!isAudibleClickEnabled)}
+                className={`h-12 w-12 rounded-full border border-white/20 text-white hover:bg-black/70 ${
+                  isAudibleClickEnabled ? 'bg-rose-600/80' : 'bg-black/50'
+                }`}
+                title={isAudibleClickEnabled ? 'Disable audible click' : 'Enable audible click'}
+              >
+                {isAudibleClickEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+              </Button>
+            </div>
+            {(isVisualClickEnabled || isAudibleClickEnabled) && (
+              <div className="text-center text-xs text-white/80 bg-black/50 rounded-lg px-2 py-1 border border-white/20">
+                {songTempo} BPM
+              </div>
+            )}
+          </div>
+
+          {/* Visual pulse indicator */}
+          {isVisualClickEnabled && (
+            <div className={`fixed bottom-4 left-4 z-40 h-12 w-12 rounded-full border-4 transition-all duration-100 ${
+              visualPulse ? 'scale-150 bg-rose-400 border-rose-200' : 'scale-100 bg-black border-rose-600'
+            }`} />
+          )}
 
           {/* Navigation buttons for setlist - positioned on the right */}
           {hasPlaylist && (

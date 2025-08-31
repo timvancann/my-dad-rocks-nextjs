@@ -3,7 +3,7 @@
 import { usePlayerStore } from '@/store/store';
 import { getLyrics } from '@/actions/supabase';
 import { LyricType } from '@/lib/interface';
-import { ChevronLeft, ChevronRight, X, RotateCcw, ZoomIn, ZoomOut, Loader2, Sun, Moon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, RotateCcw, ZoomIn, ZoomOut, Loader2, Sun, Moon, Volume2, VolumeX, Eye, EyeOff } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'motion/react';
@@ -25,12 +25,51 @@ export default function PerformanceView() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentLyrics, setCurrentLyrics] = useState<LyricType | null>(null);
   const [isLoadingLyrics, setIsLoadingLyrics] = useState(false);
+  const [isVisualClickEnabled, setIsVisualClickEnabled] = useState(false);
+  const [isAudibleClickEnabled, setIsAudibleClickEnabled] = useState(false);
+  const [metronomeInterval, setMetronomeInterval] = useState<NodeJS.Timeout | null>(null);
+  const [visualPulse, setVisualPulse] = useState(false);
 
   const minTextSize = 4;
   const maxTextSize = 40;
 
   // Get current song
   const currentSong = performancePlaylist[currentPerformanceIndex];
+
+  // Get tempo from song data, default to 120 BPM if not available
+  const songTempo = (currentSong as any)?.tempo_bpm || 120;
+
+  // Create audio context for metronome clicks
+  const createClick = useCallback(() => {
+    if (typeof window !== 'undefined' && isAudibleClickEnabled) {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = 800; // High pitch click
+      oscillator.type = 'square';
+      
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.1);
+    }
+  }, [isAudibleClickEnabled]);
+
+  // Metronome tick function
+  const tick = useCallback(() => {
+    if (isVisualClickEnabled) {
+      setVisualPulse(true);
+      setTimeout(() => setVisualPulse(false), 100);
+    }
+    if (isAudibleClickEnabled) {
+      createClick();
+    }
+  }, [isVisualClickEnabled, isAudibleClickEnabled, createClick]);
 
   // Navigation state
   const hasPrevious = currentPerformanceIndex > 0;
@@ -71,6 +110,34 @@ export default function PerformanceView() {
       setIsLoadingLyrics(false);
     }
   }, []);
+
+  // Metronome management effect
+  useEffect(() => {
+    if (isVisualClickEnabled || isAudibleClickEnabled) {
+      const interval = 60000 / songTempo; // Convert BPM to milliseconds
+      const intervalId = setInterval(tick, interval);
+      setMetronomeInterval(intervalId);
+      
+      return () => {
+        clearInterval(intervalId);
+        setMetronomeInterval(null);
+      };
+    } else {
+      if (metronomeInterval) {
+        clearInterval(metronomeInterval);
+        setMetronomeInterval(null);
+      }
+    }
+  }, [isVisualClickEnabled, isAudibleClickEnabled, songTempo, tick]);
+
+  // Cleanup metronome on unmount
+  useEffect(() => {
+    return () => {
+      if (metronomeInterval) {
+        clearInterval(metronomeInterval);
+      }
+    };
+  }, [metronomeInterval]);
 
   // Fetch lyrics when current song changes
   useEffect(() => {
@@ -248,7 +315,50 @@ export default function PerformanceView() {
           <div className="text-xs text-white/70">
             {Math.round(((currentPerformanceIndex + 1) / totalSongs) * 100)}% complete
           </div>
+          <div className="text-xs text-white/70 mt-1 border-t border-white/20 pt-1">
+            {songTempo} BPM
+          </div>
         </div>
+
+        {/* Click toggles */}
+        <div className="fixed right-4 bottom-4 z-50 flex flex-col gap-2">
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsVisualClickEnabled(!isVisualClickEnabled)}
+              className={`h-12 w-12 rounded-full border border-white/20 text-white hover:bg-black/70 ${
+                isVisualClickEnabled ? 'bg-rose-600/80' : 'bg-black/50'
+              }`}
+              title={isVisualClickEnabled ? 'Disable visual click' : 'Enable visual click'}
+            >
+              {isVisualClickEnabled ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsAudibleClickEnabled(!isAudibleClickEnabled)}
+              className={`h-12 w-12 rounded-full border border-white/20 text-white hover:bg-black/70 ${
+                isAudibleClickEnabled ? 'bg-rose-600/80' : 'bg-black/50'
+              }`}
+              title={isAudibleClickEnabled ? 'Disable audible click' : 'Enable audible click'}
+            >
+              {isAudibleClickEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+            </Button>
+          </div>
+          {(isVisualClickEnabled || isAudibleClickEnabled) && (
+            <div className="text-center text-xs text-white/80 bg-black/50 rounded-lg px-2 py-1 border border-white/20">
+              {songTempo} BPM
+            </div>
+          )}
+        </div>
+
+        {/* Visual pulse indicator */}
+        {isVisualClickEnabled && (
+          <div className={`fixed bottom-4 left-4 z-40 h-12 w-12 bg-black rounded-full border-8 transition-all duration-50 ${
+            visualPulse ? 'scale-150  border-rose-600' : 'scale-100  border-rose-600'
+          }`} />
+        )}
 
         {/* Navigation buttons for performance - positioned on the right */}
         {totalSongs > 1 && (
