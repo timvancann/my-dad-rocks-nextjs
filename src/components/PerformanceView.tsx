@@ -321,42 +321,24 @@ export default function PerformanceView() {
         </div>
 
         {/* Click toggles */}
-        <div className="fixed right-4 bottom-4 z-50 flex flex-col gap-2">
-          <div className="flex gap-2">
+        <div className="fixed right-4 top-[50%] z-50 flex gap-2">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setIsVisualClickEnabled(!isVisualClickEnabled)}
-              className={`h-12 w-12 rounded-full border border-white/20 text-white hover:bg-black/70 ${
-                isVisualClickEnabled ? 'bg-rose-600/80' : 'bg-black/50'
+              className={`h-12 w-12 rounded-full border border-white/20 text-white hover:bg-black ${
+                isVisualClickEnabled ? 'bg-rose-600/80' : 'bg-black'
               }`}
               title={isVisualClickEnabled ? 'Disable visual click' : 'Enable visual click'}
             >
               {isVisualClickEnabled ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsAudibleClickEnabled(!isAudibleClickEnabled)}
-              className={`h-12 w-12 rounded-full border border-white/20 text-white hover:bg-black/70 ${
-                isAudibleClickEnabled ? 'bg-rose-600/80' : 'bg-black/50'
-              }`}
-              title={isAudibleClickEnabled ? 'Disable audible click' : 'Enable audible click'}
-            >
-              {isAudibleClickEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
-            </Button>
           </div>
-          {(isVisualClickEnabled || isAudibleClickEnabled) && (
-            <div className="text-center text-xs text-white/80 bg-black/50 rounded-lg px-2 py-1 border border-white/20">
-              {songTempo} BPM
-            </div>
-          )}
-        </div>
 
         {/* Visual pulse indicator */}
         {isVisualClickEnabled && (
-          <div className={`fixed bottom-4 left-4 z-40 h-12 w-12 bg-black rounded-full border-8 transition-all duration-50 ${
-            visualPulse ? 'scale-150  border-rose-600' : 'scale-100  border-rose-600'
+          <div className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2  z-40 h-20 w-20 bg-rose-600 rounded-full  transition-all duration-75 ${
+            visualPulse ? 'scale-[2]  ' : 'scale-100  '
           }`} />
         )}
 

@@ -3,7 +3,7 @@
 import { useAudioTime, usePlaylistPlayer } from '@/hooks/useAudioTime';
 import { usePlayerStore } from '@/store/store';
 import { THEME } from '@/themes';
-import { X, Play, Pause, SkipBack, SkipForward, Volume2, Mic, Repeat, RotateCcw, ChevronsLeft, Plus, Edit3, Trash2, MoreHorizontal, ChevronDown, ChevronUp, GripVertical } from 'lucide-react';
+import { X, Play, Pause, SkipBack, SkipForward, Volume2, Mic, Repeat, RotateCcw, ChevronsLeft, Plus, Edit3, Trash2, MoreHorizontal, ChevronDown, ChevronUp, GripVertical, SquareArrowLeft } from 'lucide-react';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { TbGuitarPickFilled } from 'react-icons/tb';
@@ -65,6 +65,10 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
       seekTrack(loopMarkers.start);
     }
   }, [loopMarkers.start, seekTrack]);
+
+  const restartFromBeginning = useCallback(() => {
+    seekTrack(0);
+  }, [seekTrack]);
 
   // Section marker functions
   const handleAddMarker = useCallback(async () => {
@@ -484,6 +488,15 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
 
               {/* Playback controls */}
               <div className="flex items-center justify-center gap-4 sm:gap-6 mb-4">
+                <button 
+                  className={`p-2 sm:p-3 ${THEME.text} hover:${THEME.primary} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`} 
+                  onClick={restartFromBeginning}
+                  disabled={isChangingSong}
+                  title="Restart from beginning"
+                >
+                  <SquareArrowLeft className="h-6 w-6 sm:h-8 sm:w-8" />
+                </button>
+                
                 <button 
                   className={`p-2 sm:p-3 ${THEME.text} hover:${THEME.primary} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`} 
                   onClick={previousTrack}
