@@ -14,7 +14,7 @@ export function OfflineDataInitializer({ children }: { children: React.ReactNode
     const initializeOfflineData = async () => {
       try {
         // Check if we have any local data
-        const songs = await offlineSync.getSongs();
+        const songs = [] //await offlineSync.getSongs();
         
         if (songs.length === 0 && isOnline) {
           // First time load - fetch all data

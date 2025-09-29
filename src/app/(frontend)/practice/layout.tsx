@@ -47,7 +47,7 @@ export default async function RootLayout({
             <ProtectedRoute>
               <ServiceWorkerRegistration />
               <NetworkStatus />
-              <OfflineDataInitializer>
+              {/*<OfflineDataInitializer>*/}
                 <div className={'flex flex-col'}>
                   <PracticeProvider setlist={setlist} allSongs={allSongs}>
                     <Header />
@@ -56,7 +56,7 @@ export default async function RootLayout({
                     <PerformanceView />
                   </PracticeProvider>
                 </div>
-              </OfflineDataInitializer>
+              {/*</OfflineDataInitializer>*/}
             </ProtectedRoute>
           </TanstackProvider>
         </AuthProvider>
