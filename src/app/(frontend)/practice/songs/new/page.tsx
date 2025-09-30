@@ -8,7 +8,6 @@ import { Label } from '@/components/ui/label';
 import { THEME } from '@/themes';
 import { ArrowLeft, Upload, Music, Image, Save } from 'lucide-react';
 import { NavigationLink } from '@/components/NavigationButton';
-import { createSong } from '@/actions/supabase';
 
 interface NewSongFormData {
   title: string;
@@ -30,6 +29,44 @@ export default function NewSongPage() {
     coverArt: '',
     audioFile: ''
   });
+  const [isDragging, setIsDragging] = useState({
+    coverArt: false,
+    audioFile: false
+  });
+
+  const handleFileSelect = (file: File | null, fileType: 'coverArt' | 'audioFile') => {
+    setFormData(prev => ({
+      ...prev,
+      [fileType]: file
+    }));
+
+    if (!file) {
+      setPreviews(prev => ({
+        ...prev,
+        [fileType]: ''
+      }));
+      return;
+    }
+
+    if (fileType === 'coverArt') {
+      const reader = new FileReader();
+      reader.onload = event => {
+        setPreviews(prev => ({
+          ...prev,
+          coverArt: event.target?.result as string
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+
+    if (fileType === 'audioFile') {
+      const audioUrl = URL.createObjectURL(file);
+      setPreviews(prev => ({
+        ...prev,
+        audioFile: audioUrl
+      }));
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -41,32 +78,56 @@ export default function NewSongPage() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fileType: 'coverArt' | 'audioFile') => {
     const file = e.target.files?.[0] || null;
-    
-    setFormData(prev => ({
+    handleFileSelect(file || null, fileType);
+  };
+
+  const handleDragState = (fileType: 'coverArt' | 'audioFile', active: boolean) => {
+    setIsDragging(prev => ({
       ...prev,
-      [fileType]: file
+      [fileType]: active
     }));
+  };
 
-    // Create preview for cover art
-    if (file && fileType === 'coverArt') {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setPreviews(prev => ({
-          ...prev,
-          coverArt: e.target?.result as string
-        }));
-      };
-      reader.readAsDataURL(file);
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>, fileType: 'coverArt' | 'audioFile') => {
+    e.preventDefault();
+    handleDragState(fileType, false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (!file) {
+      return;
     }
 
-    // Create preview for audio file
-    if (file && fileType === 'audioFile') {
-      const audioUrl = URL.createObjectURL(file);
-      setPreviews(prev => ({
-        ...prev,
-        audioFile: audioUrl
-      }));
+    if (fileType === 'coverArt' && !file.type.startsWith('image/')) {
+      alert('Kies een geldig afbeeldingsbestand voor de cover art.');
+      return;
     }
+
+    if (fileType === 'audioFile' && !file.type.startsWith('audio/')) {
+      alert('Kies een geldig audiobestand.');
+      return;
+    }
+
+    handleFileSelect(file, fileType);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  };
+
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>, fileType: 'coverArt' | 'audioFile') => {
+    e.preventDefault();
+    handleDragState(fileType, true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>, fileType: 'coverArt' | 'audioFile') => {
+    if (e.currentTarget.contains(e.relatedTarget as Node)) {
+      return;
+    }
+    handleDragState(fileType, false);
+  };
+
+  const openFileDialog = (fileType: 'coverArt' | 'audioFile') => {
+    document.getElementById(fileType)?.click();
   };
 
   const calculateAudioDuration = (file: File): Promise<number> => {
@@ -88,26 +149,6 @@ export default function NewSongPage() {
     });
   };
 
-  const uploadFile = async (file: File, type: 'cover' | 'audio'): Promise<string> => {
-    // For now, we'll create a simple file upload endpoint
-    // In a real implementation, you'd upload to Supabase Storage or another service
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('type', type);
-    
-    const response = await fetch('/api/upload', {
-      method: 'POST',
-      body: formData
-    });
-    
-    if (!response.ok) {
-      throw new Error('Upload failed');
-    }
-    
-    const { url } = await response.json();
-    return url;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -119,32 +160,36 @@ export default function NewSongPage() {
     setIsSubmitting(true);
     
     try {
-      let coverArtUrl = '';
-      let audioUrl = '';
       let duration = 0;
-
-      // Upload cover art if provided
-      if (formData.coverArt) {
-        coverArtUrl = await uploadFile(formData.coverArt, 'cover');
-      }
-
-      // Upload audio file and calculate duration
       if (formData.audioFile) {
         duration = await calculateAudioDuration(formData.audioFile);
-        audioUrl = await uploadFile(formData.audioFile, 'audio');
       }
 
-      // Create the song
-      const newSong = await createSong({
-        title: formData.title,
-        artist: formData.artist,
-        artwork_url: coverArtUrl,
-        audio_url: audioUrl,
-        duration_seconds: duration
+      const payload = new FormData();
+      payload.append('title', formData.title);
+      payload.append('artist', formData.artist);
+      if (duration) {
+        payload.append('duration_seconds', String(duration));
+      }
+      if (formData.coverArt) {
+        payload.append('coverArt', formData.coverArt);
+      }
+      if (formData.audioFile) {
+        payload.append('audioFile', formData.audioFile);
+      }
+
+      const response = await fetch('/api/practice/songs/create', {
+        method: 'POST',
+        body: payload
       });
 
-      // Navigate to the new song's details page
-      router.push(`/practice/song/${newSong.slug}`);
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Upload mislukt');
+      }
+
+      router.push(`/practice/song/${result.song.slug}`);
       
     } catch (error) {
       console.error('Error creating song:', error);
@@ -208,32 +253,44 @@ export default function NewSongPage() {
             <Image className="inline h-4 w-4 mr-1" />
             Cover Art
           </Label>
-          
+
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => handleFileChange(e, 'coverArt')}
+            className="hidden"
+            id="coverArt"
+          />
+
           <div className="flex items-start gap-4">
-            <div className="flex-1">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleFileChange(e, 'coverArt')}
-                className="hidden"
-                id="coverArt"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                className={`w-full ${THEME.highlight} hover:bg-zinc-700 ${THEME.text} border ${THEME.border}`}
-                onClick={() => document.getElementById('coverArt')?.click()}
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                {formData.coverArt ? 'Vervang Cover Art' : 'Upload Cover Art'}
-              </Button>
+            <div
+              role="button"
+              tabIndex={0}
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  openFileDialog('coverArt');
+                }
+              }}
+              onClick={() => openFileDialog('coverArt')}
+              onDragEnter={e => handleDragEnter(e, 'coverArt')}
+              onDragOver={handleDragOver}
+              onDragLeave={e => handleDragLeave(e, 'coverArt')}
+              onDrop={e => handleDrop(e, 'coverArt')}
+              className={`flex-1 rounded-md border-2 border-dashed px-4 py-6 text-center transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2 focus:ring-offset-zinc-900 ${
+                isDragging.coverArt ? 'border-rose-400 bg-zinc-800/60' : `${THEME.border} bg-zinc-900`
+              }`}
+            >
+              <Upload className="mx-auto mb-3 h-6 w-6" />
+              <p className="text-sm font-medium">
+                {formData.coverArt ? 'Sleep een nieuwe afbeelding hierheen of klik om te vervangen' : 'Sleep cover art hierheen of klik om te kiezen'}
+              </p>
+              <p className="mt-1 text-xs text-gray-400">Ondersteunt PNG, JPG, GIF</p>
               {formData.coverArt && (
-                <p className="text-sm text-gray-400 mt-1">
-                  {formData.coverArt.name}
-                </p>
+                <p className="mt-2 text-xs text-gray-500">Geselecteerd: {formData.coverArt.name}</p>
               )}
             </div>
-            
+
             {previews.coverArt && (
               <div className="w-24 h-24 rounded-lg overflow-hidden border border-zinc-600">
                 <img
@@ -253,31 +310,43 @@ export default function NewSongPage() {
             Audio Bestand
           </Label>
           
+          <input
+            type="file"
+            accept="audio/*"
+            onChange={(e) => handleFileChange(e, 'audioFile')}
+            className="hidden"
+            id="audioFile"
+          />
+
           <div className="space-y-3">
-            <div>
-              <input
-                type="file"
-                accept="audio/*"
-                onChange={(e) => handleFileChange(e, 'audioFile')}
-                className="hidden"
-                id="audioFile"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                className={`w-full ${THEME.highlight} hover:bg-zinc-700 ${THEME.text} border ${THEME.border}`}
-                onClick={() => document.getElementById('audioFile')?.click()}
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                {formData.audioFile ? 'Vervang Audio Bestand' : 'Upload Audio Bestand'}
-              </Button>
+            <div
+              role="button"
+              tabIndex={0}
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  openFileDialog('audioFile');
+                }
+              }}
+              onClick={() => openFileDialog('audioFile')}
+              onDragEnter={e => handleDragEnter(e, 'audioFile')}
+              onDragOver={handleDragOver}
+              onDragLeave={e => handleDragLeave(e, 'audioFile')}
+              onDrop={e => handleDrop(e, 'audioFile')}
+              className={`rounded-md border-2 border-dashed px-4 py-6 text-center transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2 focus:ring-offset-zinc-900 ${
+                isDragging.audioFile ? 'border-rose-400 bg-zinc-800/60' : `${THEME.border} bg-zinc-900`
+              }`}
+            >
+              <Upload className="mx-auto mb-3 h-6 w-6" />
+              <p className="text-sm font-medium">
+                {formData.audioFile ? 'Sleep een nieuw audiobestand hierheen of klik om te vervangen' : 'Sleep een audiobestand hierheen of klik om te kiezen'}
+              </p>
+              <p className="mt-1 text-xs text-gray-400">Ondersteunt MP3, WAV, FLAC</p>
               {formData.audioFile && (
-                <p className="text-sm text-gray-400 mt-1">
-                  {formData.audioFile.name}
-                </p>
+                <p className="mt-2 text-xs text-gray-500">Geselecteerd: {formData.audioFile.name}</p>
               )}
             </div>
-            
+
             {previews.audioFile && (
               <audio controls className="w-full">
                 <source src={previews.audioFile} />

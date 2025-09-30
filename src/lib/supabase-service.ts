@@ -1,5 +1,44 @@
+import { createClient } from '@supabase/supabase-js';
 import { GigsType, GigType, SetlistType, SongType, ProposalType } from './interface';
 import { supabase } from './supabase';
+
+const supabaseServiceKey = process.env.NEXT_PRIVATE_SUPABASE_SERVICE_KEY;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+const supabaseService = supabaseServiceKey && supabaseUrl
+  ? createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        persistSession: false
+      }
+    })
+  : null;
+
+type StorageFileTarget = { bucket: 'artwork' | 'songs'; path: string };
+
+function parseStorageUrl(url: string): StorageFileTarget | null {
+  try {
+    const parsed = new URL(url);
+    const segments = parsed.pathname.split('/').filter(Boolean);
+    const publicIndex = segments.findIndex(segment => segment === 'public');
+
+    if (publicIndex === -1 || publicIndex + 2 >= segments.length) {
+      return null;
+    }
+
+    const bucket = segments[publicIndex + 1];
+
+    if (bucket !== 'artwork' && bucket !== 'songs') {
+      return null;
+    }
+
+    const path = decodeURIComponent(segments.slice(publicIndex + 2).join('/'));
+
+    return { bucket, path };
+  } catch (error) {
+    console.error('Failed to parse storage URL:', error);
+    return null;
+  }
+}
 
 // Generate URL-friendly slug from title
 export function generateSlug(title: string): string {
@@ -773,27 +812,48 @@ export async function deleteSong(songId: string) {
 
     // 6. Delete files (artwork and audio)
     if (songData) {
-      const filesToDelete = [];
-      
-      if (songData.artwork_url && songData.artwork_url.startsWith('/uploads/')) {
-        filesToDelete.push({ type: 'cover', url: songData.artwork_url });
-      }
-      
-      if (songData.audio_url && songData.audio_url.startsWith('/uploads/')) {
-        filesToDelete.push({ type: 'audio', url: songData.audio_url });
+      const filesToDelete: StorageFileTarget[] = [];
+
+      if (songData.artwork_url) {
+        const parsed = parseStorageUrl(songData.artwork_url);
+        if (parsed) {
+          filesToDelete.push(parsed);
+        }
       }
 
-      // Call delete files API if there are files to delete
+      if (songData.audio_url) {
+        const parsed = parseStorageUrl(songData.audio_url);
+        if (parsed) {
+          filesToDelete.push(parsed);
+        }
+      }
+
       if (filesToDelete.length > 0) {
-        try {
-          await fetch('/api/delete-files', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ files: filesToDelete })
-          });
-        } catch (e) {
-          console.error('Error deleting files:', e);
-          // Don't throw - files can be cleaned up manually
+        if (!supabaseService) {
+          console.warn('Supabase service client not configured; skipping storage cleanup.', filesToDelete);
+        } else {
+          const pathsByBucket = filesToDelete.reduce<Record<'artwork' | 'songs', string[]>>(
+            (acc, file) => {
+              acc[file.bucket].push(file.path);
+              return acc;
+            },
+            { artwork: [], songs: [] }
+          );
+
+          await Promise.all(
+            (Object.entries(pathsByBucket) as [keyof typeof pathsByBucket, string[]][])
+              .filter(([, paths]) => paths.length > 0)
+              .map(async ([bucket, paths]) => {
+                const { error: storageError } = await supabaseService
+                  .storage
+                  .from(bucket)
+                  .remove(paths);
+
+                if (storageError) {
+                  console.error(`Error deleting files from ${bucket} bucket:`, storageError);
+                }
+              })
+          );
         }
       }
     }
@@ -843,4 +903,3 @@ export async function getPublicSongs() {
 
   return data || [];
 }
-
