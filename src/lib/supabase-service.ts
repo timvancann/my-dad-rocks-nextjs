@@ -889,6 +889,57 @@ export async function getProposals(): Promise<ProposalType[]> {
   }));
 }
 
+export async function createProposal(proposal: {
+  title: string;
+  band: string;
+  album?: string;
+  coverart?: string;
+  uri?: string;
+}): Promise<ProposalType> {
+  const client = supabaseService ?? supabase;
+
+  const { data, error } = await client
+    .from('proposals')
+    .insert({
+      title: proposal.title,
+      band: proposal.band,
+      album: proposal.album ?? null,
+      coverart: proposal.coverart ?? null,
+      uri: proposal.uri ?? null
+    })
+    .select('*')
+    .single();
+
+  if (error) {
+    console.error('Error creating proposal:', error);
+    throw error;
+  }
+
+  return {
+    _id: data.id,
+    band: data.band || '',
+    title: data.title || '',
+    album: data.album || '',
+    coverart: data.coverart || '',
+    created_at: data.created_at,
+    uri: data.uri || null
+  };
+}
+
+export async function deleteProposal(id: string): Promise<void> {
+  const client = supabaseService ?? supabase;
+
+  const { error } = await client
+    .from('proposals')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error deleting proposal:', error);
+    throw error;
+  }
+}
+
 export async function getPublicSongs() {
   const { data, error } = await supabase
     .from('songs')

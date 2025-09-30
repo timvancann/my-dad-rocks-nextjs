@@ -60,6 +60,8 @@ export interface SpotifyTrackResult {
   artists: string[];
   images: SpotifyImage[];
   previewUrl: string | null;
+  uri: string;
+  externalUrl: string | null;
 }
 
 interface SpotifySearchParams {
@@ -110,6 +112,8 @@ export async function searchSpotifyTracks({ title, artist, limit = 8 }: SpotifyS
         album: { name: string; images: SpotifyImage[] };
         artists: Array<{ name: string }>;
         preview_url: string | null;
+        uri: string;
+        external_urls?: { spotify?: string };
       }>;
     };
   };
@@ -122,6 +126,8 @@ export async function searchSpotifyTracks({ title, artist, limit = 8 }: SpotifyS
     albumName: item.album.name,
     artists: item.artists.map((artistItem) => artistItem.name),
     images: item.album.images,
-    previewUrl: item.preview_url
+    previewUrl: item.preview_url,
+    uri: item.uri,
+    externalUrl: item.external_urls?.spotify ?? null
   }));
 }

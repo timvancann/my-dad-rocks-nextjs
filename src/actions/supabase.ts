@@ -143,3 +143,19 @@ export async function getProposals() {
 export async function getPublicSongs() {
   return getPublicSongsFromSupabase();
 }
+
+export async function createProposal(proposal: {
+  title: string;
+  band: string;
+  album?: string;
+  coverart?: string;
+  uri?: string;
+}) {
+  const { createProposal: createProposalSupabase } = await import('@/lib/supabase-service');
+  return createProposalSupabase(proposal);
+}
+
+export async function deleteProposal(id: string) {
+  const { deleteProposal: deleteProposalSupabase } = await import('@/lib/supabase-service');
+  return deleteProposalSupabase(id);
+}

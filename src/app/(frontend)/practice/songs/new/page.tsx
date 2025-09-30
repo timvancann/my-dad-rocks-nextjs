@@ -23,6 +23,8 @@ interface SpotifyArtworkOption {
   artists: string[];
   imageUrl: string;
   previewUrl: string | null;
+  uri: string;
+  externalUrl: string | null;
 }
 
 export default function NewSongPage() {
@@ -195,14 +197,16 @@ export default function NewSongPage() {
             return null;
           }
 
-          return {
-            id: item.id as string,
-            name: item.name as string,
-            albumName: item.albumName as string,
-            artists: item.artists as string[],
-            imageUrl: bestImage.url,
-            previewUrl: item.previewUrl ?? null
-          } satisfies SpotifyArtworkOption;
+            return {
+              id: item.id as string,
+              name: item.name as string,
+              albumName: item.albumName as string,
+              artists: item.artists as string[],
+              imageUrl: bestImage.url,
+              previewUrl: item.previewUrl ?? null,
+              uri: item.uri as string,
+              externalUrl: item.externalUrl ?? null
+            } satisfies SpotifyArtworkOption;
         })
         .filter(Boolean) as SpotifyArtworkOption[];
 
