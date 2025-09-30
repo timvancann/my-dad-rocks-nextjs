@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { THEME } from '@/themes';
-import { ArrowLeft, Upload, Music, Image, Save } from 'lucide-react';
+import { ArrowLeft, Upload, Music, Image as ImageIcon, Save } from 'lucide-react';
 import { NavigationLink } from '@/components/NavigationButton';
 
 interface NewSongFormData {
@@ -14,6 +14,15 @@ interface NewSongFormData {
   artist: string;
   coverArt: File | null;
   audioFile: File | null;
+}
+
+interface SpotifyArtworkOption {
+  id: string;
+  name: string;
+  albumName: string;
+  artists: string[];
+  imageUrl: string;
+  previewUrl: string | null;
 }
 
 export default function NewSongPage() {
@@ -33,6 +42,11 @@ export default function NewSongPage() {
     coverArt: false,
     audioFile: false
   });
+  const [spotifyResults, setSpotifyResults] = useState<SpotifyArtworkOption[]>([]);
+  const [spotifyError, setSpotifyError] = useState<string | null>(null);
+  const [isSpotifyLoading, setIsSpotifyLoading] = useState(false);
+  const [spotifySearched, setSpotifySearched] = useState(false);
+  const [selectedSpotifyArtwork, setSelectedSpotifyArtwork] = useState<SpotifyArtworkOption | null>(null);
 
   const handleFileSelect = (file: File | null, fileType: 'coverArt' | 'audioFile') => {
     setFormData(prev => ({
@@ -45,10 +59,14 @@ export default function NewSongPage() {
         ...prev,
         [fileType]: ''
       }));
+      if (fileType === 'coverArt') {
+        setSelectedSpotifyArtwork(null);
+      }
       return;
     }
 
     if (fileType === 'coverArt') {
+      setSelectedSpotifyArtwork(null);
       const reader = new FileReader();
       reader.onload = event => {
         setPreviews(prev => ({
@@ -130,6 +148,98 @@ export default function NewSongPage() {
     document.getElementById(fileType)?.click();
   };
 
+  const handleSpotifySearch = async () => {
+    if (!formData.title.trim() || !formData.artist.trim()) {
+      setSpotifyError('Voer zowel titel als artiest in om op Spotify te zoeken.');
+      return;
+    }
+
+    setSpotifyError(null);
+    setIsSpotifyLoading(true);
+    setSpotifySearched(true);
+    setSelectedSpotifyArtwork(prev => {
+      if (prev) {
+        setPreviews(current => ({
+          ...current,
+          coverArt: ''
+        }));
+      }
+      return null;
+    });
+
+    try {
+      const response = await fetch('/api/spotify/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title: formData.title,
+          artist: formData.artist
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Spotify zoekopdracht mislukt');
+      }
+
+      const parsedResults: SpotifyArtworkOption[] = (result.results || [])
+        .map((item: any) => {
+          const images: Array<{ url: string; width: number | null; height: number | null }> = item.images || [];
+          const sortedImages = [...images].sort((a, b) => (b.width ?? 0) - (a.width ?? 0));
+          const bestImage = sortedImages[0];
+
+          if (!bestImage?.url) {
+            return null;
+          }
+
+          return {
+            id: item.id as string,
+            name: item.name as string,
+            albumName: item.albumName as string,
+            artists: item.artists as string[],
+            imageUrl: bestImage.url,
+            previewUrl: item.previewUrl ?? null
+          } satisfies SpotifyArtworkOption;
+        })
+        .filter(Boolean) as SpotifyArtworkOption[];
+
+      setSpotifyResults(parsedResults);
+
+      if (!parsedResults.length) {
+        setSpotifyError('Geen albumart gevonden op Spotify. Controleer de titel en artiest.');
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Spotify zoekopdracht mislukt';
+      setSpotifyError(message);
+      setSpotifyResults([]);
+    } finally {
+      setIsSpotifyLoading(false);
+    }
+  };
+
+  const handleSelectSpotifyArtwork = (option: SpotifyArtworkOption) => {
+    setSelectedSpotifyArtwork(option);
+    setPreviews(prev => ({
+      ...prev,
+      coverArt: option.imageUrl
+    }));
+    setFormData(prev => ({
+      ...prev,
+      coverArt: null
+    }));
+  };
+
+  const clearSpotifySelection = () => {
+    setSelectedSpotifyArtwork(null);
+    setPreviews(prev => ({
+      ...prev,
+      coverArt: ''
+    }));
+  };
+
   const calculateAudioDuration = (file: File): Promise<number> => {
     return new Promise((resolve, reject) => {
       const audio = new Audio();
@@ -176,6 +286,9 @@ export default function NewSongPage() {
       }
       if (formData.audioFile) {
         payload.append('audioFile', formData.audioFile);
+      }
+      if (selectedSpotifyArtwork) {
+        payload.append('spotifyImageUrl', selectedSpotifyArtwork.imageUrl);
       }
 
       const response = await fetch('/api/practice/songs/create', {
@@ -250,7 +363,7 @@ export default function NewSongPage() {
         {/* Cover Art Upload */}
         <div className="space-y-4">
           <Label>
-            <Image className="inline h-4 w-4 mr-1" />
+            <ImageIcon className="inline h-4 w-4 mr-1" />
             Cover Art
           </Label>
 
@@ -301,6 +414,76 @@ export default function NewSongPage() {
               </div>
             )}
           </div>
+
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm text-gray-400">Geen bestand bij de hand? Zoek artwork op Spotify.</p>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleSpotifySearch}
+                disabled={isSpotifyLoading}
+                className={`${THEME.highlight} ${THEME.text} border ${THEME.border}`}
+              >
+                {isSpotifyLoading ? 'Zoeken…' : 'Zoek op Spotify'}
+              </Button>
+            </div>
+            {spotifyError && (
+              <p className="text-sm text-rose-400">{spotifyError}</p>
+            )}
+          </div>
+
+          {selectedSpotifyArtwork && (
+            <div className="flex items-center gap-4 rounded-md border border-zinc-700 bg-zinc-900/70 p-3">
+              <img
+                src={selectedSpotifyArtwork.imageUrl}
+                alt={`Geselecteerde artwork voor ${selectedSpotifyArtwork.albumName}`}
+                className="h-16 w-16 rounded-md object-cover"
+              />
+              <div className="flex-1 text-sm">
+                <p className="font-medium text-white">{selectedSpotifyArtwork.albumName}</p>
+                <p className="text-gray-400">{selectedSpotifyArtwork.artists.join(', ')}</p>
+                <p className="text-xs text-gray-500">Bron: Spotify</p>
+              </div>
+              <Button type="button" variant="ghost" onClick={clearSpotifySelection} className="text-rose-400 hover:text-rose-300">
+                Verwijder selectie
+              </Button>
+            </div>
+          )}
+
+          {isSpotifyLoading && (
+            <p className="text-sm text-gray-400">Spotify zoeken…</p>
+          )}
+
+          {spotifyResults.length > 0 && (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {spotifyResults.map(option => (
+                <button
+                  type="button"
+                  key={option.id}
+                  onClick={() => handleSelectSpotifyArtwork(option)}
+                  className={`flex items-center gap-3 rounded-md border px-3 py-2 text-left transition-colors ${
+                    selectedSpotifyArtwork?.id === option.id ? 'border-rose-400 bg-rose-400/10' : `${THEME.border} bg-zinc-900 hover:border-rose-400`
+                  }`}
+                >
+                  <img
+                    src={option.imageUrl}
+                    alt={`Album art voor ${option.albumName}`}
+                    className="h-14 w-14 flex-shrink-0 rounded-md object-cover"
+                  />
+                  <div className="flex-1 text-sm">
+                    <p className="font-medium text-white">{option.albumName}</p>
+                    <p className="text-xs text-gray-400">{option.artists.join(', ')}</p>
+                    <p className="text-xs text-rose-400">Klik om te selecteren</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {!isSpotifyLoading && spotifySearched && !spotifyResults.length && !selectedSpotifyArtwork && !spotifyError && (
+            <p className="text-sm text-gray-400">Geen resultaten gevonden. Pas je zoekopdracht aan of upload handmatig.</p>
+          )}
         </div>
 
         {/* Audio File Upload */}
