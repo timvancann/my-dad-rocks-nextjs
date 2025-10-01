@@ -3,11 +3,13 @@
 import { usePlayerStore } from '@/store/store';
 import { getLyrics } from '@/actions/supabase';
 import { LyricType } from '@/lib/interface';
-import { ChevronLeft, ChevronRight, X, RotateCcw, ZoomIn, ZoomOut, Loader2, Sun, Moon, Volume2, VolumeX, Eye, EyeOff } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { ChevronLeft, ChevronRight, X, RotateCcw, ZoomIn, ZoomOut, Loader2, Sun, Moon, Eye, EyeOff, Waves } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChordSheetViewer } from './ChordSheetViewer';
+import { MetronomePanel } from './MetronomePanel';
+import type { MetronomeTickEvent } from '@/lib/metronome';
 
 export default function PerformanceView() {
   const {
@@ -22,13 +24,12 @@ export default function PerformanceView() {
 
   const defaultTextSize = 8;
   const [textSize, setTextSize] = useState(defaultTextSize); // Larger default for performance
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentLyrics, setCurrentLyrics] = useState<LyricType | null>(null);
   const [isLoadingLyrics, setIsLoadingLyrics] = useState(false);
-  const [isVisualClickEnabled, setIsVisualClickEnabled] = useState(false);
-  const [isAudibleClickEnabled, setIsAudibleClickEnabled] = useState(false);
-  const [metronomeInterval, setMetronomeInterval] = useState<NodeJS.Timeout | null>(null);
-  const [visualPulse, setVisualPulse] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [metronomeVisualEnabled, setMetronomeVisualEnabled] = useState(false);
+  const [metronomePulse, setMetronomePulse] = useState<{ id: number; accent: boolean } | null>(null);
+  const [isMetronomePanelOpen, setIsMetronomePanelOpen] = useState(false);
   const historyEntryPushedRef = useRef(false);
 
   const minTextSize = 4;
@@ -40,37 +41,19 @@ export default function PerformanceView() {
   // Get tempo from song data, default to 120 BPM if not available
   const songTempo = (currentSong as any)?.tempo_bpm || 120;
 
-  // Create audio context for metronome clicks
-  const createClick = useCallback(() => {
-    if (typeof window !== 'undefined' && isAudibleClickEnabled) {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      oscillator.frequency.value = 800; // High pitch click
-      oscillator.type = 'square';
-      
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-      
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.1);
+  const beatsPerMeasure = useMemo(() => {
+    const signature = (currentSong as any)?.time_signature || (currentSong as any)?.timeSignature;
+    if (typeof signature === 'number' && Number.isFinite(signature)) {
+      return Math.max(1, Math.floor(signature));
     }
-  }, [isAudibleClickEnabled]);
-
-  // Metronome tick function
-  const tick = useCallback(() => {
-    if (isVisualClickEnabled) {
-      setVisualPulse(true);
-      setTimeout(() => setVisualPulse(false), 100);
+    if (typeof signature === 'string') {
+      const numerator = parseInt(signature.split(/[\/]/)[0], 10);
+      if (!Number.isNaN(numerator) && numerator > 0) {
+        return numerator;
+      }
     }
-    if (isAudibleClickEnabled) {
-      createClick();
-    }
-  }, [isVisualClickEnabled, isAudibleClickEnabled, createClick]);
+    return 4;
+  }, [currentSong]);
 
   // Navigation state
   const hasPrevious = currentPerformanceIndex > 0;
@@ -96,6 +79,44 @@ export default function PerformanceView() {
     setTextSize((prev) => Math.max(minTextSize, Math.min(maxTextSize, prev + delta)));
   };
 
+  const handleMetronomeVisualTick = useCallback((event: MetronomeTickEvent) => {
+    setMetronomePulse({ id: Date.now(), accent: event.isAccent });
+  }, []);
+
+  const handleMetronomeVisualToggle = useCallback((enabled: boolean) => {
+    setMetronomeVisualEnabled((prev) => {
+      if (prev === enabled) {
+        return prev;
+      }
+      return enabled;
+    });
+    if (!enabled) {
+      setMetronomePulse(null);
+    }
+  }, []);
+
+  const toggleMetronomeVisual = useCallback(() => {
+    handleMetronomeVisualToggle(!metronomeVisualEnabled);
+  }, [handleMetronomeVisualToggle, metronomeVisualEnabled]);
+
+  const toggleMetronomePanel = useCallback(() => {
+    setIsMetronomePanelOpen((prev) => !prev);
+  }, []);
+
+  useEffect(() => {
+    if (!metronomePulse) {
+      return;
+    }
+    const timeout = window.setTimeout(() => setMetronomePulse(null), 180);
+    return () => window.clearTimeout(timeout);
+  }, [metronomePulse]);
+
+  useEffect(() => {
+    if (!metronomeVisualEnabled) {
+      setMetronomePulse(null);
+    }
+  }, [metronomeVisualEnabled]);
+
   // Fetch lyrics for current song
   const fetchLyrics = useCallback(async (songId: string) => {
     if (!songId) return;
@@ -111,34 +132,6 @@ export default function PerformanceView() {
       setIsLoadingLyrics(false);
     }
   }, []);
-
-  // Metronome management effect
-  useEffect(() => {
-    if (isVisualClickEnabled || isAudibleClickEnabled) {
-      const interval = 60000 / songTempo; // Convert BPM to milliseconds
-      const intervalId = setInterval(tick, interval);
-      setMetronomeInterval(intervalId);
-      
-      return () => {
-        clearInterval(intervalId);
-        setMetronomeInterval(null);
-      };
-    } else {
-      if (metronomeInterval) {
-        clearInterval(metronomeInterval);
-        setMetronomeInterval(null);
-      }
-    }
-  }, [isVisualClickEnabled, isAudibleClickEnabled, songTempo, tick]);
-
-  // Cleanup metronome on unmount
-  useEffect(() => {
-    return () => {
-      if (metronomeInterval) {
-        clearInterval(metronomeInterval);
-      }
-    };
-  }, [metronomeInterval]);
 
   // Fetch lyrics when current song changes
   useEffect(() => {
@@ -194,9 +187,10 @@ export default function PerformanceView() {
 
       historyEntryPushedRef.current = false;
       setIsPerformanceMode(false);
+      setIsMetronomePanelOpen(false);
       exitFullscreen();
     },
-    [setIsPerformanceMode, exitFullscreen]
+    [setIsPerformanceMode, exitFullscreen, setIsMetronomePanelOpen]
   );
 
   const exitPerformanceMode = useCallback(() => {
@@ -325,27 +319,50 @@ export default function PerformanceView() {
           </p>
         </div>
 
-        {/* Close button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={exitPerformanceMode}
-          className="fixed right-4 top-4 z-50 h-12 w-12 rounded-full border border-white/20 bg-black/50 text-white hover:bg-black/70"
-          title="Exit performance mode (Esc)"
-        >
-          <X className="h-5 w-5" />
-        </Button>
-
-        {/* Theme toggle button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setIsDarkMode(!isDarkMode)}
-          className="fixed right-20 top-4 z-50 h-12 w-12 rounded-full border border-white/20 bg-black/50 text-white hover:bg-black/70"
-          title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-        >
-          {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-        </Button>
+        <div className="fixed right-4 top-4 z-50 flex flex-col gap-2 md:flex-row md:items-center">
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleMetronomePanel}
+              className={`h-12 w-12 rounded-full border border-white/20 bg-black/50 text-white transition-colors ${
+                isMetronomePanelOpen ? 'ring-2 ring-rose-500/70' : 'hover:bg-black/70'
+              }`}
+              title={isMetronomePanelOpen ? 'Hide metronome settings' : 'Show metronome settings'}
+            >
+              <Waves className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleMetronomeVisual}
+              className={`h-12 w-12 rounded-full border border-white/20 bg-black/50 text-white transition-colors ${
+                metronomeVisualEnabled ? 'ring-2 ring-sky-400/70' : 'hover:bg-black/70'
+              }`}
+              title={metronomeVisualEnabled ? 'Hide metronome visual' : 'Show metronome visual'}
+            >
+              {metronomeVisualEnabled ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsDarkMode(!isDarkMode)}
+              className="h-12 w-12 rounded-full border border-white/20 bg-black/50 text-white hover:bg-black/70"
+              title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={exitPerformanceMode}
+              className="h-12 w-12 rounded-full border border-white/20 bg-black/50 text-white hover:bg-black/70"
+              title="Exit performance mode (Esc)"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
 
         {/* Progress indicator in top-left */}
         <div className="fixed left-4 top-4 z-50 rounded-lg border border-white/20 bg-black/50 px-3 py-2 text-sm text-white backdrop-blur-sm">
@@ -358,28 +375,20 @@ export default function PerformanceView() {
           </div>
         </div>
 
-        {/* Click toggles */}
-        <div className="fixed right-4 top-[50%] z-50 flex gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsVisualClickEnabled(!isVisualClickEnabled)}
-              className={`h-12 w-12 rounded-full border border-white/20 text-white hover:bg-black ${
-                isVisualClickEnabled ? 'bg-rose-600/80' : 'bg-black'
-              }`}
-              title={isVisualClickEnabled ? 'Disable visual click' : 'Enable visual click'}
-            >
-              {isVisualClickEnabled ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
-            </Button>
-          </div>
-
-        {/* Visual pulse indicator */}
-        {isVisualClickEnabled && (
-          <div className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2  z-40 h-20 w-20 bg-rose-600 rounded-full  transition-all duration-75 ${
-            visualPulse ? 'scale-[2]  ' : 'scale-100  '
-          }`} />
-        )}
-
+        <AnimatePresence>
+          {metronomeVisualEnabled && metronomePulse && (
+            <motion.div
+              key={metronomePulse.id}
+              initial={{ scale: 0.6, opacity: 0.1 }}
+              animate={{ scale: metronomePulse.accent ? 2.2 : 1.8, opacity: 0.75 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              className={`pointer-events-none fixed left-1/2 top-1/2 z-40 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full ${
+                metronomePulse.accent ? 'bg-rose-500/30' : 'bg-sky-400/25'
+              } backdrop-blur-[2px]`}
+            />
+          )}
+        </AnimatePresence>
         {/* Navigation buttons for performance - positioned on the right */}
         {totalSongs > 1 && (
           <div className="fixed right-4 top-1/2 z-50 flex -translate-y-1/2 flex-col gap-4" style={{ transform: 'translateY(-50%)' }}>
@@ -442,6 +451,31 @@ export default function PerformanceView() {
           </div>
           <span className="mt-2 block text-center text-xs text-white/70">{Math.round((textSize / defaultTextSize) * 100)}%</span>
         </div>
+
+        <motion.div
+          key={`metronome-${currentSong?._id || 'panel'}`}
+          initial={false}
+          animate={isMetronomePanelOpen ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
+          transition={{ duration: 0.25, ease: 'easeOut' }}
+          className="pointer-events-none fixed inset-x-0 z-[60] px-4 sm:inset-x-auto sm:right-6 sm:left-auto sm:px-0"
+          style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 20px)' }}
+        >
+          <div
+            className="mx-auto w-full max-w-[420px] sm:mx-0"
+            style={{
+              visibility: isMetronomePanelOpen ? 'visible' : 'hidden',
+              pointerEvents: isMetronomePanelOpen ? 'auto' : 'none'
+            }}
+          >
+            <MetronomePanel
+              bpm={songTempo}
+              beatsPerMeasure={beatsPerMeasure}
+              onVisualTick={handleMetronomeVisualTick}
+              onVisualModeChange={handleMetronomeVisualToggle}
+              visualEnabled={metronomeVisualEnabled}
+            />
+          </div>
+        </motion.div>
       </>
 
       {/* Main content */}
