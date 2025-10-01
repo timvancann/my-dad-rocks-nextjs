@@ -174,6 +174,17 @@ export async function getSongWithStats(id: string) {
   // Get song stats
   const { data: statsData } = await supabase.from('song_stats').select('*').eq('song_id', id).single();
 
+  const { data: cueData, error: cueError } = await supabase
+    .from('song_audio_cues')
+    .select('*')
+    .eq('song_id', id)
+    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: true });
+
+  if (cueError) {
+    console.error('Error fetching song audio cues:', cueError);
+  }
+
   return {
     song: mapSupabaseSongToSongType(songData),
     stats: statsData || {
@@ -182,7 +193,8 @@ export async function getSongWithStats(id: string) {
       mastery_level: 1,
       last_practiced_at: null,
       first_learned_at: null
-    }
+    },
+    audioCues: cueData || []
   };
 }
 
@@ -225,6 +237,17 @@ export async function getSongWithStatsBySlug(slug: string) {
   // Get song stats
   const { data: statsData } = await supabase.from('song_stats').select('*').eq('song_id', songData.id).single();
 
+  const { data: cueData, error: cueError } = await supabase
+    .from('song_audio_cues')
+    .select('*')
+    .eq('song_id', songData.id)
+    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: true });
+
+  if (cueError) {
+    console.error('Error fetching song audio cues:', cueError);
+  }
+
   return {
     song: mapSupabaseSongToSongType(songData),
     stats: statsData || {
@@ -233,7 +256,8 @@ export async function getSongWithStatsBySlug(slug: string) {
       mastery_level: 1,
       last_practiced_at: null,
       first_learned_at: null
-    }
+    },
+    audioCues: cueData || []
   };
 }
 
@@ -655,6 +679,100 @@ export async function deleteSongLink(linkId: string) {
   
   if (error) {
     console.error('Error deleting song link:', error);
+    throw error;
+  }
+}
+
+export async function getSongAudioCues(songId: string) {
+  const { data, error } = await supabase
+    .from('song_audio_cues')
+    .select('*')
+    .eq('song_id', songId)
+    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching song audio cues:', error);
+    throw error;
+  }
+
+  return data || [];
+}
+
+export async function createSongAudioCue(
+  songId: string,
+  cue: { title: string; cue_url: string; description?: string | null; duration_seconds?: number | null }
+) {
+  const { data: maxOrderData } = await supabase
+    .from('song_audio_cues')
+    .select('sort_order')
+    .eq('song_id', songId)
+    .order('sort_order', { ascending: false })
+    .limit(1);
+
+  const nextOrder = ((maxOrderData && maxOrderData[0]?.sort_order) ?? -1) + 1;
+
+  const insertPayload = {
+    song_id: songId,
+    title: cue.title,
+    cue_url: cue.cue_url,
+    description: cue.description || null,
+    duration_seconds: cue.duration_seconds ?? null,
+    sort_order: nextOrder
+  };
+
+  const { data, error } = await supabase
+    .from('song_audio_cues')
+    .insert(insertPayload)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating song audio cue:', error);
+    throw error;
+  }
+
+  return data;
+}
+
+export async function updateSongAudioCue(
+  cueId: string,
+  updates: { title?: string; description?: string | null; duration_seconds?: number | null; sort_order?: number | null }
+) {
+  const payload: Record<string, any> = {};
+  if (updates.title !== undefined) payload.title = updates.title;
+  if (updates.description !== undefined) payload.description = updates.description;
+  if (updates.duration_seconds !== undefined) payload.duration_seconds = updates.duration_seconds;
+  if (updates.sort_order !== undefined) payload.sort_order = updates.sort_order;
+
+  if (Object.keys(payload).length === 0) {
+    const { data } = await supabase.from('song_audio_cues').select('*').eq('id', cueId).single();
+    return data;
+  }
+
+  const { data, error } = await supabase
+    .from('song_audio_cues')
+    .update(payload)
+    .eq('id', cueId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating song audio cue:', error);
+    throw error;
+  }
+
+  return data;
+}
+
+export async function deleteSongAudioCue(cueId: string) {
+  const { error } = await supabase
+    .from('song_audio_cues')
+    .delete()
+    .eq('id', cueId);
+
+  if (error) {
+    console.error('Error deleting song audio cue:', error);
     throw error;
   }
 }

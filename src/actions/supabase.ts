@@ -20,7 +20,11 @@ import {
   addPause as addPauseSupabase,
   updateSongMasteryLevel as updateSongMasteryLevelSupabase,
   getProposals as getProposalsFromSupabase,
-  getPublicSongs as getPublicSongsFromSupabase
+  getPublicSongs as getPublicSongsFromSupabase,
+  getSongAudioCues as getSongAudioCuesSupabase,
+  createSongAudioCue as createSongAudioCueSupabase,
+  updateSongAudioCue as updateSongAudioCueSupabase,
+  deleteSongAudioCue as deleteSongAudioCueSupabase
 } from '@/lib/supabase-service';
 
 export async function getAllSongs() {
@@ -114,6 +118,22 @@ export async function updateSongLink(linkId: string, updates: any) {
 export async function deleteSongLink(linkId: string) {
   const { deleteSongLink: deleteSongLinkSupabase } = await import('@/lib/supabase-service');
   return deleteSongLinkSupabase(linkId);
+}
+
+export async function getSongAudioCues(songId: string) {
+  return getSongAudioCuesSupabase(songId);
+}
+
+export async function createSongAudioCue(songId: string, cue: { title: string; cue_url: string; description?: string | null; duration_seconds?: number | null }) {
+  return createSongAudioCueSupabase(songId, cue);
+}
+
+export async function updateSongAudioCue(cueId: string, updates: { title?: string; description?: string | null; duration_seconds?: number | null; sort_order?: number | null }) {
+  return updateSongAudioCueSupabase(cueId, updates);
+}
+
+export async function deleteSongAudioCue(cueId: string) {
+  return deleteSongAudioCueSupabase(cueId);
 }
 
 export async function updateSongMasteryLevel(songId: string, masteryLevel: number) {

@@ -377,6 +377,50 @@ export type Database = {
           },
         ]
       }
+      song_audio_cues: {
+        Row: {
+          created_at: string | null
+          cue_url: string
+          description: string | null
+          duration_seconds: number | null
+          id: string
+          song_id: string
+          sort_order: number | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          cue_url: string
+          description?: string | null
+          duration_seconds?: number | null
+          id?: string
+          song_id: string
+          sort_order?: number | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          cue_url?: string
+          description?: string | null
+          duration_seconds?: number | null
+          id?: string
+          song_id?: string
+          sort_order?: number | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "song_audio_cues_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
+            referencedRelation: "songs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       song_sections: {
         Row: {
           color: string | null

@@ -22,13 +22,14 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(bytes);
 
     // Save to local public directory for development
-    const uploadDir = join(process.cwd(), 'public', 'uploads', type === 'cover' ? 'covers' : 'audio');
+    const folder = type === 'cover' ? 'covers' : type === 'cue' ? 'cues' : 'audio';
+    const uploadDir = join(process.cwd(), 'public', 'uploads', folder);
     await mkdir(uploadDir, { recursive: true });
     
     const filePath = join(uploadDir, fileName);
     await writeFile(filePath, buffer);
     
-    const publicUrl = `/uploads/${type === 'cover' ? 'covers' : 'audio'}/${fileName}`;
+    const publicUrl = `/uploads/${folder}/${fileName}`;
     return NextResponse.json({ url: publicUrl });
 
   } catch (error) {

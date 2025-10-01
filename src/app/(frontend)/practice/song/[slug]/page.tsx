@@ -32,7 +32,7 @@ async function SongDetails({ slug }: { slug: string }) {
     notFound();
   }
 
-  return <SongDetailsClient song={result.song} stats={result.stats} id={result.song._id} />;
+  return <SongDetailsClient song={result.song} stats={result.stats} audioCues={result.audioCues || []} id={result.song._id} />;
 }
 
 async function SongPageWrapper({ params }: { params: Promise<{ slug: string }> }) {
