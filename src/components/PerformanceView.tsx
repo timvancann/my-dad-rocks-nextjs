@@ -4,7 +4,7 @@ import { usePlayerStore } from '@/store/store';
 import { getLyrics } from '@/actions/supabase';
 import { LyricType } from '@/lib/interface';
 import { ChevronLeft, ChevronRight, X, RotateCcw, ZoomIn, ZoomOut, Loader2, Sun, Moon, Volume2, VolumeX, Eye, EyeOff } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChordSheetViewer } from './ChordSheetViewer';
@@ -29,6 +29,7 @@ export default function PerformanceView() {
   const [isAudibleClickEnabled, setIsAudibleClickEnabled] = useState(false);
   const [metronomeInterval, setMetronomeInterval] = useState<NodeJS.Timeout | null>(null);
   const [visualPulse, setVisualPulse] = useState(false);
+  const historyEntryPushedRef = useRef(false);
 
   const minTextSize = 4;
   const maxTextSize = 40;
@@ -183,12 +184,24 @@ export default function PerformanceView() {
   }, []);
 
   // Exit performance mode
-  const exitPerformanceMode = useCallback(() => {
-    setIsPerformanceMode(false);
-    if (isFullscreen) {
+  const closePerformanceOverlay = useCallback(
+    (options?: { triggeredByHistory?: boolean }) => {
+      if (!options?.triggeredByHistory && historyEntryPushedRef.current && typeof window !== 'undefined') {
+        historyEntryPushedRef.current = false;
+        window.history.back();
+        return;
+      }
+
+      historyEntryPushedRef.current = false;
+      setIsPerformanceMode(false);
       exitFullscreen();
-    }
-  }, [setIsPerformanceMode, isFullscreen, exitFullscreen]);
+    },
+    [setIsPerformanceMode, exitFullscreen]
+  );
+
+  const exitPerformanceMode = useCallback(() => {
+    closePerformanceOverlay();
+  }, [closePerformanceOverlay]);
 
   // Note: Fullscreen can only be triggered by user interaction
   // We don't auto-enter fullscreen to avoid browser errors
@@ -217,6 +230,31 @@ export default function PerformanceView() {
       document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
     };
   }, []);
+
+  // Ensure the browser back button exits performance mode
+  useEffect(() => {
+    if (!isPerformanceMode) {
+      return;
+    }
+
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const handlePopState = () => {
+      historyEntryPushedRef.current = false;
+      closePerformanceOverlay({ triggeredByHistory: true });
+    };
+
+    window.history.pushState({ performanceModeOverlay: true }, '', window.location.href);
+    historyEntryPushedRef.current = true;
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      historyEntryPushedRef.current = false;
+    };
+  }, [isPerformanceMode, closePerformanceOverlay]);
 
   // Keyboard shortcuts
   useEffect(() => {
