@@ -47,6 +47,21 @@ export type LyricType = {
   lyrics: string;
 }
 
+export type ProposalVoteStatus = 'accepted' | 'rejected';
+
+export interface ProposalVote {
+  bandMemberId: string;
+  status: ProposalVoteStatus;
+}
+
+export interface BandMember {
+  id: string;
+  name: string | null;
+  email: string;
+  role: string | null;
+  avatarUrl: string | null;
+}
+
 export interface ProposalType {
   _id: string;
   band: string;
@@ -55,4 +70,11 @@ export interface ProposalType {
   coverart: string;
   created_at?: string;
   uri?: string;
+  createdBy?: string | null;
+  votes: ProposalVote[];
+}
+
+export interface ProposalsResponse {
+  proposals: ProposalType[];
+  bandMembers: BandMember[];
 }

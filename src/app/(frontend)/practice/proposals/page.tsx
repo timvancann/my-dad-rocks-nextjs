@@ -4,11 +4,20 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { THEME } from '@/themes';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { ensureBandMemberAvatar } from '@/lib/supabase-service';
 
 export const revalidate = 0; // Disable caching
 
 export default async function ProposalsPage() {
-  const proposals = await getProposals();
+  const session = await getServerSession(authOptions);
+
+  if (session?.user?.email) {
+    await ensureBandMemberAvatar(session.user.email, session.user.image ?? null, session.user.name ?? null);
+  }
+
+  const { proposals, bandMembers } = await getProposals();
 
   return (
     <div>
@@ -20,7 +29,7 @@ export default async function ProposalsPage() {
           </Button>
         </Link>
       </div>
-      <ProposalsList proposals={proposals} />
+      <ProposalsList proposals={proposals} bandMembers={bandMembers} />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { GigsType, GigType, SetlistType, SongType, ProposalType } from './interface';
+import { GigsType, GigType, SetlistType, SongType, ProposalType, BandMember, ProposalVoteStatus, ProposalVote } from './interface';
 import { supabase } from './supabase';
 
 const supabaseServiceKey = process.env.NEXT_PRIVATE_SUPABASE_SERVICE_KEY;
@@ -985,26 +985,151 @@ export async function deleteSong(songId: string) {
   }
 }
 
-export async function getProposals(): Promise<ProposalType[]> {
-  const { data, error } = await supabase
-    .from('proposals')
-    .select('*')
-    .order('created_at', { ascending: false });
+export async function getProposals(): Promise<{ proposals: ProposalType[]; bandMembers: BandMember[] }> {
+  const client = supabaseService ?? supabase;
 
-  if (error) {
-    console.error('Error fetching proposals:', error);
-    return [];
+  const [bandMembersResult, proposalsResult] = await Promise.all([
+    client
+      .from('band_members')
+      .select('*')
+      .order('name', { ascending: true }),
+    client
+      .from('proposals')
+      .select('id, band, album, title, coverart, created_at, uri, created_by, proposal_votes (band_member_id, status)')
+      .order('created_at', { ascending: false })
+  ]);
+
+  if (bandMembersResult.error) {
+    console.error('Error fetching band members:', bandMembersResult.error);
   }
 
-  return (data || []).map((proposal) => ({
-    _id: proposal.id,
-    band: proposal.band || '',
-    title: proposal.title || '',
-    album: proposal.album || '',
-    coverart: proposal.coverart || '',
-    created_at: proposal.created_at,
-    uri: proposal.uri || null
+  if (proposalsResult.error) {
+    console.error('Error fetching proposals:', proposalsResult.error);
+  }
+
+  const bandMembers: BandMember[] = (bandMembersResult.data ?? []).map((member: any) => ({
+    id: member.id,
+    name: member.name,
+    email: member.email,
+    role: member.role,
+    avatarUrl: member.avatar_url ?? null,
   }));
+
+  const proposals: ProposalType[] = (proposalsResult.data ?? []).map((proposal: any) => {
+    const rawVotes = Array.isArray(proposal.proposal_votes) ? proposal.proposal_votes : [];
+
+    const votes = rawVotes
+      .filter((vote: any) => vote?.band_member_id && vote?.status)
+      .map((vote: any) => ({
+        bandMemberId: vote.band_member_id as string,
+        status: (vote.status as ProposalVoteStatus)
+      }))
+      .filter((vote: { bandMemberId: string; status: ProposalVoteStatus }) => vote.status === 'accepted' || vote.status === 'rejected');
+
+    return {
+      _id: proposal.id,
+      band: proposal.band || '',
+      title: proposal.title || '',
+      album: proposal.album || '',
+      coverart: proposal.coverart || '',
+      created_at: proposal.created_at,
+      uri: proposal.uri || null,
+      createdBy: proposal.created_by ?? null,
+      votes
+    } satisfies ProposalType;
+  });
+
+  return { bandMembers, proposals };
+}
+
+export async function ensureBandMemberAvatar(
+  email: string,
+  avatarUrl?: string | null,
+  displayName?: string | null
+): Promise<{ id: string; avatarUrl: string | null } | null> {
+  if (!email) {
+    return null;
+  }
+
+  const client = supabaseService ?? supabase;
+  const normalizedEmail = email.toLowerCase();
+
+  const { data, error } = await client
+    .from('band_members')
+    .select('id, avatar_url, email, name')
+    .ilike('email', normalizedEmail)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error fetching band member for avatar sync:', error);
+    return null;
+  }
+
+  if (!data) {
+    const insertPayload: Record<string, any> = {
+      email: normalizedEmail,
+      name: displayName ?? null,
+      avatar_url: avatarUrl ?? null,
+      role: 'member'
+    };
+
+    const { data: inserted, error: insertError } = await client
+      .from('band_members')
+      .insert(insertPayload)
+      .select('id, avatar_url')
+      .single();
+
+    if (insertError) {
+      console.error('Error inserting band member for avatar sync:', insertError);
+      return null;
+    }
+
+    return {
+      id: inserted.id as string,
+      avatarUrl: (inserted.avatar_url as string | null) ?? null
+    };
+  }
+
+  const currentAvatar = (data.avatar_url as string | null) ?? null;
+  const shouldUpdateAvatar = Boolean(avatarUrl) && currentAvatar !== avatarUrl;
+  const shouldUpdateName = Boolean(displayName) && displayName !== data.name;
+
+  if (!shouldUpdateAvatar && !shouldUpdateName) {
+    return {
+      id: data.id as string,
+      avatarUrl: currentAvatar
+    };
+  }
+
+  const updatePayload: Record<string, any> = {};
+
+  if (shouldUpdateAvatar) {
+    updatePayload.avatar_url = avatarUrl;
+  }
+
+  if (shouldUpdateName) {
+    updatePayload.name = displayName;
+  }
+
+  const { data: updated, error: updateError } = await client
+    .from('band_members')
+    .update(updatePayload)
+    .eq('id', data.id)
+    .select('id, avatar_url')
+    .maybeSingle();
+
+  if (updateError) {
+    console.error('Error updating band member avatar:', updateError);
+    return {
+      id: data.id as string,
+      avatarUrl: currentAvatar
+    };
+  }
+
+  return {
+    id: (updated?.id ?? data.id) as string,
+    avatarUrl: (updated?.avatar_url as string | null) ?? (avatarUrl ?? currentAvatar)
+  };
 }
 
 export async function createProposal(proposal: {
@@ -1013,6 +1138,8 @@ export async function createProposal(proposal: {
   album?: string;
   coverart?: string;
   uri?: string;
+  createdBy?: string;
+  seedVote?: boolean;
 }): Promise<ProposalType> {
   const client = supabaseService ?? supabase;
 
@@ -1023,7 +1150,8 @@ export async function createProposal(proposal: {
       band: proposal.band,
       album: proposal.album ?? null,
       coverart: proposal.coverart ?? null,
-      uri: proposal.uri ?? null
+      uri: proposal.uri ?? null,
+      created_by: proposal.createdBy ?? null
     })
     .select('*')
     .single();
@@ -1033,6 +1161,24 @@ export async function createProposal(proposal: {
     throw error;
   }
 
+  const votes: ProposalVote[] = [];
+
+  if (proposal.seedVote && proposal.createdBy) {
+    const { error: voteError } = await client
+      .from('proposal_votes')
+      .upsert({
+        proposal_id: data.id,
+        band_member_id: proposal.createdBy,
+        status: 'accepted'
+      }, { onConflict: 'proposal_id,band_member_id' });
+
+    if (voteError) {
+      console.error('Error seeding proposal vote:', voteError);
+    } else {
+      votes.push({ bandMemberId: proposal.createdBy, status: 'accepted' });
+    }
+  }
+
   return {
     _id: data.id,
     band: data.band || '',
@@ -1040,7 +1186,9 @@ export async function createProposal(proposal: {
     album: data.album || '',
     coverart: data.coverart || '',
     created_at: data.created_at,
-    uri: data.uri || null
+    uri: data.uri || null,
+    createdBy: data.created_by ?? null,
+    votes
   };
 }
 

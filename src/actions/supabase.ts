@@ -170,6 +170,8 @@ export async function createProposal(proposal: {
   album?: string;
   coverart?: string;
   uri?: string;
+  createdBy?: string;
+  seedVote?: boolean;
 }) {
   const { createProposal: createProposalSupabase } = await import('@/lib/supabase-service');
   return createProposalSupabase(proposal);

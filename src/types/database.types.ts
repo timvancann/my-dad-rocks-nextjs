@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       band_members: {
         Row: {
+          avatar_url: string | null
           created_at: string
           email: string
           id: string
@@ -24,6 +25,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
           email?: string
           id?: string
@@ -32,6 +34,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
           email?: string
           id?: string
@@ -234,6 +237,7 @@ export type Database = {
           band: string | null
           coverart: string | null
           created_at: string
+          created_by: string | null
           id: string
           title: string | null
           uri: string | null
@@ -243,6 +247,7 @@ export type Database = {
           band?: string | null
           coverart?: string | null
           created_at?: string
+          created_by?: string | null
           id?: string
           title?: string | null
           uri?: string | null
@@ -252,11 +257,62 @@ export type Database = {
           band?: string | null
           coverart?: string | null
           created_at?: string
+          created_by?: string | null
           id?: string
           title?: string | null
           uri?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "proposals_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "band_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      proposal_votes: {
+        Row: {
+          band_member_id: string
+          created_at: string
+          id: string
+          proposal_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          band_member_id: string
+          created_at?: string
+          id?: string
+          proposal_id: string
+          status: string
+          updated_at?: string
+        }
+        Update: {
+          band_member_id?: string
+          created_at?: string
+          id?: string
+          proposal_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposal_votes_band_member_id_fkey"
+            columns: ["band_member_id"]
+            isOneToOne: false
+            referencedRelation: "band_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposal_votes_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       setlist_items: {
         Row: {

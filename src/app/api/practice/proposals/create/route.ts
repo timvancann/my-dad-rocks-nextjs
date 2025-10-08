@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
+import { ensureBandMemberAvatar } from '@/lib/supabase-service';
 
 export const runtime = 'nodejs';
 
@@ -22,6 +25,18 @@ const supabase = createClient(supabaseUrl, serviceRoleKey, {
 
 export async function POST(request: Request) {
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 });
+    }
+
+    const bandMember = await ensureBandMemberAvatar(session.user.email, session.user.image ?? null, session.user.name ?? null);
+
+    if (!bandMember?.id) {
+      return NextResponse.json({ error: 'Je e-mailadres is niet gekoppeld aan een bandlid' }, { status: 403 });
+    }
+
     const payload = await request.json();
     const title = typeof payload?.title === 'string' ? payload.title.trim() : '';
     const band = typeof payload?.band === 'string' ? payload.band.trim() : '';
@@ -40,13 +55,26 @@ export async function POST(request: Request) {
         band,
         album: album ?? null,
         coverart: coverart ?? null,
-        uri: uri ?? null
+        uri: uri ?? null,
+        created_by: bandMember.id
       })
       .select('*')
       .single();
 
     if (error) {
       throw error;
+    }
+
+    const { error: voteError } = await supabase
+      .from('proposal_votes')
+      .upsert({
+        proposal_id: data.id,
+        band_member_id: bandMember.id,
+        status: 'accepted'
+      }, { onConflict: 'proposal_id,band_member_id' });
+
+    if (voteError) {
+      console.error('Error seeding initial proposal vote:', voteError);
     }
 
     return NextResponse.json({ proposal: data });
