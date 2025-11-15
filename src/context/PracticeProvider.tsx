@@ -1,8 +1,9 @@
 'use client';
 
 import { SetlistType, SongType } from '@/lib/interface';
-import { createContext, PropsWithChildren, useContext, useState } from 'react';
+import { createContext, PropsWithChildren, useContext, useState, useEffect } from 'react';
 import { createStore, StoreApi, useStore } from 'zustand';
+import { useSongs } from '@/hooks/useSongs';
 
 export type SetlistStore = {
   setlist: SetlistType;
@@ -22,11 +23,13 @@ type PracticeProviderProps = PropsWithChildren & {
   allSongs: SongType[];
 };
 
-export default function PracticeProvider({ children, setlist: setlist, allSongs }: PracticeProviderProps) {
+export default function PracticeProvider({ children, setlist: setlist, allSongs: initialSongs }: PracticeProviderProps) {
+  const { data: allSongs } = useSongs(initialSongs);
+
   const [store] = useState(() =>
     createStore<SetlistStore>((set) => ({
       setlist: setlist,
-      allSongs: allSongs,
+      allSongs: initialSongs,
       addSong: (song: SongType) => set((state) => ({ ...state, setlist: { ...state.setlist, songs: [...state.setlist.songs, song] } })),
       removeSong: (song: SongType) => set((state) => ({ ...state, setlist: { ...state.setlist, songs: state.setlist.songs.filter((s) => s._id !== song._id) } })),
       updateSongsInSetlist: (songs: SongType[]) => set((state) => ({ ...state, setlist: { ...state.setlist, songs } })),
@@ -35,6 +38,13 @@ export default function PracticeProvider({ children, setlist: setlist, allSongs 
       closeAddSongModal: () => set((state) => ({ ...state, isAddSongModalOpen: false }))
     }))
   );
+
+  // Update the store when songs data changes
+  useEffect(() => {
+    if (allSongs) {
+      store.setState({ allSongs });
+    }
+  }, [allSongs, store]);
 
   return <PracticeContext.Provider value={store}>{children}</PracticeContext.Provider>;
 }

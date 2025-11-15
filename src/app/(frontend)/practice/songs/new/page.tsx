@@ -9,6 +9,7 @@ import { THEME } from '@/themes';
 import { ArrowLeft, Upload, Music, Image as ImageIcon, Save } from 'lucide-react';
 import { NavigationLink } from '@/components/NavigationButton';
 import { supabase } from '@/lib/supabase';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface NewSongFormData {
   title: string;
@@ -54,6 +55,7 @@ interface UploadedAssetPayload {
 export default function NewSongPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<NewSongFormData>({
     title: '',
@@ -437,6 +439,9 @@ export default function NewSongPage() {
       if (!response.ok) {
         throw new Error(result.error || 'Upload mislukt');
       }
+
+      // Invalidate the songs query to refresh the list
+      await queryClient.invalidateQueries({ queryKey: ['songs'] });
 
       router.push(`/practice/song/${result.song.slug}`);
       
