@@ -5,6 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 import { generateSlug } from '@/lib/supabase-service';
 
 export const runtime = 'nodejs';
+export const maxDuration = 60; // Maximum execution time in seconds
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.NEXT_PRIVATE_SUPABASE_SERVICE_KEY;

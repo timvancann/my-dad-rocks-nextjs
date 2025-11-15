@@ -149,7 +149,12 @@ const nextConfig = {
         hostname: 'i.scdn.co',
       },
     ],
-  }
+  },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '20mb',
+    },
+  },
 };
 
 export default withPWA(nextConfig);
