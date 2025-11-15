@@ -628,7 +628,33 @@ export default function NewSongPage() {
             <Music className="inline h-4 w-4 mr-1" />
             Audio Bestand
           </Label>
-          
+
+          {/* Spotidownloader Hint Box */}
+          <div className="rounded-lg border border-blue-500/30 bg-blue-500/10 p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 mt-0.5">
+                <svg className="h-5 w-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="flex-1 text-sm">
+                <p className="font-medium text-blue-300 mb-2">💡 Geen audiobestand? Download het van Spotify!</p>
+                <ol className="space-y-1.5 text-gray-300 list-decimal list-inside">
+                  <li>Ga naar <a href="https://spotidownloader.com/" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">spotidownloader.com</a></li>
+                  <li>
+                    Plak deze link in het zoekveld: {selectedSpotifyArtwork?.uri ? (
+                      <code className="px-1.5 py-0.5 bg-zinc-800 rounded text-rose-300 text-xs ml-1">{selectedSpotifyArtwork.uri}</code>
+                    ) : (
+                      <span className="text-gray-400 italic">(selecteer eerst artwork hierboven)</span>
+                    )}
+                  </li>
+                  <li>Download het audiobestand</li>
+                  <li>Upload het hier</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+
           <input
             type="file"
             accept="audio/*"
