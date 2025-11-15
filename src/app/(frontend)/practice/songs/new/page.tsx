@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { THEME } from '@/themes';
 import { ArrowLeft, Upload, Music, Image as ImageIcon, Save } from 'lucide-react';
 import { NavigationLink } from '@/components/NavigationButton';
+import { supabase } from '@/lib/supabase';
 
 interface NewSongFormData {
   title: string;
@@ -25,6 +26,29 @@ interface SpotifyArtworkOption {
   previewUrl: string | null;
   uri: string;
   externalUrl: string | null;
+}
+
+type SongUploadKind = 'coverArt' | 'audio';
+
+interface UploadAssetDescriptor {
+  kind: SongUploadKind;
+  bucket: 'artwork' | 'songs';
+  file: File;
+}
+
+interface SignedUploadTarget {
+  kind: SongUploadKind;
+  bucket: 'artwork' | 'songs';
+  path: string;
+  token: string;
+  publicUrl: string;
+}
+
+interface UploadedAssetPayload {
+  kind: SongUploadKind;
+  bucket: 'artwork' | 'songs';
+  path: string;
+  publicUrl: string;
 }
 
 export default function NewSongPage() {
@@ -328,25 +352,84 @@ export default function NewSongPage() {
         duration = await calculateAudioDuration(formData.audioFile);
       }
 
-      const payload = new FormData();
-      payload.append('title', formData.title);
-      payload.append('artist', formData.artist);
-      if (duration) {
-        payload.append('duration_seconds', String(duration));
-      }
+      const filesToUpload: UploadAssetDescriptor[] = [];
       if (formData.coverArt) {
-        payload.append('coverArt', formData.coverArt);
+        filesToUpload.push({ kind: 'coverArt', bucket: 'artwork', file: formData.coverArt });
       }
       if (formData.audioFile) {
-        payload.append('audioFile', formData.audioFile);
+        filesToUpload.push({ kind: 'audio', bucket: 'songs', file: formData.audioFile });
       }
-      if (selectedSpotifyArtwork) {
-        payload.append('spotifyImageUrl', selectedSpotifyArtwork.imageUrl);
+
+      const uploadedAssets: UploadedAssetPayload[] = [];
+
+      if (filesToUpload.length) {
+        const uploadResponse = await fetch('/api/practice/songs/create/upload-urls', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: formData.title,
+            assets: filesToUpload.map(asset => ({
+              kind: asset.kind,
+              bucket: asset.bucket,
+              fileName: asset.file.name,
+              contentType: asset.file.type
+            }))
+          })
+        });
+
+        const uploadInfo = await uploadResponse.json();
+
+        if (!uploadResponse.ok) {
+          throw new Error(uploadInfo.error || 'Kon upload niet voorbereiden');
+        }
+
+        const fileLookup: Record<SongUploadKind, File | undefined> = {
+          coverArt: undefined,
+          audio: undefined
+        };
+
+        filesToUpload.forEach(asset => {
+          fileLookup[asset.kind] = asset.file;
+        });
+
+        const uploadTargets: SignedUploadTarget[] = Array.isArray(uploadInfo.uploads) ? uploadInfo.uploads : [];
+
+        for (const target of uploadTargets) {
+          const file = fileLookup[target.kind];
+          if (!file) {
+            continue;
+          }
+
+          const { error } = await supabase.storage
+            .from(target.bucket)
+            .uploadToSignedUrl(target.path, target.token, file, {
+              contentType: file.type || 'application/octet-stream',
+              upsert: false
+            });
+
+          if (error) {
+            throw new Error(error.message || 'Upload naar opslag mislukt');
+          }
+
+          uploadedAssets.push({
+            kind: target.kind,
+            bucket: target.bucket,
+            path: target.path,
+            publicUrl: target.publicUrl
+          });
+        }
       }
 
       const response = await fetch('/api/practice/songs/create', {
         method: 'POST',
-        body: payload
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: formData.title,
+          artist: formData.artist,
+          duration_seconds: duration || undefined,
+          spotifyImageUrl: selectedSpotifyArtwork?.imageUrl,
+          uploadedAssets
+        })
       });
 
       const result = await response.json();
