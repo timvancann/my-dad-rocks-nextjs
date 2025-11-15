@@ -542,16 +542,66 @@ export async function updateGig(id: string, updates: Partial<GigsType & { notes?
 }
 
 export async function removeSongFromSetlist(setlistId: string, itemId: string) {
-  // Remove the item from setlist_items
-  const { error } = await supabase.from('setlist_items').delete().eq('setlist_id', setlistId).eq('id', itemId);
+  // Try removing by setlist item id first (covers pauses where _id === item id)
+  const { data: deletedByItemId, error: deleteByItemIdError } = await supabase
+    .from('setlist_items')
+    .delete()
+    .eq('setlist_id', setlistId)
+    .eq('id', itemId)
+    .select('id');
 
-  if (error) {
-    console.error('Error removing item from setlist:', error);
-    throw error;
+  if (deleteByItemIdError) {
+    console.error('Error removing item from setlist:', deleteByItemIdError);
+    throw deleteByItemIdError;
+  }
+
+  let removedItem = deletedByItemId && deletedByItemId.length > 0;
+
+  // If nothing was removed we likely received a song id, so resolve the matching setlist item
+  if (!removedItem) {
+    const { data: targetItem, error: fetchTargetError } = await supabase
+      .from('setlist_items')
+      .select('id')
+      .eq('setlist_id', setlistId)
+      .eq('song_id', itemId)
+      .order('position')
+      .limit(1)
+      .maybeSingle();
+
+    if (fetchTargetError) {
+      console.error('Error locating song in setlist:', fetchTargetError);
+      throw fetchTargetError;
+    }
+
+    if (!targetItem) {
+      console.warn('No matching setlist item found to remove', { setlistId, itemId });
+      return;
+    }
+
+    const { error: deleteBySongIdError } = await supabase
+      .from('setlist_items')
+      .delete()
+      .eq('setlist_id', setlistId)
+      .eq('id', targetItem.id);
+
+    if (deleteBySongIdError) {
+      console.error('Error removing song from setlist:', deleteBySongIdError);
+      throw deleteBySongIdError;
+    }
+
+    removedItem = true;
+  }
+
+  if (!removedItem) {
+    return;
   }
 
   // Reorder remaining items
-  const { data: remainingItems, error: fetchError } = await supabase.from('setlist_items').select('id').eq('setlist_id', setlistId).order('position');
+  const { data: remainingItems, error: fetchError } = await supabase
+    .from('setlist_items')
+    .select('id')
+    .eq('setlist_id', setlistId)
+    .order('position');
 
   if (!fetchError && remainingItems) {
     for (let i = 0; i < remainingItems.length; i++) {
