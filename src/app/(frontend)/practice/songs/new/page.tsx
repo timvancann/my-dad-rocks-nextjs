@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,6 +29,7 @@ interface SpotifyArtworkOption {
 
 export default function NewSongPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<NewSongFormData>({
     title: '',
@@ -49,6 +50,54 @@ export default function NewSongPage() {
   const [isSpotifyLoading, setIsSpotifyLoading] = useState(false);
   const [spotifySearched, setSpotifySearched] = useState(false);
   const [selectedSpotifyArtwork, setSelectedSpotifyArtwork] = useState<SpotifyArtworkOption | null>(null);
+  const [prefillApplied, setPrefillApplied] = useState(false);
+
+  useEffect(() => {
+    if (prefillApplied) {
+      return;
+    }
+
+    const title = searchParams.get('title');
+    const artist = searchParams.get('artist');
+    const album = searchParams.get('album');
+    const coverArt = searchParams.get('coverart');
+    const uri = searchParams.get('uri');
+    const externalUrl = searchParams.get('externalUrl');
+
+    const hasPrefillData = Boolean(title || artist || album || coverArt || uri || externalUrl);
+
+    if (!hasPrefillData) {
+      return;
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      title: title ?? prev.title,
+      artist: artist ?? prev.artist
+    }));
+
+    if (coverArt) {
+      setPreviews(prev => ({
+        ...prev,
+        coverArt
+      }));
+    }
+
+    if (coverArt) {
+      setSelectedSpotifyArtwork({
+        id: uri || `proposal-${title ?? artist ?? 'song'}`,
+        name: title ?? '',
+        albumName: album ?? (title ?? ''),
+        artists: artist ? [artist] : [],
+        imageUrl: coverArt,
+        previewUrl: null,
+        uri: uri ?? '',
+        externalUrl: externalUrl ?? null
+      });
+    }
+
+    setPrefillApplied(true);
+  }, [prefillApplied, searchParams]);
 
   const handleFileSelect = (file: File | null, fileType: 'coverArt' | 'audioFile') => {
     setFormData(prev => ({

@@ -7,7 +7,8 @@ import clsx from 'clsx';
 import { Button } from '@/components/ui/button';
 import { BandMember, ProposalType, ProposalVoteStatus } from '@/lib/interface';
 import { THEME } from '@/themes';
-import { CheckCircle2, ExternalLink, Music, Trash2, XCircle } from 'lucide-react';
+import { CheckCircle2, Music, PlusCircle, Trash2, XCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { FaSpotify } from 'react-icons/fa';
 
 interface ProposalsListProps {
@@ -72,6 +73,8 @@ const ProposalCard = ({
   isExpanded: boolean;
   onToggle: () => void;
 }) => {
+  const router = useRouter();
+
   const votesByMember = useMemo(() => {
     const map = new Map<string, ProposalVoteStatus>();
     for (const vote of proposal.votes || []) {
@@ -103,6 +106,29 @@ const ProposalCard = ({
 
   const readyThreshold = Math.ceil(totalMembers * 0.75) || totalMembers;
   const isReady = acceptedCount >= readyThreshold && totalMembers > 0;
+  const canAddToRepertoire = acceptedCount >= 3;
+
+  const addSongHref = useMemo(() => {
+    const params = new URLSearchParams();
+    if (proposal.title) {
+      params.set('title', proposal.title);
+    }
+    if (proposal.band) {
+      params.set('artist', proposal.band);
+    }
+    if (proposal.album) {
+      params.set('album', proposal.album);
+    }
+    if (proposal.coverart) {
+      params.set('coverart', proposal.coverart);
+    }
+    if (proposal.uri) {
+      params.set('uri', proposal.uri);
+    }
+
+    const query = params.toString();
+    return query ? `/practice/songs/new?${query}` : '/practice/songs/new';
+  }, [proposal.album, proposal.band, proposal.coverart, proposal.title, proposal.uri]);
 
   const currentVote = currentMemberId ? votesByMember.get(currentMemberId) ?? null : null;
   const voteDisabled = !currentMemberId || isUpdating;
@@ -308,6 +334,21 @@ const ProposalCard = ({
           <span>{summaryText}</span>
           {isReady && <span className="font-medium text-emerald-400">Klaar om toe te voegen</span>}
         </div>
+
+        {canAddToRepertoire && (
+          <div className="flex justify-end pt-1">
+            <Button
+              type="button"
+              className={`${THEME.primaryBg} hover:${THEME.primaryBgDark} text-white flex items-center gap-2`}
+              onClick={(event) => {
+                event.stopPropagation();
+                router.push(addSongHref);
+              }}
+            >
+              <PlusCircle className="h-4 w-4" /> Voeg toe aan repertoire
+            </Button>
+          </div>
+        )}
       </div>
 
     </div>
