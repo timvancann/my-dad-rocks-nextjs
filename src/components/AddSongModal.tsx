@@ -7,6 +7,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { TbGuitarPickFilled } from 'react-icons/tb';
 import { Button } from '@/components/ui/button';
+import { fuzzyIncludes } from '@/lib/fuzzySearch';
 
 interface AddSongModalProps {
   isOpen: boolean;
@@ -31,14 +32,7 @@ export const AddSongModal = ({
     const excludeIds = new Set(excludeSongs.map(song => song._id));
     return availableSongs
       .filter(song => !excludeIds.has(song._id))
-      .filter(song => {
-        if (!searchTerm) return true;
-        const term = searchTerm.toLowerCase();
-        return (
-          song.title.toLowerCase().includes(term) ||
-          song.artist?.toLowerCase().includes(term)
-        );
-      });
+      .filter(song => fuzzyIncludes(`${song.title ?? ''} ${song.artist ?? ''}`, searchTerm));
   }, [availableSongs, excludeSongs, searchTerm]);
 
   const handleAddSong = async (song: SongType) => {
