@@ -44,9 +44,8 @@ export const config = {
      * 3. /_next/image (image optimization files)
      * 4. /favicon.ico (favicon file)
      * 5. public files (fonts, images, etc)
-     * 6. service worker files (sw.js, workbox-*.js)
-     * 7. manifest.json and other PWA files
+     * 6. manifest.json and other PWA files
      */
-    '/((?!api/auth|_next/static|_next/image|favicon.ico|sw\\.js|test-sw\\.js|custom-sw\\.js|workbox.*\\.js|manifest\\.json|android-chrome.*\\.png|apple-touch-icon\\.png|favicon-.*\\.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'
+    '/((?!api/auth|_next/static|_next/image|favicon.ico|manifest\\.json|android-chrome.*\\.png|apple-touch-icon\\.png|favicon-.*\\.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'
   ]
 };

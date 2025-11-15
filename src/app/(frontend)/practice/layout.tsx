@@ -11,8 +11,8 @@ import '../../globals.css';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Header } from '@/components/Header';
 import { NetworkStatus } from '@/components/NetworkStatus';
-import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistration';
 import { OfflineDataInitializer } from '@/components/OfflineDataInitializer';
+import { ServiceWorkerCleanup } from '@/components/ServiceWorkerCleanup';
 import PerformanceView from '@/components/PerformanceView';
 
 const inter = Noto_Sans({ subsets: ['latin'] });
@@ -45,8 +45,8 @@ export default async function RootLayout({
         <AuthProvider>
           <TanstackProvider>
             <ProtectedRoute>
-              <ServiceWorkerRegistration />
               <NetworkStatus />
+              <ServiceWorkerCleanup />
               {/*<OfflineDataInitializer>*/}
                 <div className={'flex flex-col'}>
                   <PracticeProvider setlist={setlist} allSongs={allSongs}>
