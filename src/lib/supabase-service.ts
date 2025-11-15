@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { GigsType, GigType, SetlistType, SongType, ProposalType, BandMember, ProposalVoteStatus, ProposalVote } from './interface';
 import { supabase } from './supabase';
+import { generateSlug } from './slug';
 
 const supabaseServiceKey = process.env.NEXT_PRIVATE_SUPABASE_SERVICE_KEY;
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -40,15 +41,8 @@ function parseStorageUrl(url: string): StorageFileTarget | null {
   }
 }
 
-// Generate URL-friendly slug from title
-export function generateSlug(title: string): string {
-  return title
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, '') // Remove special characters
-    .replace(/\s+/g, '-')     // Replace spaces with hyphens
-    .replace(/-+/g, '-')      // Replace multiple hyphens with single hyphen
-    .trim();
-}
+// Re-export for legacy imports
+export { generateSlug };
 
 // Convert Supabase data to match existing interfaces
 function mapSupabaseSongToSongType(song: any): SongType & { key_signature?: string; tempo_bpm?: number; tags?: string[]; tabs_chords?: string } {
