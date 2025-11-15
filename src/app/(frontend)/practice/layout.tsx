@@ -11,7 +11,6 @@ import '../../globals.css';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Header } from '@/components/Header';
 import { NetworkStatus } from '@/components/NetworkStatus';
-import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistration';
 import { OfflineDataInitializer } from '@/components/OfflineDataInitializer';
 import PerformanceView from '@/components/PerformanceView';
 
@@ -45,7 +44,6 @@ export default async function RootLayout({
         <AuthProvider>
           <TanstackProvider>
             <ProtectedRoute>
-              <ServiceWorkerRegistration />
               <NetworkStatus />
               {/*<OfflineDataInitializer>*/}
                 <div className={'flex flex-col'}>
