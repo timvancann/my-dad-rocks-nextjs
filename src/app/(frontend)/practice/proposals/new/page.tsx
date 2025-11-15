@@ -120,7 +120,7 @@ export default function NewProposalPage() {
           band: selectedTrack.artists.join(', '),
           album: selectedTrack.albumName,
           coverart: selectedTrack.imageUrl ?? undefined,
-          uri: selectedTrack.uri
+          uri: selectedTrack.externalUrl ?? undefined
         })
       });
 
