@@ -120,7 +120,7 @@ export default function NewProposalPage() {
           band: selectedTrack.artists.join(', '),
           album: selectedTrack.albumName,
           coverart: selectedTrack.imageUrl ?? undefined,
-          uri: selectedTrack.uri
+          uri: selectedTrack.externalUrl ?? undefined
         })
       });
 
@@ -218,9 +218,8 @@ export default function NewProposalPage() {
               return (
                 <div
                   key={track.id}
-                  className={`rounded-lg border px-4 py-3 transition-colors ${
-                    isSelected ? 'border-rose-400 bg-rose-400/5' : `${THEME.border} bg-zinc-900 hover:border-rose-400/70`
-                  }`}
+                  className={`rounded-lg border px-4 py-3 transition-colors ${isSelected ? 'border-rose-400 bg-rose-400/5' : `${THEME.border} bg-zinc-900 hover:border-rose-400/70`
+                    }`}
                 >
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                     <div className="flex items-center gap-3 flex-1">

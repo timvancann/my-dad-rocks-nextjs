@@ -120,14 +120,18 @@ export async function searchSpotifyTracks({ title, artist, limit = 8 }: SpotifyS
 
   const items = data.tracks?.items ?? [];
 
-  return items.map((item) => ({
-    id: item.id,
-    name: item.name,
-    albumName: item.album.name,
-    artists: item.artists.map((artistItem) => artistItem.name),
-    images: item.album.images,
-    previewUrl: item.preview_url,
-    uri: item.uri,
-    externalUrl: item.external_urls?.spotify ?? null
-  }));
+  return items.map((item) => {
+    const externalSpotifyUrl = item.external_urls?.spotify ?? null;
+
+    return {
+      id: item.id,
+      name: item.name,
+      albumName: item.album.name,
+      artists: item.artists.map((artistItem) => artistItem.name),
+      images: item.album.images,
+      previewUrl: item.preview_url,
+      uri: externalSpotifyUrl ?? item.uri,
+      externalUrl: externalSpotifyUrl
+    };
+  });
 }
