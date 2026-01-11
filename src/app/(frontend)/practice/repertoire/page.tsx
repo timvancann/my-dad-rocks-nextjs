@@ -4,24 +4,45 @@ import { Repertoire } from '@/components/RepertoirePage';
 import { usePracticeStore } from '@/context/PracticeProvider';
 import { THEME } from '@/themes';
 import { NavigationButton } from '@/components/NavigationButton';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Guitar, Mic, UserMinus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { fuzzyIncludes } from '@/lib/fuzzySearch';
+import { TbGuitarPickFilled } from 'react-icons/tb';
 
 export default function RepertoirePage() {
   const store = usePracticeStore((state) => state);
   const totalDuration = store.allSongs.reduce((acc, song) => acc + (song.duration || 0), 0);
   const roundedDuration = Math.round(totalDuration / 60);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterDualGuitar, setFilterDualGuitar] = useState<boolean | null>(null);
+  const [filterDualVocal, setFilterDualVocal] = useState<boolean | null>(null);
+  const [filterCanPlayWithoutSinger, setFilterCanPlayWithoutSinger] = useState<boolean | null>(null);
 
   const filteredSongs = useMemo(() => {
-    if (!searchTerm.trim()) return store.allSongs;
-    return store.allSongs.filter((song) => {
-      const title = song.title ?? '';
-      const artist = song.artist ?? '';
-      return fuzzyIncludes(`${title} ${artist}`, searchTerm);
-    });
-  }, [searchTerm, store.allSongs]);
+    let songs = store.allSongs;
+
+    // Apply arrangement filters
+    if (filterDualGuitar !== null) {
+      songs = songs.filter(song => song.dualGuitar === filterDualGuitar);
+    }
+    if (filterDualVocal !== null) {
+      songs = songs.filter(song => song.dualVocal === filterDualVocal);
+    }
+    if (filterCanPlayWithoutSinger !== null) {
+      songs = songs.filter(song => song.canPlayWithoutSinger === filterCanPlayWithoutSinger);
+    }
+
+    // Apply search filter
+    if (searchTerm.trim()) {
+      songs = songs.filter((song) => {
+        const title = song.title ?? '';
+        const artist = song.artist ?? '';
+        return fuzzyIncludes(`${title} ${artist}`, searchTerm);
+      });
+    }
+
+    return songs;
+  }, [searchTerm, store.allSongs, filterDualGuitar, filterDualVocal, filterCanPlayWithoutSinger]);
 
   return (
     <div className="flex flex-col">
@@ -58,6 +79,46 @@ export default function RepertoirePage() {
             autoComplete="off"
           />
         </div>
+
+        {/* Filter Buttons */}
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            onClick={() => setFilterDualGuitar(filterDualGuitar === true ? null : true)}
+            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-all ${
+              filterDualGuitar === true
+                ? 'bg-red-600/20 text-red-400 ring-1 ring-red-600/50'
+                : 'bg-zinc-800/70 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-300'
+            }`}
+          >
+            <TbGuitarPickFilled className="h-4 w-4" />
+            Dubbele Gitaar
+          </button>
+
+          <button
+            onClick={() => setFilterDualVocal(filterDualVocal === true ? null : true)}
+            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-all ${
+              filterDualVocal === true
+                ? 'bg-red-600/20 text-red-400 ring-1 ring-red-600/50'
+                : 'bg-zinc-800/70 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-300'
+            }`}
+          >
+            <Mic className="h-4 w-4" />
+            Dubbele Zang
+          </button>
+
+          <button
+            onClick={() => setFilterCanPlayWithoutSinger(filterCanPlayWithoutSinger === true ? null : true)}
+            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-all ${
+              filterCanPlayWithoutSinger === true
+                ? 'bg-red-600/20 text-red-400 ring-1 ring-red-600/50'
+                : 'bg-zinc-800/70 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-300'
+            }`}
+          >
+            <UserMinus className="h-4 w-4" />
+            Speelbaar zonder zanger
+          </button>
+        </div>
+
         <p className="mt-2 text-xs text-zinc-500">
           Showing {filteredSongs.length} of {store.allSongs.length} songs
         </p>

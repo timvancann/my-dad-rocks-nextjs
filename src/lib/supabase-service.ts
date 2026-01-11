@@ -57,6 +57,7 @@ function mapSupabaseSongToSongType(song: any): SongType & { key_signature?: stri
     last_played_at: song.last_played_at,
     dualGuitar: song.dual_guitar || false,
     dualVocal: song.dual_vocal || false,
+    canPlayWithoutSinger: song.can_play_without_singer || false,
     notes: song.notes || '',
     duration: song.duration_seconds || 0,
     version: song.updated_at,
@@ -129,6 +130,7 @@ export async function getSetlist(title: string): Promise<SetlistType> {
           _type: 'pause',
           dualGuitar: false,
           dualVocal: false,
+          canPlayWithoutSinger: false,
           notes: '',
           duration: 0,
           version: item.updated_at
@@ -353,6 +355,7 @@ export async function getGig(id: string): Promise<GigType | null> {
               _type: 'pause',
               dualGuitar: false,
               dualVocal: false,
+              canPlayWithoutSinger: false,
               notes: '',
               duration: 0,
               version: item.updated_at
@@ -831,6 +834,7 @@ export async function updateSong(
     tags?: string[];
     dual_guitar?: boolean;
     dual_vocal?: boolean;
+    can_play_without_singer?: boolean;
   }
 ) {
   const updateData: any = {};
@@ -842,6 +846,7 @@ export async function updateSong(
   if (updates.tags !== undefined) updateData.tags = updates.tags;
   if (updates.dual_guitar !== undefined) updateData.dual_guitar = updates.dual_guitar;
   if (updates.dual_vocal !== undefined) updateData.dual_vocal = updates.dual_vocal;
+  if (updates.can_play_without_singer !== undefined) updateData.can_play_without_singer = updates.can_play_without_singer;
 
   const { error } = await supabase.from('songs').update(updateData).eq('id', songId);
 

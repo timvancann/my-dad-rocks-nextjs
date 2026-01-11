@@ -3,7 +3,7 @@
 import { SongType } from '@/lib/interface';
 import { usePlayerStore } from '@/store/store';
 import { THEME } from '@/themes';
-import { Clock, Mic, StickyNote } from 'lucide-react';
+import { Clock, Mic, StickyNote, UserMinus } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { TbGuitarPickFilled } from 'react-icons/tb';
 import { SongMenu } from './SongMenu';
@@ -78,6 +78,11 @@ export const SongCard = ({ song, playlist, removeFromSetlistFn, addToSetlistFn }
                 {song.dualVocal && (
                   <div className={`flex items-center gap-1 ${THEME.highlight} rounded-full p-1 text-xs`}>
                     <Mic className={`h-3 w-3 ${THEME.secondary}`} />
+                  </div>
+                )}
+                {song.canPlayWithoutSinger && (
+                  <div className={`flex items-center gap-1 ${THEME.highlight} rounded-full p-1 text-xs`}>
+                    <UserMinus className="h-3 w-3 text-cyan-400" />
                   </div>
                 )}
               </div>

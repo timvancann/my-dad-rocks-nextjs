@@ -8,6 +8,7 @@ export interface SongType {
   audio?: string;
   dualGuitar: boolean;
   dualVocal: boolean;
+  canPlayWithoutSinger: boolean;
   duration: number;
   notes?: string;
   version?: number;

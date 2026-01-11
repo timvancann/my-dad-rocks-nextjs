@@ -3,7 +3,7 @@
 import { useAudioTime, usePlaylistPlayer } from '@/hooks/useAudioTime';
 import { usePlayerStore } from '@/store/store';
 import { THEME } from '@/themes';
-import { X, Play, Pause, SkipBack, SkipForward, Volume2, Mic, Repeat, RotateCcw, ChevronsLeft, Plus, Edit3, Trash2, MoreHorizontal, ChevronDown, ChevronUp, GripVertical, SquareArrowLeft } from 'lucide-react';
+import { X, Play, Pause, SkipBack, SkipForward, Volume2, Mic, Repeat, RotateCcw, ChevronsLeft, Plus, Edit3, Trash2, MoreHorizontal, ChevronDown, ChevronUp, GripVertical, SquareArrowLeft, UserMinus } from 'lucide-react';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { TbGuitarPickFilled } from 'react-icons/tb';
@@ -296,6 +296,11 @@ export const PlayerFull = ({ isOpen, onClose }: PlayerFullProps) => {
                   {selectedSong.dualVocal && (
                     <div className={`flex items-center gap-1 ${THEME.highlight} rounded-full px-3 py-1.5`}>
                       <Mic className={`h-5 w-5 ${THEME.secondary}`} />
+                    </div>
+                  )}
+                  {selectedSong.canPlayWithoutSinger && (
+                    <div className={`flex items-center gap-1 ${THEME.highlight} rounded-full px-3 py-1.5`}>
+                      <UserMinus className="h-5 w-5 text-cyan-400" />
                     </div>
                   )}
                   {(selectedSong as any).tempo_bpm && (

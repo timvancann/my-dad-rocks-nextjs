@@ -2,7 +2,7 @@
 import { updateSong, getSongLinks, createSongLink, updateSongLink, deleteSongLink, updateSongMasteryLevel } from '@/actions/supabase';
 import { useRouter } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
-import { Hash, Music, X, Save, Tag, Plus, Minus, Link, Youtube, Disc3, FileText, Users, Guitar, Mic } from 'lucide-react';
+import { Hash, Music, X, Save, Tag, Plus, Minus, Link, Youtube, Disc3, FileText, Users, Guitar, Mic, UserMinus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -52,7 +52,8 @@ export const EditSong = ({ song, masteryLevel, onClose, onUpdate }: EditSongProp
     difficulty_level: masteryLevel || 1,
     tags: song.tags || [],
     dualGuitar: song.dualGuitar || false,
-    dualVocal: song.dualVocal || false
+    dualVocal: song.dualVocal || false,
+    canPlayWithoutSinger: song.canPlayWithoutSinger || false
   });
   
   // BPM Tap functionality
@@ -89,7 +90,8 @@ export const EditSong = ({ song, masteryLevel, onClose, onUpdate }: EditSongProp
         tabs_chords: formData.tabs_chords || null,
         tags: formData.tags,
         dual_guitar: formData.dualGuitar,
-        dual_vocal: formData.dualVocal
+        dual_vocal: formData.dualVocal,
+        can_play_without_singer: formData.canPlayWithoutSinger
       });
       
       // Update mastery level in song_stats table
@@ -423,6 +425,21 @@ export const EditSong = ({ song, masteryLevel, onClose, onUpdate }: EditSongProp
                 <label htmlFor="dualVocal" className="text-sm font-medium flex items-center gap-1">
                   <Mic className="h-4 w-4" />
                   Dubbele Zang
+                </label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  id="canPlayWithoutSinger"
+                  name="canPlayWithoutSinger"
+                  type="checkbox"
+                  checked={formData.canPlayWithoutSinger}
+                  onChange={handleChange}
+                  className="w-4 h-4 text-rose-600 bg-zinc-800 border-zinc-600 rounded focus:ring-rose-500 focus:ring-2"
+                />
+                <label htmlFor="canPlayWithoutSinger" className="text-sm font-medium flex items-center gap-1">
+                  <UserMinus className="h-4 w-4" />
+                  Speelbaar zonder zanger
                 </label>
               </div>
             </div>

@@ -6,6 +6,11 @@ interface UseSongSearchParams {
   searchTerm: string;
   excludeSongs: SongType[];
   debounceMs?: number;
+  filters?: {
+    dualGuitar?: boolean;
+    dualVocal?: boolean;
+    canPlayWithoutSinger?: boolean;
+  };
 }
 
 interface UseSongSearchReturn {
@@ -19,6 +24,7 @@ export function useSongSearch({
   searchTerm,
   excludeSongs,
   debounceMs = 300,
+  filters,
 }: UseSongSearchParams): UseSongSearchReturn {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
   const [isSearching, setIsSearching] = useState(false);
@@ -47,7 +53,20 @@ export function useSongSearch({
   // Filter and search songs
   const filteredSongs = useMemo(() => {
     // First filter out excluded songs
-    const availableSongs = songs.filter(song => !excludedSongIds.has(song._id));
+    let availableSongs = songs.filter(song => !excludedSongIds.has(song._id));
+
+    // Apply arrangement filters if provided
+    if (filters) {
+      if (filters.dualGuitar !== undefined) {
+        availableSongs = availableSongs.filter(song => song.dualGuitar === filters.dualGuitar);
+      }
+      if (filters.dualVocal !== undefined) {
+        availableSongs = availableSongs.filter(song => song.dualVocal === filters.dualVocal);
+      }
+      if (filters.canPlayWithoutSinger !== undefined) {
+        availableSongs = availableSongs.filter(song => song.canPlayWithoutSinger === filters.canPlayWithoutSinger);
+      }
+    }
 
     // If no search term, return all available songs
     if (!debouncedSearchTerm.trim()) {
@@ -56,14 +75,14 @@ export function useSongSearch({
 
     // Perform case-insensitive fuzzy search on title and artist
     const searchTermLower = debouncedSearchTerm.toLowerCase().trim();
-    
+
     return availableSongs.filter(song => {
       const titleMatch = song.title.toLowerCase().includes(searchTermLower);
       const artistMatch = song.artist?.toLowerCase().includes(searchTermLower) || false;
-      
+
       return titleMatch || artistMatch;
     });
-  }, [songs, debouncedSearchTerm, excludedSongIds]);
+  }, [songs, debouncedSearchTerm, excludedSongIds, filters]);
 
   return {
     filteredSongs,

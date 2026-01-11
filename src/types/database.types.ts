@@ -571,6 +571,7 @@ export type Database = {
           difficulty_level: number | null
           dual_guitar: boolean | null
           dual_vocal: boolean | null
+          can_play_without_singer: boolean | null
           duration_seconds: number | null
           id: string
           key_signature: string | null
@@ -592,6 +593,7 @@ export type Database = {
           difficulty_level?: number | null
           dual_guitar?: boolean | null
           dual_vocal?: boolean | null
+          can_play_without_singer?: boolean | null
           duration_seconds?: number | null
           id?: string
           key_signature?: string | null
@@ -613,6 +615,7 @@ export type Database = {
           difficulty_level?: number | null
           dual_guitar?: boolean | null
           dual_vocal?: boolean | null
+          can_play_without_singer?: boolean | null
           duration_seconds?: number | null
           id?: string
           key_signature?: string | null

@@ -2,7 +2,7 @@
 
 import { SongType } from '@/lib/interface';
 import { THEME } from '@/themes';
-import { X, Search, Clock, Mic, Plus, Loader2 } from 'lucide-react';
+import { X, Search, Clock, Mic, Plus, Loader2, UserMinus } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { TbGuitarPickFilled } from 'react-icons/tb';
@@ -163,6 +163,11 @@ export const AddSongModal = ({
                             {song.dualVocal && (
                               <div className={`flex items-center gap-1 ${THEME.highlight} rounded-full px-2 py-0.5`}>
                                 <Mic className={`h-3 w-3 ${THEME.secondary}`} />
+                              </div>
+                            )}
+                            {song.canPlayWithoutSinger && (
+                              <div className={`flex items-center gap-1 ${THEME.highlight} rounded-full px-2 py-0.5`}>
+                                <UserMinus className="h-3 w-3 text-cyan-400" />
                               </div>
                             )}
                           </div>

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { EditSong } from '@/components/EditSong';
 import { THEME } from '@/themes';
-import { Calendar, Clock, Guitar, Hash, Mic, Music, Star, Tag, Users, Edit, ArrowLeft, Link as LinkIcon, FileText, Trash2, Upload, Pencil, Trash } from 'lucide-react';
+import { Calendar, Clock, Guitar, Hash, Mic, Music, Star, Tag, Users, Edit, ArrowLeft, Link as LinkIcon, FileText, Trash2, Upload, Pencil, Trash, UserMinus } from 'lucide-react';
 import { FaSpotify, FaYoutube } from 'react-icons/fa';
 import { SiYoutubemusic } from 'react-icons/si';
 import { NavigationLink } from './NavigationButton';
@@ -350,7 +350,13 @@ export function SongDetailsClient({ song: initialSong, stats: initialStats, audi
                       Dubbele Zang
                     </Badge>
                   )}
-                  {!song.dualGuitar && !song.dualVocal && <span className="text-gray-400">Standaard</span>}
+                  {song.canPlayWithoutSinger && (
+                    <Badge variant="secondary">
+                      <UserMinus className="mr-1 h-3 w-3" />
+                      Speelbaar zonder zanger
+                    </Badge>
+                  )}
+                  {!song.dualGuitar && !song.dualVocal && !song.canPlayWithoutSinger && <span className="text-gray-400">Standaard</span>}
                 </div>
               </div>
             </CardContent>
