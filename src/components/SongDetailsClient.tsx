@@ -290,15 +290,6 @@ export function SongDetailsClient({ song: initialSong, stats: initialStats, audi
           >
             Bekijk Songtekst
           </NavigationLink>
-          {audioCues.length >= 2 && (
-            <NavigationLink
-              href={`/practice/song/${song.slug}/stems`}
-              className={`px-6 py-3 ${THEME.highlight} hover:bg-zinc-700 ${THEME.text} border ${THEME.border} rounded-md font-medium transition-colors`}
-              icon={<Users className="h-4 w-4" />}
-            >
-              Multi-Track Stem Player
-            </NavigationLink>
-          )}
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
@@ -408,7 +399,9 @@ export function SongDetailsClient({ song: initialSong, stats: initialStats, audi
                 </div>
               )}
               {audioCues.length === 0 ? (
-                <p className="text-sm text-gray-400">Nog geen audio referenties. Upload een opname van een break, intro of einde zodat iedereen weet hoe het moet klinken.</p>
+                <p className="text-sm text-gray-400">
+                  Nog geen audio bestanden. Upload stems (vocals, drums, bass, guitar, etc.) voor de multi-track player, of korte fragmenten voor intro&apos;s, breaks en eindes.
+                </p>
               ) : (
                 <div className="space-y-3">
                   {audioCues.map((cue) => (
