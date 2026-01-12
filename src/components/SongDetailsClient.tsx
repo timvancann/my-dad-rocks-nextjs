@@ -283,13 +283,22 @@ export function SongDetailsClient({ song: initialSong, stats: initialStats, audi
 
         {/* Quick Actions */}
         <div className="flex gap-4 mb-8">
-          <NavigationLink 
-            href={`/practice/lyrics/${song.slug}`} 
+          <NavigationLink
+            href={`/practice/lyrics/${song.slug}`}
             className={`px-6 py-3 ${THEME.primaryBg} hover:${THEME.primaryBgDark} text-white rounded-md font-medium transition-colors`}
             icon={<Music className="h-4 w-4" />}
           >
             Bekijk Songtekst
           </NavigationLink>
+          {audioCues.length >= 2 && (
+            <NavigationLink
+              href={`/practice/song/${song.slug}/stems`}
+              className={`px-6 py-3 ${THEME.highlight} hover:bg-zinc-700 ${THEME.text} border ${THEME.border} rounded-md font-medium transition-colors`}
+              icon={<Users className="h-4 w-4" />}
+            >
+              Multi-Track Stem Player
+            </NavigationLink>
+          )}
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
@@ -367,7 +376,11 @@ export function SongDetailsClient({ song: initialSong, stats: initialStats, audi
             <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <CardTitle>Audio Cues</CardTitle>
-                <CardDescription>Korte fragmenten voor intro&apos;s, breaks en eindes</CardDescription>
+                <CardDescription>
+                  {audioCues.length >= 2
+                    ? 'Upload stems (vocals, drums, bass, guitar, etc.) voor de multi-track player'
+                    : 'Korte fragmenten voor intro\'s, breaks en eindes'}
+                </CardDescription>
               </div>
               <div className="flex items-center gap-3">
                 <input ref={fileInputRef} type="file" accept="audio/*" className="hidden" onChange={handleCueFileChange} />
