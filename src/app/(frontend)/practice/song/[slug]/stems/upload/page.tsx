@@ -1,4 +1,4 @@
-import { getSongBySlug } from '@/actions/supabase';
+import { getSongWithStatsBySlug } from '@/actions/supabase';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -19,11 +19,13 @@ function UploadSkeleton() {
 }
 
 async function StemUpload({ slug }: { slug: string }) {
-  const song = await getSongBySlug(slug);
+  const result = await getSongWithStatsBySlug(slug);
 
-  if (!song) {
+  if (!result) {
     notFound();
   }
+
+  const { song } = result;
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
