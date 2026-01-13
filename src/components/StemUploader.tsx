@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { STEM_CATEGORIES, STEM_COLORS, type StemCategory } from '@/types/stems';
 import { createSongAudioCue } from '@/actions/supabase';
+import { supabase } from '@/lib/supabase';
+import { v4 as uuidv4 } from 'uuid';
 
 interface StemFile {
   id: string;
@@ -167,22 +169,30 @@ export function StemUploader({ songId, songSlug, onUploadComplete }: StemUploade
         // Extract duration
         const duration = await extractAudioDuration(stemFile.file);
 
-        // Upload file to server
-        const formData = new FormData();
-        formData.append('file', stemFile.file);
-        formData.append('type', 'cue');
-        formData.append('songSlug', songSlug);
+        // Generate unique filename
+        const fileExtension = stemFile.file.name.split('.').pop();
+        const fileName = `${uuidv4()}.${fileExtension}`;
+        const objectPath = `${songSlug}/${fileName}`;
 
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
-        });
+        // Upload directly to Supabase storage (bypasses Vercel 4.5MB limit)
+        const { error: uploadError } = await supabase.storage
+          .from('stems')
+          .upload(objectPath, stemFile.file, {
+            contentType: stemFile.file.type,
+            upsert: false,
+          });
 
-        if (!response.ok) {
+        if (uploadError) {
+          console.error('Supabase upload error:', uploadError);
           throw new Error('Upload failed');
         }
 
-        const { url } = await response.json();
+        // Get public URL
+        const { data: publicData } = supabase.storage
+          .from('stems')
+          .getPublicUrl(objectPath);
+
+        const url = publicData?.publicUrl;
         if (!url) {
           throw new Error('No URL received from upload');
         }
@@ -221,7 +231,7 @@ export function StemUploader({ songId, songSlug, onUploadComplete }: StemUploade
     if (allUploaded && onUploadComplete) {
       onUploadComplete();
     }
-  }, [stemFiles, isUploading, songId, onUploadComplete]);
+  }, [stemFiles, isUploading, songId, songSlug, onUploadComplete]);
 
   const allUploaded = stemFiles.length > 0 && stemFiles.every((s) => s.uploaded);
 
