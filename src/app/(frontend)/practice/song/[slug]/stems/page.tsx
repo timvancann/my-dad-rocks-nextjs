@@ -43,17 +43,14 @@ async function StemPlayer({ slug }: { slug: string }) {
   }));
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      {/* Back Button */}
-      <Link href={`/practice/song/${slug}`}>
-        <Button variant="ghost" className="mb-6">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Song Details
-        </Button>
-      </Link>
-
+    <div className="container mx-auto p-0 max-w-4xl">
       {/* Stem Player */}
-      <StemPlayerControls stems={stems} songTitle={song.title} />
+      <StemPlayerControls
+        stems={stems}
+        songTitle={song.title}
+        artworkUrl={song.artwork}
+        slug={slug}
+      />
     </div>
   );
 }

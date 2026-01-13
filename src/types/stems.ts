@@ -64,6 +64,34 @@ export function inferStemCategory(title: string): StemCategory {
   return STEM_CATEGORIES.OTHER;
 }
 
+// Sort order for stem categories
+const STEM_SORT_ORDER: Record<StemCategory, number> = {
+  [STEM_CATEGORIES.VOCALS]: 0,
+  [STEM_CATEGORIES.GUITAR]: 1,
+  [STEM_CATEGORIES.BASS]: 2,
+  [STEM_CATEGORIES.DRUMS]: 3,
+  [STEM_CATEGORIES.KEYS]: 4,
+  [STEM_CATEGORIES.OTHER]: 5,
+  [STEM_CATEGORIES.METRONOME]: 6,
+};
+
+// Helper to sort stems by category
+export function sortStemsByCategory(stems: Stem[]): Stem[] {
+  return [...stems].sort((a, b) => {
+    const catA = inferStemCategory(a.title);
+    const catB = inferStemCategory(b.title);
+    const orderA = STEM_SORT_ORDER[catA];
+    const orderB = STEM_SORT_ORDER[catB];
+    
+    if (orderA !== orderB) {
+      return orderA - orderB;
+    }
+    
+    // If same category, maintain original sort order
+    return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+  });
+}
+
 // Color mapping for stem categories
 export const STEM_COLORS: Record<StemCategory, string> = {
   [STEM_CATEGORIES.VOCALS]: 'bg-blue-500',

@@ -171,6 +171,7 @@ export function StemUploader({ songId, songSlug, onUploadComplete }: StemUploade
         const formData = new FormData();
         formData.append('file', stemFile.file);
         formData.append('type', 'cue');
+        formData.append('songSlug', songSlug);
 
         const response = await fetch('/api/upload', {
           method: 'POST',
