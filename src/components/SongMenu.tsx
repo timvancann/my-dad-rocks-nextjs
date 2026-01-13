@@ -5,18 +5,20 @@ import { markSongPracticed } from '@/actions/supabase';
 import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { THEME } from '@/themes';
-import { 
-  MoreVertical, 
-  FileText, 
-  Info, 
-  Music, 
-  Hash, 
-  StickyNote, 
-  CheckCircle2, 
-  CirclePlus, 
+import {
+  MoreVertical,
+  FileText,
+  Info,
+  Music,
+  Hash,
+  StickyNote,
+  CheckCircle2,
+  CirclePlus,
   Trash2,
   ChevronRight,
-  Play
+  Play,
+  Headphones,
+  Upload
 } from 'lucide-react';
 import { TbListDetails } from 'react-icons/tb';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
@@ -146,6 +148,26 @@ export const SongMenu = ({ song, removeFromSetlistFn, addToSetlistFn, onShowNote
             rightContent={<ChevronRight className="h-3 w-3 opacity-50" />}
           >
             Song Details
+          </NavigationButton>
+
+          <NavigationButton
+            href={`/practice/song/${song.slug || song._id}/stems`}
+            icon={<Headphones className="h-4 w-4" />}
+            onClick={() => setIsOpen(false)}
+            className={`${THEME.text} hover:${THEME.highlight} cursor-pointer`}
+            rightContent={<ChevronRight className="h-3 w-3 opacity-50" />}
+          >
+            Stem Player
+          </NavigationButton>
+
+          <NavigationButton
+            href={`/practice/song/${song.slug || song._id}/stems/upload`}
+            icon={<Upload className="h-4 w-4" />}
+            onClick={() => setIsOpen(false)}
+            className={`${THEME.text} hover:${THEME.highlight} cursor-pointer`}
+            rightContent={<ChevronRight className="h-3 w-3 opacity-50" />}
+          >
+            Upload Stems
           </NavigationButton>
 
           <MenuItem

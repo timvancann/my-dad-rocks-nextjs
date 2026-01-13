@@ -283,8 +283,8 @@ export function SongDetailsClient({ song: initialSong, stats: initialStats, audi
 
         {/* Quick Actions */}
         <div className="flex gap-4 mb-8">
-          <NavigationLink 
-            href={`/practice/lyrics/${song.slug}`} 
+          <NavigationLink
+            href={`/practice/lyrics/${song.slug}`}
             className={`px-6 py-3 ${THEME.primaryBg} hover:${THEME.primaryBgDark} text-white rounded-md font-medium transition-colors`}
             icon={<Music className="h-4 w-4" />}
           >
@@ -367,7 +367,11 @@ export function SongDetailsClient({ song: initialSong, stats: initialStats, audi
             <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <CardTitle>Audio Cues</CardTitle>
-                <CardDescription>Korte fragmenten voor intro&apos;s, breaks en eindes</CardDescription>
+                <CardDescription>
+                  {audioCues.length >= 2
+                    ? 'Upload stems (vocals, drums, bass, guitar, etc.) voor de multi-track player'
+                    : 'Korte fragmenten voor intro\'s, breaks en eindes'}
+                </CardDescription>
               </div>
               <div className="flex items-center gap-3">
                 <input ref={fileInputRef} type="file" accept="audio/*" className="hidden" onChange={handleCueFileChange} />
@@ -395,7 +399,9 @@ export function SongDetailsClient({ song: initialSong, stats: initialStats, audi
                 </div>
               )}
               {audioCues.length === 0 ? (
-                <p className="text-sm text-gray-400">Nog geen audio referenties. Upload een opname van een break, intro of einde zodat iedereen weet hoe het moet klinken.</p>
+                <p className="text-sm text-gray-400">
+                  Nog geen audio bestanden. Upload stems (vocals, drums, bass, guitar, etc.) voor de multi-track player, of korte fragmenten voor intro&apos;s, breaks en eindes.
+                </p>
               ) : (
                 <div className="space-y-3">
                   {audioCues.map((cue) => (
