@@ -7,7 +7,7 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "migrate": "tsx scripts/migrate-sanity-to-supabase.ts",
     "migrate:files": "tsx scripts/migrate-files-to-supabase.ts",
     "migrate:lyrics": "tsx scripts/migrate-lyrics.ts",
