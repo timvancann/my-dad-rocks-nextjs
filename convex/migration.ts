@@ -1,0 +1,251 @@
+import { v } from "convex/values";
+import { mutation, internalMutation } from "./_generated/server";
+
+// ============================================
+// Migration Helper Mutations
+// These are used by the migration script to import data from Supabase
+// ============================================
+
+export const createBandMember = mutation({
+  args: {
+    email: v.string(),
+    name: v.optional(v.string()),
+    role: v.optional(v.string()),
+    avatarUrl: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("bandMembers", args);
+  },
+});
+
+export const createSong = mutation({
+  args: {
+    title: v.string(),
+    artist: v.optional(v.string()),
+    slug: v.string(),
+    audioUrl: v.optional(v.string()),
+    artworkUrl: v.optional(v.string()),
+    lyrics: v.optional(v.string()),
+    durationSeconds: v.optional(v.number()),
+    keySignature: v.optional(v.string()),
+    tempoBpm: v.optional(v.number()),
+    difficultyLevel: v.optional(v.number()),
+    tags: v.optional(v.array(v.string())),
+    notes: v.optional(v.string()),
+    tabsChords: v.optional(v.string()),
+    dualGuitar: v.boolean(),
+    dualVocal: v.boolean(),
+    canPlayWithoutSinger: v.boolean(),
+    // Embedded stats
+    timesPlayed: v.optional(v.number()),
+    timesPracticed: v.optional(v.number()),
+    masteryLevel: v.optional(v.number()),
+    lastPracticedAt: v.optional(v.number()),
+    firstLearnedAt: v.optional(v.number()),
+    lastPlayedAt: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("songs", args);
+  },
+});
+
+export const createSongLink = mutation({
+  args: {
+    songId: v.id("songs"),
+    linkType: v.union(
+      v.literal("youtube"),
+      v.literal("youtube_music"),
+      v.literal("spotify"),
+      v.literal("other")
+    ),
+    url: v.string(),
+    title: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("songLinks", args);
+  },
+});
+
+export const createSongSection = mutation({
+  args: {
+    songId: v.id("songs"),
+    name: v.string(),
+    startTime: v.number(),
+    color: v.optional(v.string()),
+    position: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("songSections", args);
+  },
+});
+
+export const createSongAudioCue = mutation({
+  args: {
+    songId: v.id("songs"),
+    title: v.string(),
+    cueUrl: v.optional(v.string()),
+    description: v.optional(v.string()),
+    durationSeconds: v.optional(v.number()),
+    sortOrder: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("songAudioCues", args);
+  },
+});
+
+export const createSetlist = mutation({
+  args: {
+    title: v.string(),
+    type: v.optional(v.string()),
+    description: v.optional(v.string()),
+    totalDurationMinutes: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("setlists", args);
+  },
+});
+
+export const createSetlistItem = mutation({
+  args: {
+    setlistId: v.id("setlists"),
+    songId: v.optional(v.id("songs")),
+    itemType: v.union(
+      v.literal("song"),
+      v.literal("pause"),
+      v.literal("announcement"),
+      v.literal("intro"),
+      v.literal("outro")
+    ),
+    customTitle: v.optional(v.string()),
+    customDurationMinutes: v.optional(v.number()),
+    notes: v.optional(v.string()),
+    position: v.number(),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("setlistItems", args);
+  },
+});
+
+export const createGig = mutation({
+  args: {
+    title: v.string(),
+    date: v.string(),
+    venueName: v.optional(v.string()),
+    venueAddress: v.optional(v.string()),
+    startTime: v.optional(v.string()),
+    endTime: v.optional(v.string()),
+    contactPerson: v.optional(v.string()),
+    contactPhone: v.optional(v.string()),
+    contactEmail: v.optional(v.string()),
+    paymentAmount: v.optional(v.number()),
+    paymentStatus: v.optional(
+      v.union(v.literal("pending"), v.literal("paid"), v.literal("cancelled"))
+    ),
+    status: v.optional(
+      v.union(
+        v.literal("scheduled"),
+        v.literal("completed"),
+        v.literal("cancelled")
+      )
+    ),
+    setlistId: v.optional(v.id("setlists")),
+    videoPlaylistUrl: v.optional(v.string()),
+    notes: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("gigs", args);
+  },
+});
+
+export const createPracticeSession = mutation({
+  args: {
+    title: v.string(),
+    date: v.string(),
+    startTime: v.optional(v.string()),
+    endTime: v.optional(v.string()),
+    setlistId: v.optional(v.id("setlists")),
+    attendees: v.optional(v.array(v.string())),
+    notes: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("practiceSessions", args);
+  },
+});
+
+export const createPracticeSessionSong = mutation({
+  args: {
+    sessionId: v.id("practiceSessions"),
+    songId: v.id("songs"),
+    qualityRating: v.optional(v.number()),
+    notes: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("practiceSessionSongs", args);
+  },
+});
+
+export const createProposal = mutation({
+  args: {
+    title: v.optional(v.string()),
+    band: v.optional(v.string()),
+    album: v.optional(v.string()),
+    coverart: v.optional(v.string()),
+    uri: v.optional(v.string()),
+    createdBy: v.optional(v.id("bandMembers")),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("proposals", args);
+  },
+});
+
+export const createProposalVote = mutation({
+  args: {
+    proposalId: v.id("proposals"),
+    bandMemberId: v.id("bandMembers"),
+    status: v.union(v.literal("accepted"), v.literal("rejected")),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("proposalVotes", args);
+  },
+});
+
+export const createChecklistItem = mutation({
+  args: {
+    userEmail: v.string(),
+    name: v.string(),
+    isChecked: v.boolean(),
+    position: v.number(),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("checklistItems", args);
+  },
+});
+
+// ============================================
+// File Storage Migration
+// ============================================
+
+export const updateSongStorageId = mutation({
+  args: {
+    songId: v.id("songs"),
+    audioStorageId: v.optional(v.id("_storage")),
+    artworkStorageId: v.optional(v.id("_storage")),
+  },
+  handler: async (ctx, args) => {
+    const { songId, ...updates } = args;
+    const filteredUpdates = Object.fromEntries(
+      Object.entries(updates).filter(([, v]) => v !== undefined)
+    );
+    await ctx.db.patch(songId, filteredUpdates);
+  },
+});
+
+export const updateAudioCueStorageId = mutation({
+  args: {
+    cueId: v.id("songAudioCues"),
+    cueStorageId: v.id("_storage"),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.cueId, { cueStorageId: args.cueStorageId });
+  },
+});
