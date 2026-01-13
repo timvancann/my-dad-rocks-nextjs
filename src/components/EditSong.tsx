@@ -1,5 +1,4 @@
 'use client';
-import { updateSong, getSongLinks, createSongLink, updateSongLink, deleteSongLink, updateSongMasteryLevel } from '@/actions/supabase';
 import { useRouter } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
 import { Hash, Music, X, Save, Tag, Plus, Minus, Link, Youtube, Disc3, FileText, Users, Guitar, Mic, UserMinus } from 'lucide-react';
@@ -11,6 +10,8 @@ import { THEME } from '@/themes';
 import { SongType } from '@/lib/interface';
 import { FaSpotify, FaYoutube } from 'react-icons/fa';
 import { SiYoutubemusic } from 'react-icons/si';
+import { useUpdateSong, useUpdateMasteryLevel, useSongLinks, useCreateSongLink, useDeleteSongLink } from '@/hooks/convex';
+import type { Id } from '../../convex/_generated/dataModel';
 
 interface EditSongProps {
   song: SongType & { key_signature?: string; tempo_bpm?: number; tags?: string[]; difficulty_level?: number; notes?: string; tabs_chords?: string };
@@ -20,8 +21,8 @@ interface EditSongProps {
 }
 
 interface SongLink {
-  id: string;
-  link_type: 'youtube' | 'youtube_music' | 'spotify' | 'other';
+  _id: Id<"songLinks">;
+  linkType: 'youtube' | 'youtube_music' | 'spotify' | 'other';
   url: string;
   title?: string;
 }
@@ -41,8 +42,6 @@ export const EditSong = ({ song, masteryLevel, onClose, onUpdate }: EditSongProp
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newTag, setNewTag] = useState('');
-  const [songLinks, setSongLinks] = useState<SongLink[]>([]);
-  const [isLoadingLinks, setIsLoadingLinks] = useState(true);
   const [newLink, setNewLink] = useState({ type: 'youtube', url: '', title: '' });
   const [formData, setFormData] = useState({
     key_signature: song.key_signature || '',
@@ -55,48 +54,43 @@ export const EditSong = ({ song, masteryLevel, onClose, onUpdate }: EditSongProp
     dualVocal: song.dualVocal || false,
     canPlayWithoutSinger: song.canPlayWithoutSinger || false
   });
-  
+
+  // Convex hooks
+  const updateSong = useUpdateSong();
+  const updateMasteryLevel = useUpdateMasteryLevel();
+  const convexSongLinks = useSongLinks(song._id as Id<"songs">);
+  const createSongLink = useCreateSongLink();
+  const deleteSongLink = useDeleteSongLink();
+
   // BPM Tap functionality
   const [tapTimes, setTapTimes] = useState<number[]>([]);
   const [calculatedBPM, setCalculatedBPM] = useState<number | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
-  
-  // Load song links on mount
-  useEffect(() => {
-    loadSongLinks();
-  }, [song._id]);
-  
-  const loadSongLinks = async () => {
-    try {
-      const links = await getSongLinks(song._id);
-      setSongLinks(links || []);
-    } catch (error) {
-      console.error('Error loading song links:', error);
-    } finally {
-      setIsLoadingLinks(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     try {
-      // Update song details (without difficulty_level)
-      await updateSong(song._id, {
-        key_signature: formData.key_signature || null,
-        tempo_bpm: formData.tempo_bpm ? parseInt(formData.tempo_bpm.toString()) : null,
-        notes: formData.notes || null,
-        tabs_chords: formData.tabs_chords || null,
+      // Update song details
+      await updateSong({
+        id: song._id as Id<"songs">,
+        keySignature: formData.key_signature || undefined,
+        tempoBpm: formData.tempo_bpm ? parseInt(formData.tempo_bpm.toString()) : undefined,
+        notes: formData.notes || undefined,
+        tabsChords: formData.tabs_chords || undefined,
         tags: formData.tags,
-        dual_guitar: formData.dualGuitar,
-        dual_vocal: formData.dualVocal,
-        can_play_without_singer: formData.canPlayWithoutSinger
+        dualGuitar: formData.dualGuitar,
+        dualVocal: formData.dualVocal,
+        canPlayWithoutSinger: formData.canPlayWithoutSinger
       });
-      
-      // Update mastery level in song_stats table
-      await updateSongMasteryLevel(song._id, formData.difficulty_level);
-      
+
+      // Update mastery level
+      await updateMasteryLevel({
+        id: song._id as Id<"songs">,
+        masteryLevel: formData.difficulty_level
+      });
+
       onUpdate?.();
       onClose();
     } catch (error) {
@@ -110,7 +104,7 @@ export const EditSong = ({ song, masteryLevel, onClose, onUpdate }: EditSongProp
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-    
+
     setFormData({
       ...formData,
       [name]: type === 'checkbox' ? checked : (name === 'difficulty_level' ? parseInt(value) : value)
@@ -143,7 +137,7 @@ export const EditSong = ({ song, masteryLevel, onClose, onUpdate }: EditSongProp
   const renderStars = (level: number) => {
     return '★'.repeat(level) + '☆'.repeat(5 - level);
   };
-  
+
   const getLinkIcon = (type: string) => {
     switch (type) {
       case 'youtube': return <FaYoutube className="h-4 w-4 text-red-500" />;
@@ -152,27 +146,26 @@ export const EditSong = ({ song, masteryLevel, onClose, onUpdate }: EditSongProp
       default: return <Link className="h-4 w-4" />;
     }
   };
-  
+
   const handleAddLink = async () => {
     if (!newLink.url) return;
-    
+
     try {
-      const link = await createSongLink(song._id, {
-        link_type: newLink.type as any,
+      await createSongLink({
+        songId: song._id as Id<"songs">,
+        linkType: newLink.type as 'youtube' | 'youtube_music' | 'spotify' | 'other',
         url: newLink.url,
         title: newLink.title || undefined
       });
-      setSongLinks([...songLinks, link]);
       setNewLink({ type: 'youtube', url: '', title: '' });
     } catch (error) {
       console.error('Error adding link:', error);
     }
   };
-  
-  const handleDeleteLink = async (linkId: string) => {
+
+  const handleDeleteLink = async (linkId: Id<"songLinks">) => {
     try {
-      await deleteSongLink(linkId);
-      setSongLinks(songLinks.filter(l => l.id !== linkId));
+      await deleteSongLink({ id: linkId });
     } catch (error) {
       console.error('Error deleting link:', error);
     }
@@ -181,45 +174,45 @@ export const EditSong = ({ song, masteryLevel, onClose, onUpdate }: EditSongProp
   const handleTap = () => {
     const now = Date.now();
     setIsAnimating(true);
-    
+
     // Reset animation after a short time
     setTimeout(() => setIsAnimating(false), 150);
-    
+
     setTapTimes(prevTimes => {
       const newTimes = [...prevTimes, now];
-      
+
       // Keep only the last 8 taps for more stable calculation
       const recentTimes = newTimes.slice(-8);
-      
+
       if (recentTimes.length >= 2) {
         // Calculate intervals between taps
         const intervals = [];
         for (let i = 1; i < recentTimes.length; i++) {
           intervals.push(recentTimes[i] - recentTimes[i - 1]);
         }
-        
+
         // Calculate average interval from the last 4 intervals for stability
         const recentIntervals = intervals.slice(-4);
         const avgInterval = recentIntervals.reduce((a, b) => a + b) / recentIntervals.length;
-        
+
         // Convert to BPM (60000ms = 1 minute)
         const bpm = Math.round(60000 / avgInterval);
-        
+
         // Only update if BPM is within reasonable range
         if (bpm >= 40 && bpm <= 300) {
           setCalculatedBPM(bpm);
         }
       }
-      
+
       return recentTimes;
     });
   };
-  
+
   const resetTap = () => {
     setTapTimes([]);
     setCalculatedBPM(null);
   };
-  
+
   const useTappedBPM = () => {
     if (calculatedBPM) {
       setFormData({
@@ -241,6 +234,8 @@ export const EditSong = ({ song, masteryLevel, onClose, onUpdate }: EditSongProp
     document.addEventListener('keydown', handleKeyPress);
     return () => document.removeEventListener('keydown', handleKeyPress);
   }, []);
+
+  const songLinks = convexSongLinks || [];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
@@ -329,7 +324,7 @@ export const EditSong = ({ song, masteryLevel, onClose, onUpdate }: EditSongProp
                   </Button>
                 </div>
               </div>
-              
+
               <div className="text-center">
                 <button
                   type="button"
@@ -340,7 +335,7 @@ export const EditSong = ({ song, masteryLevel, onClose, onUpdate }: EditSongProp
                 >
                   <Music className="h-7 w-7" />
                 </button>
-                
+
                 <div className="mt-4 space-y-1">
                   {calculatedBPM ? (
                     <div className="text-xl font-bold text-rose-400">
@@ -351,7 +346,7 @@ export const EditSong = ({ song, masteryLevel, onClose, onUpdate }: EditSongProp
                       Tap in ritme
                     </div>
                   )}
-                  
+
                   <div className="text-sm text-gray-500">
                     {tapTimes.length > 0 ? (
                       `${tapTimes.length} tap${tapTimes.length !== 1 ? 's' : ''}`
@@ -396,7 +391,7 @@ export const EditSong = ({ song, masteryLevel, onClose, onUpdate }: EditSongProp
               <Users className="inline h-4 w-4 mr-1" />
               Arrangement
             </Label>
-            
+
             <div className="space-y-3">
               <div className="flex items-center space-x-2">
                 <input
@@ -412,7 +407,7 @@ export const EditSong = ({ song, masteryLevel, onClose, onUpdate }: EditSongProp
                   Dubbele Gitaar
                 </label>
               </div>
-              
+
               <div className="flex items-center space-x-2">
                 <input
                   id="dualVocal"
@@ -444,62 +439,6 @@ export const EditSong = ({ song, masteryLevel, onClose, onUpdate }: EditSongProp
               </div>
             </div>
           </div>
-
-          {/* Tags - Hidden for now */}
-          {/* <div className="space-y-4">
-            <Label>
-              <Tag className="inline h-4 w-4 mr-1" />
-              Tags
-            </Label>
-            
-            <div className="flex flex-wrap gap-2">
-              {formData.tags.map((tag) => (
-                <Badge key={tag} variant="secondary" className="flex items-center gap-1">
-                  {tag}
-                  <button
-                    type="button"
-                    onClick={() => removeTag(tag)}
-                    className="ml-1 hover:text-red-400"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              ))}
-            </div>
-
-            <div className="flex gap-2">
-              <Input
-                value={newTag}
-                onChange={(e) => setNewTag(e.target.value)}
-                placeholder="Nieuwe tag toevoegen..."
-                className="flex-1 bg-zinc-800 text-white border-zinc-600 focus:border-rose-400 focus:ring-rose-400"
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddNewTag())}
-              />
-              <Button
-                type="button"
-                onClick={handleAddNewTag}
-                className="px-3 bg-zinc-700 hover:bg-zinc-600"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-sm text-gray-400">Veel gebruikte tags:</p>
-              <div className="flex flex-wrap gap-1">
-                {COMMON_TAGS.filter(tag => !formData.tags.includes(tag)).map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() => addTag(tag)}
-                    className="px-2 py-1 text-xs bg-zinc-700 hover:bg-zinc-600 rounded-md transition-colors"
-                  >
-                    {tag}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div> */}
 
           {/* Notes */}
           <div className="space-y-2">
@@ -538,31 +477,29 @@ export const EditSong = ({ song, masteryLevel, onClose, onUpdate }: EditSongProp
               <Link className="inline h-4 w-4 mr-1" />
               Externe Links
             </Label>
-            
+
             {/* Existing Links */}
-            {!isLoadingLinks && (
-              <div className="space-y-2">
-                {songLinks.map((link) => (
-                  <div key={link.id} className="flex items-center gap-2 p-2 bg-zinc-800 rounded-md">
-                    {getLinkIcon(link.link_type)}
-                    <div className="flex-1">
-                      <a href={link.url} target="_blank" rel="noopener noreferrer" 
-                         className="text-sm text-blue-400 hover:text-blue-300">
-                        {link.title || link.url}
-                      </a>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteLink(link.id)}
-                      className="p-1 hover:text-red-400"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
+            <div className="space-y-2">
+              {songLinks.map((link) => (
+                <div key={link._id} className="flex items-center gap-2 p-2 bg-zinc-800 rounded-md">
+                  {getLinkIcon(link.linkType)}
+                  <div className="flex-1">
+                    <a href={link.url} target="_blank" rel="noopener noreferrer"
+                       className="text-sm text-blue-400 hover:text-blue-300">
+                      {link.title || link.url}
+                    </a>
                   </div>
-                ))}
-              </div>
-            )}
-            
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteLink(link._id)}
+                    className="p-1 hover:text-red-400"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+
             {/* Add New Link */}
             <div className="space-y-2 p-3 bg-zinc-800 rounded-md">
               <div className="flex gap-2">

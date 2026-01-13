@@ -1,14 +1,24 @@
-// src/app/page.tsx
-import { getPublicGigs, getPublicSongs } from '@/actions/supabase';
+'use client';
+
+import { useSongs, useUpcomingGigs } from '@/hooks/convex';
 import { CalendarIcon, MapPinIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import { EnvelopeIcon } from '@heroicons/react/24/solid';
 import Image from 'next/image';
 import { THEME } from '@/themes';
-import { YoutubeIcon, Music } from 'lucide-react';
+import { YoutubeIcon, Music, Loader2 } from 'lucide-react';
 
-export default async function PublicPage() {
-  const upcomingGigs = await getPublicGigs();
-  const songs = await getPublicSongs();
+export default function PublicPage() {
+  const songs = useSongs();
+  const upcomingGigs = useUpcomingGigs(10);
+
+  // Loading state
+  if (songs === undefined || upcomingGigs === undefined) {
+    return (
+      <div className={`min-h-screen ${THEME.bg} ${THEME.text} flex items-center justify-center`}>
+        <Loader2 className="h-8 w-8 animate-spin text-red-500" />
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen ${THEME.bg} ${THEME.text}`}>
@@ -107,9 +117,9 @@ export default async function PublicPage() {
           </div>
           <div className={`rounded-xl ${THEME.border} ${THEME.card} p-8 border bg-gradient-to-br from-red-900/5 to-gray-900/5`}>
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-              {songs.map((song, index) => (
+              {songs.map((song) => (
                 <div
-                  key={index}
+                  key={song._id}
                   className={`p-4 rounded-lg border ${THEME.border} hover:border-red-500/50 transition-all duration-300 hover:bg-red-900/10 hover:scale-105 hover:shadow-lg hover:shadow-red-500/10`}
                 >
                   <div className="flex items-center gap-3">
@@ -157,10 +167,10 @@ export default async function PublicPage() {
                             year: 'numeric'
                           })}
                         </p>
-                        {gig.address && (
+                        {gig.venueAddress && (
                           <div className={`mt-2 flex items-center gap-2 ${THEME.secondary}`}>
                             <MapPinIcon className="h-4 w-4" />
-                            <span className="text-sm">{gig.address}</span>
+                            <span className="text-sm">{gig.venueAddress}</span>
                           </div>
                         )}
                       </div>

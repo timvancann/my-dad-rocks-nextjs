@@ -1,12 +1,13 @@
 import { v } from "convex/values";
-import { mutation, internalMutation } from "./_generated/server";
+import { mutation } from "./_generated/server";
 
 // ============================================
-// Migration Helper Mutations
+// Migration Helper Mutations (Idempotent/Upsert)
 // These are used by the migration script to import data from Supabase
+// All mutations check for existing records and return existing ID if found
 // ============================================
 
-export const createBandMember = mutation({
+export const upsertBandMember = mutation({
   args: {
     email: v.string(),
     name: v.optional(v.string()),
@@ -14,11 +15,23 @@ export const createBandMember = mutation({
     avatarUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Check if band member exists by email
+    const existing = await ctx.db
+      .query("bandMembers")
+      .filter((q) => q.eq(q.field("email"), args.email))
+      .first();
+
+    if (existing) {
+      // Update existing record
+      await ctx.db.patch(existing._id, args);
+      return existing._id;
+    }
+
     return await ctx.db.insert("bandMembers", args);
   },
 });
 
-export const createSong = mutation({
+export const upsertSong = mutation({
   args: {
     title: v.string(),
     artist: v.optional(v.string()),
@@ -45,11 +58,24 @@ export const createSong = mutation({
     lastPlayedAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    // Check if song exists by slug
+    const existing = await ctx.db
+      .query("songs")
+      .filter((q) => q.eq(q.field("slug"), args.slug))
+      .first();
+
+    if (existing) {
+      // Update existing record (preserve storage IDs)
+      const { ...updates } = args;
+      await ctx.db.patch(existing._id, updates);
+      return existing._id;
+    }
+
     return await ctx.db.insert("songs", args);
   },
 });
 
-export const createSongLink = mutation({
+export const upsertSongLink = mutation({
   args: {
     songId: v.id("songs"),
     linkType: v.union(
@@ -62,11 +88,27 @@ export const createSongLink = mutation({
     title: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Check if link exists by songId + url
+    const existing = await ctx.db
+      .query("songLinks")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("songId"), args.songId),
+          q.eq(q.field("url"), args.url)
+        )
+      )
+      .first();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, args);
+      return existing._id;
+    }
+
     return await ctx.db.insert("songLinks", args);
   },
 });
 
-export const createSongSection = mutation({
+export const upsertSongSection = mutation({
   args: {
     songId: v.id("songs"),
     name: v.string(),
@@ -75,11 +117,28 @@ export const createSongSection = mutation({
     position: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    // Check if section exists by songId + name + startTime
+    const existing = await ctx.db
+      .query("songSections")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("songId"), args.songId),
+          q.eq(q.field("name"), args.name),
+          q.eq(q.field("startTime"), args.startTime)
+        )
+      )
+      .first();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, args);
+      return existing._id;
+    }
+
     return await ctx.db.insert("songSections", args);
   },
 });
 
-export const createSongAudioCue = mutation({
+export const upsertSongAudioCue = mutation({
   args: {
     songId: v.id("songs"),
     title: v.string(),
@@ -89,11 +148,29 @@ export const createSongAudioCue = mutation({
     sortOrder: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    // Check if audio cue exists by songId + title
+    const existing = await ctx.db
+      .query("songAudioCues")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("songId"), args.songId),
+          q.eq(q.field("title"), args.title)
+        )
+      )
+      .first();
+
+    if (existing) {
+      // Preserve existing cueStorageId if it exists
+      const { ...updates } = args;
+      await ctx.db.patch(existing._id, updates);
+      return existing._id;
+    }
+
     return await ctx.db.insert("songAudioCues", args);
   },
 });
 
-export const createSetlist = mutation({
+export const upsertSetlist = mutation({
   args: {
     title: v.string(),
     type: v.optional(v.string()),
@@ -101,11 +178,22 @@ export const createSetlist = mutation({
     totalDurationMinutes: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    // Check if setlist exists by title
+    const existing = await ctx.db
+      .query("setlists")
+      .filter((q) => q.eq(q.field("title"), args.title))
+      .first();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, args);
+      return existing._id;
+    }
+
     return await ctx.db.insert("setlists", args);
   },
 });
 
-export const createSetlistItem = mutation({
+export const upsertSetlistItem = mutation({
   args: {
     setlistId: v.id("setlists"),
     songId: v.optional(v.id("songs")),
@@ -122,11 +210,27 @@ export const createSetlistItem = mutation({
     position: v.number(),
   },
   handler: async (ctx, args) => {
+    // Check if item exists by setlistId + position
+    const existing = await ctx.db
+      .query("setlistItems")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("setlistId"), args.setlistId),
+          q.eq(q.field("position"), args.position)
+        )
+      )
+      .first();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, args);
+      return existing._id;
+    }
+
     return await ctx.db.insert("setlistItems", args);
   },
 });
 
-export const createGig = mutation({
+export const upsertGig = mutation({
   args: {
     title: v.string(),
     date: v.string(),
@@ -153,11 +257,27 @@ export const createGig = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Check if gig exists by title + date
+    const existing = await ctx.db
+      .query("gigs")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("title"), args.title),
+          q.eq(q.field("date"), args.date)
+        )
+      )
+      .first();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, args);
+      return existing._id;
+    }
+
     return await ctx.db.insert("gigs", args);
   },
 });
 
-export const createPracticeSession = mutation({
+export const upsertPracticeSession = mutation({
   args: {
     title: v.string(),
     date: v.string(),
@@ -168,11 +288,27 @@ export const createPracticeSession = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Check if session exists by title + date
+    const existing = await ctx.db
+      .query("practiceSessions")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("title"), args.title),
+          q.eq(q.field("date"), args.date)
+        )
+      )
+      .first();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, args);
+      return existing._id;
+    }
+
     return await ctx.db.insert("practiceSessions", args);
   },
 });
 
-export const createPracticeSessionSong = mutation({
+export const upsertPracticeSessionSong = mutation({
   args: {
     sessionId: v.id("practiceSessions"),
     songId: v.id("songs"),
@@ -180,11 +316,27 @@ export const createPracticeSessionSong = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Check if exists by sessionId + songId
+    const existing = await ctx.db
+      .query("practiceSessionSongs")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("sessionId"), args.sessionId),
+          q.eq(q.field("songId"), args.songId)
+        )
+      )
+      .first();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, args);
+      return existing._id;
+    }
+
     return await ctx.db.insert("practiceSessionSongs", args);
   },
 });
 
-export const createProposal = mutation({
+export const upsertProposal = mutation({
   args: {
     title: v.optional(v.string()),
     band: v.optional(v.string()),
@@ -194,22 +346,51 @@ export const createProposal = mutation({
     createdBy: v.optional(v.id("bandMembers")),
   },
   handler: async (ctx, args) => {
+    // Check if proposal exists by uri (Spotify URI is unique)
+    if (args.uri) {
+      const existing = await ctx.db
+        .query("proposals")
+        .filter((q) => q.eq(q.field("uri"), args.uri))
+        .first();
+
+      if (existing) {
+        await ctx.db.patch(existing._id, args);
+        return existing._id;
+      }
+    }
+
     return await ctx.db.insert("proposals", args);
   },
 });
 
-export const createProposalVote = mutation({
+export const upsertProposalVote = mutation({
   args: {
     proposalId: v.id("proposals"),
     bandMemberId: v.id("bandMembers"),
     status: v.union(v.literal("accepted"), v.literal("rejected")),
   },
   handler: async (ctx, args) => {
+    // Check if vote exists by proposalId + bandMemberId
+    const existing = await ctx.db
+      .query("proposalVotes")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("proposalId"), args.proposalId),
+          q.eq(q.field("bandMemberId"), args.bandMemberId)
+        )
+      )
+      .first();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, args);
+      return existing._id;
+    }
+
     return await ctx.db.insert("proposalVotes", args);
   },
 });
 
-export const createChecklistItem = mutation({
+export const upsertChecklistItem = mutation({
   args: {
     userEmail: v.string(),
     name: v.string(),
@@ -217,6 +398,22 @@ export const createChecklistItem = mutation({
     position: v.number(),
   },
   handler: async (ctx, args) => {
+    // Check if item exists by userEmail + name
+    const existing = await ctx.db
+      .query("checklistItems")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("userEmail"), args.userEmail),
+          q.eq(q.field("name"), args.name)
+        )
+      )
+      .first();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, args);
+      return existing._id;
+    }
+
     return await ctx.db.insert("checklistItems", args);
   },
 });

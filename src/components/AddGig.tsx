@@ -1,12 +1,8 @@
 'use client';
-import { createGigWithSetlist } from '@/actions/supabase';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
-import { useFormStatus } from 'react-dom';
-
 import { format } from 'date-fns';
 import { CalendarIcon, Clock, MapPin, Music, ArrowLeft, Save } from 'lucide-react';
-
 import { PendingIcon } from '@/components/PendingIcon';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -17,29 +13,31 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { THEME } from '@/themes';
 import Link from 'next/link';
+import { useCreateGigWithSetlist } from '@/hooks/convex';
 
 export const AddGig = () => {
   const router = useRouter();
   const [date, setDate] = useState<Date>();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const createGigWithSetlist = useCreateGigWithSetlist();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     const formData = new FormData(e.currentTarget);
-    
+
     try {
       const gig = await createGigWithSetlist({
         title: formData.get('title') as string,
-        venue: formData.get('venue') as string,
-        address: formData.get('address') as string,
+        venueName: (formData.get('venue') as string) || undefined,
+        venueAddress: (formData.get('address') as string) || undefined,
         date: date ? format(date, 'yyyy-MM-dd') : '',
-        time: formData.get('time') as string,
-        notes: formData.get('notes') as string
+        startTime: (formData.get('time') as string) || undefined,
+        notes: (formData.get('notes') as string) || undefined
       });
-      
-      router.push(`/practice/gigs/${gig.id}`);
+
+      router.push(`/practice/gigs/${gig}`);
     } catch (error) {
       console.error('Error creating gig:', error);
       alert('Er is een fout opgetreden bij het aanmaken van de gig');
@@ -51,7 +49,7 @@ export const AddGig = () => {
   return (
     <div className="container mx-auto px-4 py-8 max-w-2xl">
       <div className="flex items-center gap-4 mb-8">
-        <Link 
+        <Link
           href="/practice/gigs"
           className={`inline-flex items-center gap-2 px-4 py-2 ${THEME.highlight} hover:bg-zinc-700 ${THEME.text} rounded-md font-medium transition-colors border ${THEME.border}`}
         >

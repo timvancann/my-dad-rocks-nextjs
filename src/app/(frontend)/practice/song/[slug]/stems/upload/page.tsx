@@ -1,11 +1,13 @@
-import { getSongWithStatsBySlug } from '@/actions/supabase';
+'use client';
+
+import { useSongBySlug } from '@/hooks/convex';
 import { notFound } from 'next/navigation';
-import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StemUploader } from '@/components/StemUploader';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Headphones } from 'lucide-react';
 import Link from 'next/link';
+import { use } from 'react';
 
 function UploadSkeleton() {
   return (
@@ -18,14 +20,18 @@ function UploadSkeleton() {
   );
 }
 
-async function StemUpload({ slug }: { slug: string }) {
-  const result = await getSongWithStatsBySlug(slug);
+function StemUpload({ slug }: { slug: string }) {
+  const song = useSongBySlug(slug);
 
-  if (!result) {
-    notFound();
+  // Loading state
+  if (song === undefined) {
+    return <UploadSkeleton />;
   }
 
-  const { song } = result;
+  // Not found
+  if (song === null) {
+    notFound();
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -62,14 +68,8 @@ async function StemUpload({ slug }: { slug: string }) {
   );
 }
 
-async function StemUploadPageWrapper({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
+export default function StemUploadPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = use(params);
 
-  return (
-    <Suspense fallback={<UploadSkeleton />}>
-      <StemUpload slug={slug} />
-    </Suspense>
-  );
+  return <StemUpload slug={slug} />;
 }
-
-export default StemUploadPageWrapper;

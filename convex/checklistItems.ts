@@ -132,3 +132,18 @@ export const clearCompleted = mutation({
     );
   },
 });
+
+export const resetAll = mutation({
+  args: { userEmail: v.string() },
+  handler: async (ctx, args) => {
+    const items = await ctx.db
+      .query("checklistItems")
+      .withIndex("by_userEmail", (q) => q.eq("userEmail", args.userEmail))
+      .filter((q) => q.eq(q.field("isChecked"), true))
+      .collect();
+
+    await Promise.all(
+      items.map((item) => ctx.db.patch(item._id, { isChecked: false }))
+    );
+  },
+});

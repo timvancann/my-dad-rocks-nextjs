@@ -41,3 +41,7 @@ export function useReorderChecklistItems() {
 export function useClearCompletedChecklistItems() {
   return useMutation(api.checklistItems.clearCompleted);
 }
+
+export function useResetAllChecklistItems() {
+  return useMutation(api.checklistItems.resetAll);
+}
