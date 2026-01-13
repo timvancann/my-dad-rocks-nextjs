@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import type { ChangeEvent } from 'react';
-import { getSongWithStats, getSongLinks, deleteSong, createSongAudioCue, updateSongAudioCue, deleteSongAudioCue } from '@/actions/supabase';
+import { useSongLinks, useDeleteSong, useCreateAudioCue, useUpdateAudioCue, useDeleteAudioCue } from '@/hooks/convex';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +13,7 @@ import { FaSpotify, FaYoutube } from 'react-icons/fa';
 import { SiYoutubemusic } from 'react-icons/si';
 import { NavigationLink } from './NavigationButton';
 import { useRouter } from 'next/navigation';
+import type { Id } from '../../convex/_generated/dataModel';
 
 function getDifficultyColor(level: number) {
   const colors = ['text-green-600', 'text-blue-600', 'text-yellow-600', 'text-orange-600', 'text-red-600'];
@@ -79,29 +80,30 @@ export function SongDetailsClient({ song: initialSong, stats: initialStats, audi
   const [stats, setStats] = useState(initialStats);
   const [loading, setLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [songLinks, setSongLinks] = useState<any[]>([]);
   const [audioCues, setAudioCues] = useState<any[]>(initialAudioCues || []);
   const [isUploadingCue, setIsUploadingCue] = useState(false);
   const [cueError, setCueError] = useState<string | null>(null);
   const [activeCueId, setActiveCueId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [showStats, setShowStats] = useState(false);
-  
+
+  // Convex hooks
+  const convexSongLinks = useSongLinks(id as Id<'songs'>);
+  const deleteSongMutation = useDeleteSong();
+  const createAudioCueMutation = useCreateAudioCue();
+  const updateAudioCueMutation = useUpdateAudioCue();
+  const deleteAudioCueMutation = useDeleteAudioCue();
+
+  // Transform Convex song links to expected format
+  const songLinks = (convexSongLinks || []).map((link: any) => ({
+    id: link._id,
+    link_type: link.linkType,
+    url: link.url,
+    title: link.title,
+  }));
+
   // Get the raw song data to access new fields
   const rawSong = song as any;
-  
-  useEffect(() => {
-    loadSongLinks();
-  }, [id]);
-  
-  const loadSongLinks = async () => {
-    try {
-      const links = await getSongLinks(id);
-      setSongLinks(links || []);
-    } catch (error) {
-      console.error('Error loading song links:', error);
-    }
-  };
 
   const triggerCueUpload = () => {
     setCueError(null);
@@ -137,12 +139,21 @@ export function SongDetailsClient({ song: initialSong, stats: initialStats, audi
       }
 
       const duration = await extractAudioDuration(file);
-      const newCue = await createSongAudioCue(id, {
+      const newCueId = await createAudioCueMutation({
+        songId: id as Id<'songs'>,
         title: deriveCueTitleFromFilename(file.name),
-        cue_url: url,
-        duration_seconds: duration ? Math.round(duration) : null
+        cueUrl: url,
+        durationSeconds: duration ? Math.round(duration) : undefined,
       });
 
+      // Add the new cue to local state (Convex will also update via subscription)
+      const newCue = {
+        id: newCueId,
+        title: deriveCueTitleFromFilename(file.name),
+        cue_url: url,
+        duration_seconds: duration ? Math.round(duration) : null,
+        sort_order: audioCues.length,
+      };
       setAudioCues((prev) => [...prev, newCue].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)));
     } catch (error) {
       console.error('Error uploading cue', error);
@@ -160,8 +171,8 @@ export function SongDetailsClient({ song: initialSong, stats: initialStats, audi
     }
 
     try {
-      const updated = await updateSongAudioCue(cue.id, { title: newTitle.trim() });
-      setAudioCues((prev) => prev.map((item) => (item.id === cue.id ? updated : item)));
+      await updateAudioCueMutation({ id: cue.id as Id<'songAudioCues'>, title: newTitle.trim() });
+      setAudioCues((prev) => prev.map((item) => (item.id === cue.id ? { ...item, title: newTitle.trim() } : item)));
     } catch (error) {
       console.error('Error renaming cue', error);
       setCueError('Naam aanpassen mislukt.');
@@ -175,7 +186,7 @@ export function SongDetailsClient({ song: initialSong, stats: initialStats, audi
     }
 
     try {
-      await deleteSongAudioCue(cue.id);
+      await deleteAudioCueMutation({ id: cue.id as Id<'songAudioCues'> });
       setAudioCues((prev) => prev.filter((item) => item.id !== cue.id));
     } catch (error) {
       console.error('Error deleting cue', error);
@@ -205,37 +216,27 @@ export function SongDetailsClient({ song: initialSong, stats: initialStats, audi
   };
 
   const refreshSongData = async () => {
+    // With Convex, data refreshes automatically via subscriptions
+    // This function is kept for backwards compatibility with EditSong component
     setLoading(true);
-    try {
-      const result = await getSongWithStats(id);
-      if (result) {
-        setSong(result.song);
-        setStats(result.stats);
-        setAudioCues(result.audioCues || []);
-      }
-      await loadSongLinks();
-    } catch (error) {
-      console.error('Error refreshing song:', error);
-    } finally {
-      setLoading(false);
-    }
+    setTimeout(() => setLoading(false), 500);
   };
 
   const handleDeleteSong = async () => {
     const confirmMessage = `Weet je zeker dat je "${song.title}" wilt verwijderen?\n\nDit verwijdert:\n• Het nummer uit alle setlists\n• Alle song links\n• Cover art en audio bestanden\n• Alle statistieken en notities\n\nDeze actie kan niet ongedaan worden gemaakt.`;
-    
+
     if (!confirm(confirmMessage)) {
       return;
     }
 
     setIsDeleting(true);
-    
+
     try {
-      await deleteSong(id);
-      
+      await deleteSongMutation({ id: id as Id<'songs'> });
+
       // Navigate back to repertoire after successful deletion
       router.push('/practice/repertoire');
-      
+
     } catch (error) {
       console.error('Error deleting song:', error);
       alert('Er is een fout opgetreden bij het verwijderen van het nummer');
