@@ -182,7 +182,10 @@ export function StemUploader({ songId, songSlug, onUploadComplete }: StemUploade
           body: stemFile.file,
         });
 
-        if (!response.ok) {
+        const uploadError = !response.ok;
+
+        if (uploadError) {
+          console.error('Upload error:', uploadError);
           throw new Error('Upload failed');
         }
 
