@@ -21,7 +21,7 @@ import {
   Upload
 } from 'lucide-react';
 import { TbListDetails } from 'react-icons/tb';
-import { Drawer, DrawerContent, DrawerTrigger } from './ui/drawer';
+import { Drawer, DrawerContent, DrawerTitle, DrawerTrigger } from './ui/drawer';
 import { NavigationButton } from './NavigationButton';
 import { usePlayerStore } from '@/store/store';
 
@@ -119,11 +119,11 @@ export const SongMenu = ({ song, removeFromSetlistFn, addToSetlistFn, onShowNote
       >
         <div className="flex flex-col max-h-[85vh] overflow-y-auto p-4 pb-8">
           {/* Song Info Section */}
-          <div className={`px-2 py-1.5 text-xs ${THEME.textSecondary}`}>
+          <DrawerTitle className={`px-2 py-1.5 text-base leading-tight ${THEME.text}`}>
             <div className="font-semibold">{song.title}</div>
-            <div>{song.artist}</div>
-          </div>
-          
+            <div className={`text-sm font-normal ${THEME.textSecondary}`}>{song.artist}</div>
+          </DrawerTitle>
+
           <MenuDivider />
 
           {/* Navigation Actions */}
