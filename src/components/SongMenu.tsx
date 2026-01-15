@@ -21,7 +21,7 @@ import {
   Upload
 } from 'lucide-react';
 import { TbListDetails } from 'react-icons/tb';
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { Drawer, DrawerContent, DrawerTitle, DrawerTrigger } from './ui/drawer';
 import { NavigationButton } from './NavigationButton';
 import { usePlayerStore } from '@/store/store';
 
@@ -105,27 +105,25 @@ export const SongMenu = ({ song, removeFromSetlistFn, addToSetlistFn, onShowNote
   );
 
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger asChild>
-        <button 
+    <Drawer open={isOpen} onOpenChange={setIsOpen}>
+      <DrawerTrigger asChild>
+        <button
           className={`p-1.5 rounded-full transition-colors hover:${THEME.highlight} ${THEME.textSecondary}`}
           onClick={(e) => e.stopPropagation()}
         >
           <MoreVertical className="h-4 w-4" />
         </button>
-      </PopoverTrigger>
-      <PopoverContent 
-        className={`w-56 p-1 ${THEME.bg} ${THEME.border} border rounded-md shadow-lg`}
-        align="end"
-        sideOffset={5}
+      </DrawerTrigger>
+      <DrawerContent
+        className={`${THEME.bg} ${THEME.border} border-t`}
       >
-        <div className="flex flex-col">
+        <div className="flex flex-col max-h-[85vh] overflow-y-auto p-4 pb-8">
           {/* Song Info Section */}
-          <div className={`px-2 py-1.5 text-xs ${THEME.textSecondary}`}>
+          <DrawerTitle className={`px-2 py-1.5 text-base leading-tight ${THEME.text}`}>
             <div className="font-semibold">{song.title}</div>
-            <div>{song.artist}</div>
-          </div>
-          
+            <div className={`text-sm font-normal ${THEME.textSecondary}`}>{song.artist}</div>
+          </DrawerTitle>
+
           <MenuDivider />
 
           {/* Navigation Actions */}
@@ -242,7 +240,7 @@ export const SongMenu = ({ song, removeFromSetlistFn, addToSetlistFn, onShowNote
             />
           )}
         </div>
-      </PopoverContent>
-    </Popover>
+      </DrawerContent>
+    </Drawer>
   );
 };
