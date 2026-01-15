@@ -25,11 +25,17 @@ type SetlistProps = {
 export const Setlist = ({ setlist, removeSong, updateSongsInSetlist, onAddSong }: SetlistProps) => {
   const sensors = useSensors(useSensor(PointerSensor, {}), useSensor(TouchSensor, {}));
   const updateSetlistItemsMutation = useUpdateSetlistItems();
+  const removeSetlistItemMutation = useRemoveSetlistItem();
 
   const removeFromSetlistFn = async (song: SongType) => {
+    // Optimistically update local state for immediate UI feedback
     removeSong(song);
-    // Note: The setlist items are managed via Convex - the local state update handles UI
-    // The actual removal happens when updateSetlistItems is called on drag end
+
+    // Find the setlist item to remove from the database
+    const itemToRemove = setlist.items?.find((item) => item.songId === song._id);
+    if (itemToRemove?._id) {
+      await removeSetlistItemMutation({ id: itemToRemove._id as Id<'setlistItems'> });
+    }
   };
 
   const getSongIndex = (id: UniqueIdentifier) => {
