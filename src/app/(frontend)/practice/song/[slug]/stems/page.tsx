@@ -1,12 +1,11 @@
-import { getSongWithStatsBySlug } from '@/actions/supabase';
+'use client';
+
+import { useSongWithDetails } from '@/hooks/convex';
 import { notFound } from 'next/navigation';
-import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StemPlayerControls } from '@/components/StemPlayerControls';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
 import type { Stem } from '@/types/stems';
+import { use } from 'react';
 
 function StemPlayerSkeleton() {
   return (
@@ -23,23 +22,30 @@ function StemPlayerSkeleton() {
   );
 }
 
-async function StemPlayer({ slug }: { slug: string }) {
-  const result = await getSongWithStatsBySlug(slug);
+function StemPlayer({ slug }: { slug: string }) {
+  const result = useSongWithDetails(slug);
 
-  if (!result) {
+  // Loading state
+  if (result === undefined) {
+    return <StemPlayerSkeleton />;
+  }
+
+  // Not found
+  if (result === null) {
     notFound();
   }
 
-  const { song, audioCues } = result;
+  const song = result;
+  const audioCues = result.audioCues;
 
   // Convert audio cues to stems
-  const stems: Stem[] = audioCues.map((cue) => ({
-    id: cue.id,
+  const stems: Stem[] = (audioCues || []).map((cue) => ({
+    id: cue._id,
     title: cue.title,
-    url: cue.cue_url,
-    duration: cue.duration_seconds,
-    description: cue.description,
-    sortOrder: cue.sort_order ?? 0,
+    url: cue.cueUrl || '',
+    duration: cue.durationSeconds ?? null,
+    description: cue.description ?? null,
+    sortOrder: cue.sortOrder ?? 0,
   }));
 
   return (
@@ -48,21 +54,15 @@ async function StemPlayer({ slug }: { slug: string }) {
       <StemPlayerControls
         stems={stems}
         songTitle={song.title}
-        artworkUrl={song.artwork}
+        artworkUrl={song.artworkUrl ?? undefined}
         slug={slug}
       />
     </div>
   );
 }
 
-async function StemPlayerPageWrapper({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
+export default function StemPlayerPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = use(params);
 
-  return (
-    <Suspense fallback={<StemPlayerSkeleton />}>
-      <StemPlayer slug={slug} />
-    </Suspense>
-  );
+  return <StemPlayer slug={slug} />;
 }
-
-export default StemPlayerPageWrapper;

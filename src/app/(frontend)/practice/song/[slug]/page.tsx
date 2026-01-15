@@ -1,48 +1,70 @@
-import { getSongWithStatsBySlug } from '@/actions/supabase';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { THEME } from '@/themes';
-import { Calendar, Clock, Guitar, Hash, Mic, Music, Star, Tag, Users } from 'lucide-react';
-import Link from 'next/link';
+'use client';
+
+import { useSongWithDetails } from '@/hooks/convex';
+import { useParams } from 'next/navigation';
 import { notFound } from 'next/navigation';
-import { Suspense } from 'react';
+import { Loader2 } from 'lucide-react';
 import { SongDetailsClient } from '@/components/SongDetailsClient';
 
-function SongSkeleton() {
-  return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <Skeleton className="h-12 w-3/4 mb-2" />
-      <Skeleton className="h-6 w-1/2 mb-8" />
-      <div className="grid gap-6">
-        <Skeleton className="h-48 w-full" />
-        <Skeleton className="h-48 w-full" />
-        <Skeleton className="h-48 w-full" />
+export default function SongPage() {
+  const params = useParams();
+  const slug = params.slug as string;
+
+  const songData = useSongWithDetails(slug);
+
+  // Loading state
+  if (songData === undefined) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="flex flex-col items-center justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-zinc-400" />
+          <p className="mt-4 text-zinc-400">Nummer laden...</p>
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
-
-async function SongDetails({ slug }: { slug: string }) {
-  const result = await getSongWithStatsBySlug(slug);
-  
-  if (!result) {
+  // Not found
+  if (songData === null) {
     notFound();
   }
 
-  return <SongDetailsClient song={result.song} stats={result.stats} audioCues={result.audioCues || []} id={result.song._id} />;
-}
+  // Transform data for SongDetailsClient
+  const song = {
+    _id: songData._id,
+    title: songData.title,
+    artist: songData.artist,
+    slug: songData.slug,
+    artwork: songData.artworkUrl || '',
+    audio: songData.audioUrl,
+    dualGuitar: songData.dualGuitar,
+    dualVocal: songData.dualVocal,
+    canPlayWithoutSinger: songData.canPlayWithoutSinger,
+    duration: songData.durationSeconds || 0,
+    notes: songData.notes,
+    key_signature: songData.keySignature,
+    tempo_bpm: songData.tempoBpm,
+    difficulty_level: songData.difficultyLevel,
+    tabs_chords: songData.tabsChords,
+    tags: songData.tags,
+    last_played_at: songData.lastPlayedAt,
+  };
 
-async function SongPageWrapper({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  
-  return (
-    <Suspense fallback={<SongSkeleton />}>
-      <SongDetails slug={slug} />
-    </Suspense>
-  );
-}
+  const stats = {
+    times_played: songData.timesPlayed || 0,
+    times_practiced: songData.timesPracticed || 0,
+    mastery_level: songData.masteryLevel || 1,
+    last_practiced_at: songData.lastPracticedAt,
+  };
 
-export default SongPageWrapper;
+  // Transform audio cues - map Convex format to expected format
+  const audioCues = (songData.audioCues || []).map((cue: any) => ({
+    id: cue._id,
+    title: cue.title,
+    cue_url: cue.cueUrl,
+    duration_seconds: cue.durationSeconds,
+    sort_order: cue.sortOrder,
+  }));
+
+  return <SongDetailsClient song={song} stats={stats} audioCues={audioCues} id={songData._id} />;
+}

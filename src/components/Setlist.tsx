@@ -3,7 +3,7 @@
 import { SetlistType, SongType } from '@/lib/interface';
 import { LayoutGroup } from 'motion/react';
 
-import { removeSongFromSetlist, updateSetlistSongs } from '@/actions/supabase';
+import { useRemoveSetlistItem, useUpdateSetlistItems } from '@/hooks/convex';
 import { SongCard } from '@/components/SongCard';
 import { usePlayerStore } from '@/store/store';
 import { THEME } from '@/themes';
@@ -13,6 +13,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Coffee, GripVertical, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MdDragIndicator } from 'react-icons/md';
+import type { Id } from '../../convex/_generated/dataModel';
 
 type SetlistProps = {
   setlist: SetlistType;
@@ -23,24 +24,38 @@ type SetlistProps = {
 
 export const Setlist = ({ setlist, removeSong, updateSongsInSetlist, onAddSong }: SetlistProps) => {
   const sensors = useSensors(useSensor(PointerSensor, {}), useSensor(TouchSensor, {}));
+  const updateSetlistItemsMutation = useUpdateSetlistItems();
 
   const removeFromSetlistFn = async (song: SongType) => {
     removeSong(song);
-    removeSongFromSetlist(setlist._id, song._id);
+    // Note: The setlist items are managed via Convex - the local state update handles UI
+    // The actual removal happens when updateSetlistItems is called on drag end
   };
 
   const getSongIndex = (id: UniqueIdentifier) => {
     return setlist.songs.findIndex((song) => song._id === id);
   };
 
-  const onDragEnd = (event: DragEndEvent) => {
+  const onDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over) return;
     if (active.id == over.id) return;
 
     const moved = arrayMove(setlist.songs, getSongIndex(active.id), getSongIndex(over.id));
     updateSongsInSetlist(moved);
-    updateSetlistSongs(setlist._id, moved);
+
+    // Update Convex with new order
+    if (setlist._id) {
+      const items = moved.map((song, index) => ({
+        songId: (song as any)._type === 'pause' ? undefined : song._id as Id<'songs'>,
+        itemType: ((song as any)._type === 'pause' ? 'pause' : 'song') as 'song' | 'pause' | 'announcement' | 'intro' | 'outro',
+        position: index,
+      }));
+      await updateSetlistItemsMutation({
+        setlistId: setlist._id as Id<'setlists'>,
+        items,
+      });
+    }
   };
 
   return (

@@ -3,18 +3,28 @@
 import { Setlist } from '@/components/Setlist';
 import { AddSongModal } from '@/components/AddSongModal';
 import { usePracticeStore } from '@/context/PracticeProvider';
-import { updateSetlistSongs } from '@/actions/supabase';
+import { useAddSetlistItem } from '@/hooks/convex';
 import { SongType } from '@/lib/interface';
 import { THEME } from '@/themes';
+import type { Id } from '../../../../convex/_generated/dataModel';
 
 export default function Home() {
   const store = usePracticeStore((state) => state);
+  const addSetlistItem = useAddSetlistItem();
   const totalDuration = store.setlist.songs.reduce((acc, song) => acc + (song.duration || 0), 0);
   const roundedDuration = Math.round(totalDuration / 60);
 
   const handleAddSongToSetlist = async (song: SongType) => {
     store.addSong(song);
-    await updateSetlistSongs(store.setlist._id, [...store.setlist.songs, song]);
+    // Add item to Convex setlist
+    if (store.setlist._id) {
+      await addSetlistItem({
+        setlistId: store.setlist._id as Id<'setlists'>,
+        songId: song._id as Id<'songs'>,
+        itemType: 'song',
+        position: store.setlist.songs.length,
+      });
+    }
     // Don't close modal - let user continue adding songs
   };
 

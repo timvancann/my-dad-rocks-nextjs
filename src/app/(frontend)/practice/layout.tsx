@@ -1,8 +1,7 @@
 import { Footer } from '@/components/Footer';
 import PracticeProvider from '@/context/PracticeProvider';
-import { getAllSongs, getSetlist } from '@/actions/supabase';
 import { AuthProvider } from '@/providers/auth-provider';
-import { TanstackProvider } from '@/providers/tanstack-provider';
+import ConvexClientProvider from '@/components/ConvexClientProvider';
 import { THEME } from '@/themes';
 import type { Metadata } from 'next';
 import { Noto_Sans } from 'next/font/google';
@@ -11,7 +10,6 @@ import '../../globals.css';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Header } from '@/components/Header';
 import { NetworkStatus } from '@/components/NetworkStatus';
-import { OfflineDataInitializer } from '@/components/OfflineDataInitializer';
 import { ServiceWorkerCleanup } from '@/components/ServiceWorkerCleanup';
 import PerformanceView from '@/components/PerformanceView';
 
@@ -22,14 +20,11 @@ export const metadata: Metadata = {
   description: 'The most awesome dad rock in the world!'
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const setlist = await getSetlist('Practice');
-  const allSongs = await getAllSongs();
-
   return (
     <html lang="en">
       <head>
@@ -43,22 +38,20 @@ export default async function RootLayout({
       </head>
       <body suppressHydrationWarning={true} className={`${inter.className} h-screen ${THEME.bg} ${THEME.text}`}>
         <AuthProvider>
-          <TanstackProvider>
+          <ConvexClientProvider>
             <ProtectedRoute>
               <NetworkStatus />
               <ServiceWorkerCleanup />
-              {/*<OfflineDataInitializer>*/}
-                <div className={'flex flex-col'}>
-                  <PracticeProvider setlist={setlist} allSongs={allSongs}>
-                    <Header />
-                    <main className="mb-40 px-3 pt-4">{children}</main>
-                    <Footer />
-                    <PerformanceView />
-                  </PracticeProvider>
-                </div>
-              {/*</OfflineDataInitializer>*/}
+              <div className={'flex flex-col'}>
+                <PracticeProvider>
+                  <Header />
+                  <main className="mb-40 px-3 pt-4">{children}</main>
+                  <Footer />
+                  <PerformanceView />
+                </PracticeProvider>
+              </div>
             </ProtectedRoute>
-          </TanstackProvider>
+          </ConvexClientProvider>
         </AuthProvider>
       </body>
     </html>

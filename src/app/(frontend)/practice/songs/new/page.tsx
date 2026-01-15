@@ -8,8 +8,8 @@ import { Label } from '@/components/ui/label';
 import { THEME } from '@/themes';
 import { ArrowLeft, Upload, Music, Image as ImageIcon, Save } from 'lucide-react';
 import { NavigationLink } from '@/components/NavigationButton';
-import { supabase } from '@/lib/supabase';
-import { useQueryClient } from '@tanstack/react-query';
+import { useFileUpload, useCreateSong } from '@/hooks/convex';
+import type { Id } from '../../../../../../convex/_generated/dataModel';
 
 interface NewSongFormData {
   title: string;
@@ -29,33 +29,18 @@ interface SpotifyArtworkOption {
   externalUrl: string | null;
 }
 
-type SongUploadKind = 'coverArt' | 'audio';
-
-interface UploadAssetDescriptor {
-  kind: SongUploadKind;
-  bucket: 'artwork' | 'songs';
-  file: File;
-}
-
-interface SignedUploadTarget {
-  kind: SongUploadKind;
-  bucket: 'artwork' | 'songs';
-  path: string;
-  token: string;
-  publicUrl: string;
-}
-
-interface UploadedAssetPayload {
-  kind: SongUploadKind;
-  bucket: 'artwork' | 'songs';
-  path: string;
-  publicUrl: string;
+function generateSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim();
 }
 
 export default function NewSongPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<NewSongFormData>({
     title: '',
@@ -77,6 +62,10 @@ export default function NewSongPage() {
   const [spotifySearched, setSpotifySearched] = useState(false);
   const [selectedSpotifyArtwork, setSelectedSpotifyArtwork] = useState<SpotifyArtworkOption | null>(null);
   const [prefillApplied, setPrefillApplied] = useState(false);
+
+  // Convex hooks
+  const { uploadFile } = useFileUpload();
+  const createSong = useCreateSong();
 
   useEffect(() => {
     if (prefillApplied) {
@@ -323,128 +312,66 @@ export default function NewSongPage() {
     return new Promise((resolve, reject) => {
       const audio = new Audio();
       const objectUrl = URL.createObjectURL(file);
-      
+
       audio.addEventListener('loadedmetadata', () => {
         URL.revokeObjectURL(objectUrl);
         resolve(Math.round(audio.duration));
       });
-      
+
       audio.addEventListener('error', () => {
         URL.revokeObjectURL(objectUrl);
         reject(new Error('Failed to load audio file'));
       });
-      
+
       audio.src = objectUrl;
     });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.title || !formData.artist) {
       alert('Titel en artiest zijn verplicht');
       return;
     }
 
     setIsSubmitting(true);
-    
+
     try {
       let duration = 0;
       if (formData.audioFile) {
         duration = await calculateAudioDuration(formData.audioFile);
       }
 
-      const filesToUpload: UploadAssetDescriptor[] = [];
-      if (formData.coverArt) {
-        filesToUpload.push({ kind: 'coverArt', bucket: 'artwork', file: formData.coverArt });
-      }
+      // Upload files to Convex storage
+      let audioStorageId: Id<"_storage"> | undefined;
+      let artworkStorageId: Id<"_storage"> | undefined;
+
       if (formData.audioFile) {
-        filesToUpload.push({ kind: 'audio', bucket: 'songs', file: formData.audioFile });
+        audioStorageId = await uploadFile(formData.audioFile);
       }
 
-      const uploadedAssets: UploadedAssetPayload[] = [];
-
-      if (filesToUpload.length) {
-        const uploadResponse = await fetch('/api/practice/songs/create/upload-urls', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            title: formData.title,
-            assets: filesToUpload.map(asset => ({
-              kind: asset.kind,
-              bucket: asset.bucket,
-              fileName: asset.file.name,
-              contentType: asset.file.type
-            }))
-          })
-        });
-
-        const uploadInfo = await uploadResponse.json();
-
-        if (!uploadResponse.ok) {
-          throw new Error(uploadInfo.error || 'Kon upload niet voorbereiden');
-        }
-
-        const fileLookup: Record<SongUploadKind, File | undefined> = {
-          coverArt: undefined,
-          audio: undefined
-        };
-
-        filesToUpload.forEach(asset => {
-          fileLookup[asset.kind] = asset.file;
-        });
-
-        const uploadTargets: SignedUploadTarget[] = Array.isArray(uploadInfo.uploads) ? uploadInfo.uploads : [];
-
-        for (const target of uploadTargets) {
-          const file = fileLookup[target.kind];
-          if (!file) {
-            continue;
-          }
-
-          const { error } = await supabase.storage
-            .from(target.bucket)
-            .uploadToSignedUrl(target.path, target.token, file, {
-              contentType: file.type || 'application/octet-stream',
-              upsert: false
-            });
-
-          if (error) {
-            throw new Error(error.message || 'Upload naar opslag mislukt');
-          }
-
-          uploadedAssets.push({
-            kind: target.kind,
-            bucket: target.bucket,
-            path: target.path,
-            publicUrl: target.publicUrl
-          });
-        }
+      if (formData.coverArt) {
+        artworkStorageId = await uploadFile(formData.coverArt);
       }
 
-      const response = await fetch('/api/practice/songs/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: formData.title,
-          artist: formData.artist,
-          duration_seconds: duration || undefined,
-          spotifyImageUrl: selectedSpotifyArtwork?.imageUrl,
-          uploadedAssets
-        })
+      // Generate slug
+      const slug = generateSlug(formData.title);
+
+      // Create song in Convex
+      await createSong({
+        title: formData.title,
+        artist: formData.artist,
+        slug,
+        audioStorageId,
+        artworkStorageId,
+        artworkUrl: selectedSpotifyArtwork?.imageUrl,
+        durationSeconds: duration || undefined,
       });
 
-      const result = await response.json();
+      // Navigate to the new song
+      router.push(`/practice/song/${slug}`);
 
-      if (!response.ok) {
-        throw new Error(result.error || 'Upload mislukt');
-      }
-
-      // Invalidate the songs query to refresh the list
-      await queryClient.invalidateQueries({ queryKey: ['songs'] });
-
-      router.push(`/practice/song/${result.song.slug}`);
-      
     } catch (error) {
       console.error('Error creating song:', error);
       alert('Er is een fout opgetreden bij het aanmaken van het nummer');
@@ -461,7 +388,7 @@ export default function NewSongPage() {
           <h1 className="text-4xl font-bold mb-2">Nieuw Nummer</h1>
           <p className="text-gray-400">Voeg een nieuw nummer toe aan het repertoire</p>
         </div>
-        <NavigationLink 
+        <NavigationLink
           href="/practice/repertoire"
           className={`px-4 py-2 ${THEME.highlight} hover:bg-zinc-700 ${THEME.text} rounded-md font-medium transition-colors border ${THEME.border}`}
           icon={<ArrowLeft className="h-4 w-4" />}

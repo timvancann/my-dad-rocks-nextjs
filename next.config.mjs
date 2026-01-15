@@ -12,11 +12,11 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'owjfnhmdikxkltvrizzj.supabase.co',
+        hostname: 'i.scdn.co',
       },
       {
         protocol: 'https',
-        hostname: 'i.scdn.co',
+        hostname: '*.convex.cloud',
       },
     ],
   },

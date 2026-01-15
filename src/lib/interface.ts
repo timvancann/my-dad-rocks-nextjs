@@ -5,19 +5,42 @@ export interface SongType {
   artist?: string;
   slug?: string;
   artwork: string;
+  artworkUrl?: string | null;
   audio?: string;
+  audioUrl?: string | null;
   dualGuitar: boolean;
   dualVocal: boolean;
   canPlayWithoutSinger: boolean;
   duration: number;
+  durationSeconds?: number;
   notes?: string;
   version?: number;
+  // Stats fields (from Convex)
+  timesPlayed?: number;
+  timesPracticed?: number;
+  masteryLevel?: number;
+  lastPracticedAt?: number;
+  lastPlayedAt?: number;
+  firstLearnedAt?: number;
+}
+
+export interface SetlistItemType {
+  _id: string;
+  setlistId: string;
+  songId?: string;
+  song?: SongType | null;
+  itemType: 'song' | 'pause' | 'announcement' | 'intro' | 'outro';
+  customTitle?: string;
+  customDurationMinutes?: number;
+  notes?: string;
+  position: number;
 }
 
 export interface SetlistType {
   _id: string;
   title: string;
   songs: SongType[];
+  items?: SetlistItemType[];
 }
 
 export interface GigType {

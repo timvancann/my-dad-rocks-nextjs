@@ -1,5 +1,4 @@
 'use client';
-import { updateGig } from '@/actions/supabase';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import { format } from 'date-fns';
@@ -12,6 +11,8 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { THEME } from '@/themes';
 import { GigType } from '@/lib/interface';
+import { useUpdateGig } from '@/hooks/convex';
+import type { Id } from '../../convex/_generated/dataModel';
 
 interface EditGigProps {
   gig: GigType;
@@ -30,20 +31,23 @@ export const EditGig = ({ gig, onClose }: EditGigProps) => {
     notes: (gig as any).notes || ''
   });
 
+  const updateGig = useUpdateGig();
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     try {
-      await updateGig(gig._id, {
+      await updateGig({
+        id: gig._id as Id<"gigs">,
         title: formData.title,
-        venue: formData.venue,
-        address: formData.address,
+        venueName: formData.venue || undefined,
+        venueAddress: formData.address || undefined,
         date: format(date, 'yyyy-MM-dd'),
-        time: formData.time,
-        notes: formData.notes
+        startTime: formData.time || undefined,
+        notes: formData.notes || undefined
       });
-      
+
       router.refresh();
       onClose();
     } catch (error) {

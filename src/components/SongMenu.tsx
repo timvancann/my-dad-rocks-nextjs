@@ -1,8 +1,8 @@
 'use client';
 
 import { SongType } from '@/lib/interface';
-import { markSongPracticed } from '@/actions/supabase';
-import { useQueryClient } from '@tanstack/react-query';
+import { useMarkPracticed } from '@/hooks/convex';
+import type { Id } from '../../convex/_generated/dataModel';
 import { useState } from 'react';
 import { THEME } from '@/themes';
 import {
@@ -33,21 +33,20 @@ interface SongMenuProps {
 }
 
 export const SongMenu = ({ song, removeFromSetlistFn, addToSetlistFn, onShowNotes }: SongMenuProps) => {
-  const queryClient = useQueryClient();
+  const markPracticed = useMarkPracticed();
   const [isPracticeMarking, setIsPracticeMarking] = useState(false);
   const [showPracticeSuccess, setShowPracticeSuccess] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  
+
   const { setPerformancePlaylist, setCurrentPerformanceIndex, setIsPerformanceMode } = usePlayerStore();
 
   const handleMarkPracticed = async () => {
     setIsPracticeMarking(true);
     try {
-      await markSongPracticed(song._id);
+      await markPracticed({ id: song._id as Id<"songs"> });
       setShowPracticeSuccess(true);
-      queryClient.invalidateQueries({ queryKey: ['songStats', song._id] });
-      queryClient.invalidateQueries({ queryKey: ['songs'] });
-      
+      // Convex queries update automatically - no need to invalidate
+
       setTimeout(() => {
         setShowPracticeSuccess(false);
         setIsOpen(false);

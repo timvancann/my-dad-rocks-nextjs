@@ -2,69 +2,75 @@
 
 import { useEffect, useState } from 'react';
 import { usePlayerStore } from '@/store/store';
-import { SongSection, CreateSongSectionData, UpdateSongSectionData } from '@/types/song-section';
-import { getSongSections, createSongSection, updateSongSection, deleteSongSection } from '@/actions/song-sections';
+import { SongSection } from '@/types/song-section';
+import { useSongSections as useConvexSongSections, useCreateSongSection, useUpdateSongSection, useDeleteSongSection } from '@/hooks/convex';
+import type { Id } from '../../convex/_generated/dataModel';
 
 export function useSongSections() {
   const { currentSong, songSections, setSongSections } = usePlayerStore();
-  const [loading, setLoading] = useState(false);
   const [editingMarkerId, setEditingMarkerId] = useState<string | null>(null);
 
-  const loadSections = async (songId: string) => {
-    setLoading(true);
-    try {
-      const sections = await getSongSections(songId);
-      // Sort sections by start_time
-      const sortedSections = sections.sort((a, b) => a.start_time - b.start_time);
-      setSongSections(sortedSections);
-    } catch (error) {
-      console.error('Failed to load song sections:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Convex hooks
+  const convexSections = useConvexSongSections(currentSong?._id as Id<"songs"> | undefined);
+  const createSectionMutation = useCreateSongSection();
+  const updateSectionMutation = useUpdateSongSection();
+  const deleteSectionMutation = useDeleteSongSection();
 
+  const loading = convexSections === undefined && !!currentSong?._id;
+
+  // Sync Convex data to store when it changes
   useEffect(() => {
-    if (currentSong?._id) {
-      loadSections(currentSong._id);
-    } else {
+    if (convexSections) {
+      // Transform Convex sections to match the expected format
+      const transformedSections: SongSection[] = convexSections.map(section => ({
+        id: section._id,
+        song_id: section.songId,
+        name: section.name,
+        start_time: section.startTime,
+        end_time: null,
+        color: section.color ?? '#6366f1',
+        position: section.position ?? 0,
+        created_at: section._creationTime?.toString() ?? new Date().toISOString(),
+        updated_at: section._creationTime?.toString() ?? new Date().toISOString(),
+      }));
+      // Sort sections by start_time
+      const sortedSections = transformedSections.sort((a, b) => a.start_time - b.start_time);
+      setSongSections(sortedSections);
+    } else if (!currentSong?._id) {
       setSongSections([]);
     }
-  }, [currentSong?._id, setSongSections]);
+  }, [convexSections, currentSong?._id, setSongSections]);
 
   const addSection = async (name: string, startTime: number, color?: string) => {
     if (!currentSong?._id) return;
 
     try {
-      const newSection = await createSongSection({
-        song_id: currentSong._id,
+      const newSectionId = await createSectionMutation({
+        songId: currentSong._id as Id<"songs">,
         name,
-        start_time: startTime,
-        color
+        startTime,
+        color,
       });
-      
-      // Add new section and sort by start_time
-      const updatedSections = [...songSections, newSection].sort((a, b) => a.start_time - b.start_time);
-      setSongSections(updatedSections);
-      return newSection;
+
+      // Convex will automatically update the query, triggering the useEffect above
+      return { id: newSectionId, name };
     } catch (error) {
       console.error('Failed to create song section:', error);
       throw error;
     }
   };
 
-  const updateSection = async (id: string, updates: UpdateSongSectionData) => {
+  const updateSection = async (id: string, updates: { name?: string; start_time?: number; color?: string }) => {
     try {
-      const updatedSection = await updateSongSection(id, updates);
-      
-      // Update section and sort by start_time
-      const updatedSections = songSections.map(section => 
-        section.id === id ? updatedSection : section
-      ).sort((a, b) => a.start_time - b.start_time);
-      
-      setSongSections(updatedSections);
-      
-      return updatedSection;
+      await updateSectionMutation({
+        id: id as Id<"songSections">,
+        name: updates.name,
+        startTime: updates.start_time,
+        color: updates.color,
+      });
+
+      // Convex will automatically update the query
+      return { id };
     } catch (error) {
       console.error('Failed to update song section:', error);
       throw error;
@@ -73,8 +79,8 @@ export function useSongSections() {
 
   const removeSection = async (id: string) => {
     try {
-      await deleteSongSection(id);
-      setSongSections(songSections.filter(section => section.id !== id));
+      await deleteSectionMutation({ id: id as Id<"songSections"> });
+      // Convex will automatically update the query
     } catch (error) {
       console.error('Failed to delete song section:', error);
       throw error;
@@ -84,6 +90,11 @@ export function useSongSections() {
   const jumpToSection = (section: SongSection): void => {
     const event = new CustomEvent('seekTo', { detail: section.start_time });
     window.dispatchEvent(event);
+  };
+
+  // For compatibility with existing code that may call loadSections
+  const loadSections = async (_songId: string) => {
+    // No-op - Convex handles this reactively
   };
 
   return {

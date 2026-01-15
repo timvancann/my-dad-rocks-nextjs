@@ -1,9 +1,9 @@
 'use client';
 
 import { SetlistType, SongType } from '@/lib/interface';
-import { createContext, PropsWithChildren, useContext, useState, useEffect } from 'react';
+import { createContext, PropsWithChildren, useContext, useState, useEffect, useMemo } from 'react';
 import { createStore, StoreApi, useStore } from 'zustand';
-import { useSongs } from '@/hooks/useSongs';
+import { useSongs, useSetlistByTitle } from '@/hooks/convex';
 
 export type SetlistStore = {
   setlist: SetlistType;
@@ -18,18 +18,68 @@ export type SetlistStore = {
 
 const PracticeContext = createContext<StoreApi<SetlistStore> | undefined>(undefined);
 
-type PracticeProviderProps = PropsWithChildren & {
-  setlist: SetlistType;
-  allSongs: SongType[];
-};
+// Transform Convex song to SongType
+function transformSong(song: any): SongType {
+  return {
+    _id: song._id,
+    title: song.title,
+    artist: song.artist,
+    slug: song.slug,
+    artwork: song.artworkUrl || '',
+    artworkUrl: song.artworkUrl,
+    audio: song.audioUrl,
+    audioUrl: song.audioUrl,
+    dualGuitar: song.dualGuitar ?? false,
+    dualVocal: song.dualVocal ?? false,
+    canPlayWithoutSinger: song.canPlayWithoutSinger ?? false,
+    duration: song.durationSeconds ?? 0,
+    durationSeconds: song.durationSeconds,
+    notes: song.notes,
+    timesPlayed: song.timesPlayed,
+    timesPracticed: song.timesPracticed,
+    masteryLevel: song.masteryLevel,
+    lastPracticedAt: song.lastPracticedAt,
+    lastPlayedAt: song.lastPlayedAt,
+    firstLearnedAt: song.firstLearnedAt,
+  };
+}
 
-export default function PracticeProvider({ children, setlist: setlist, allSongs: initialSongs }: PracticeProviderProps) {
-  const { data: allSongs } = useSongs(initialSongs);
+// Transform Convex setlist to SetlistType
+function transformSetlist(setlist: any): SetlistType {
+  if (!setlist) {
+    return { _id: '', title: 'Practice', songs: [] };
+  }
+
+  const songs = (setlist.items || [])
+    .filter((item: any) => item.song && item.itemType === 'song')
+    .map((item: any) => transformSong(item.song));
+
+  return {
+    _id: setlist._id,
+    title: setlist.title,
+    songs,
+    items: setlist.items,
+  };
+}
+
+export default function PracticeProvider({ children }: PropsWithChildren) {
+  const convexSongs = useSongs();
+  const convexSetlist = useSetlistByTitle('Practice');
+
+  // Transform Convex data to expected types
+  const allSongs = useMemo(() => {
+    if (!convexSongs) return [];
+    return convexSongs.map(transformSong);
+  }, [convexSongs]);
+
+  const setlist = useMemo(() => {
+    return transformSetlist(convexSetlist);
+  }, [convexSetlist]);
 
   const [store] = useState(() =>
     createStore<SetlistStore>((set) => ({
-      setlist: setlist,
-      allSongs: initialSongs,
+      setlist: { _id: '', title: 'Practice', songs: [] },
+      allSongs: [],
       addSong: (song: SongType) => set((state) => ({ ...state, setlist: { ...state.setlist, songs: [...state.setlist.songs, song] } })),
       removeSong: (song: SongType) => set((state) => ({ ...state, setlist: { ...state.setlist, songs: state.setlist.songs.filter((s) => s._id !== song._id) } })),
       updateSongsInSetlist: (songs: SongType[]) => set((state) => ({ ...state, setlist: { ...state.setlist, songs } })),
@@ -39,12 +89,10 @@ export default function PracticeProvider({ children, setlist: setlist, allSongs:
     }))
   );
 
-  // Update the store when songs data changes
+  // Update the store when data changes
   useEffect(() => {
-    if (allSongs) {
-      store.setState({ allSongs });
-    }
-  }, [allSongs, store]);
+    store.setState({ allSongs, setlist });
+  }, [allSongs, setlist, store]);
 
   return <PracticeContext.Provider value={store}>{children}</PracticeContext.Provider>;
 }

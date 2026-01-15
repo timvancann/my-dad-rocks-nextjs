@@ -1,9 +1,10 @@
 'use client';
 
-import { modifyLyrics } from '@/actions/supabase';
+import { useUpdateLyrics } from '@/hooks/convex';
 import { LyricType } from '@/lib/interface';
 import { usePlayerStore } from '@/store/store';
 import { THEME } from '@/themes';
+import type { Id } from '../../convex/_generated/dataModel';
 import { AlertCircle, CheckCircle, ChevronLeft, ChevronRight, Edit2, Loader2, Maximize, Minimize, Moon, RotateCcw, Save, Sun, X, ZoomIn, ZoomOut, Volume2, VolumeX, Eye, EyeOff } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useRouter } from 'next/navigation';
@@ -15,6 +16,7 @@ import { ChordSheetViewer } from './ChordSheetViewer';
 export default function DisplayLyrics({ song, songId }: { song: LyricType; songId: string }) {
   const router = useRouter();
   const { isFullscreen, setIsFullscreen, playlist, currentSong, isDarkMode, setIsDarkMode } = usePlayerStore();
+  const updateLyricsMutation = useUpdateLyrics();
   const [edit, setEdit] = useState(false);
   const [lyrics, setLyrics] = useState(song.lyrics);
   const [textSize, setTextSize] = useState(16); // Base font size in pixels
@@ -126,7 +128,7 @@ export default function DisplayLyrics({ song, songId }: { song: LyricType; songI
     setError(null);
 
     try {
-      await modifyLyrics(songId, lyrics);
+      await updateLyricsMutation({ id: songId as Id<'songs'>, lyrics: lyrics || '' });
       setSaveStatus('success');
       setEdit(false);
 
@@ -141,7 +143,7 @@ export default function DisplayLyrics({ song, songId }: { song: LyricType; songI
     } finally {
       setIsSaving(false);
     }
-  }, [lyrics, song.lyrics, songId]);
+  }, [lyrics, song.lyrics, songId, updateLyricsMutation]);
 
   const handleCancel = useCallback(() => {
     setLyrics(song.lyrics);

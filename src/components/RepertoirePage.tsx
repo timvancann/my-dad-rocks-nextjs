@@ -1,8 +1,11 @@
-import { updateSetlistSongs } from '@/actions/supabase';
+'use client';
+
 import { SetlistType, SongType } from '@/lib/interface';
 import { usePlayerStore } from '@/store/store';
 import { THEME } from '@/themes';
 import { SongCard } from './SongCard';
+import { useAddSetlistItem } from '@/hooks/convex';
+import type { Id } from '../../convex/_generated/dataModel';
 
 type AllSongsProps = {
   filterSetlist: boolean;
@@ -12,11 +15,25 @@ type AllSongsProps = {
 };
 
 export const Repertoire = ({ filterSetlist, songs, addSong, setlist }: AllSongsProps) => {
+  const addSetlistItem = useAddSetlistItem();
+  const selectedSong = usePlayerStore((state) => state.currentSong);
+
   const addToSetlistFn = async (song: SongType) => {
     addSong(song);
-    updateSetlistSongs(setlist._id, [...setlist.songs, song]);
+    // Add item to Convex setlist
+    if (setlist._id) {
+      try {
+        await addSetlistItem({
+          setlistId: setlist._id as Id<'setlists'>,
+          songId: song._id as Id<'songs'>,
+          itemType: 'song',
+          position: setlist.songs.length,
+        });
+      } catch (error) {
+        console.error('Error adding song to setlist:', error);
+      }
+    }
   };
-  const selectedSong = usePlayerStore((state) => state.currentSong);
 
   return (
     <div className={'flex flex-col space-y-2'}>

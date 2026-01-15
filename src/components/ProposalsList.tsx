@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import clsx from 'clsx';
@@ -10,6 +10,8 @@ import { THEME } from '@/themes';
 import { CheckCircle2, Music, PlusCircle, Trash2, XCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { FaSpotify } from 'react-icons/fa';
+import { useDeleteProposal, useVote, useRemoveVote } from '@/hooks/convex';
+import type { Id } from '../../convex/_generated/dataModel';
 
 interface ProposalsListProps {
   proposals: ProposalType[];
@@ -357,15 +359,15 @@ const ProposalCard = ({
 
 export const ProposalsList = ({ proposals, bandMembers }: ProposalsListProps) => {
   const { data: session } = useSession();
-  const [items, setItems] = useState(proposals);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  useEffect(() => {
-    setItems(proposals);
-  }, [proposals]);
+  // Convex mutations
+  const deleteProposal = useDeleteProposal();
+  const voteMutation = useVote();
+  const removeVoteMutation = useRemoveVote();
 
   const currentEmail = session?.user?.email?.toLowerCase() ?? null;
   const currentMember = useMemo(() => {
@@ -392,7 +394,7 @@ export const ProposalsList = ({ proposals, bandMembers }: ProposalsListProps) =>
   };
 
   const handleDelete = async (id: string) => {
-    const proposal = items.find(item => item._id === id);
+    const proposal = proposals.find(item => item._id === id);
     if (!proposal) return;
 
     const confirmed = window.confirm(`Weet je zeker dat je "${proposal.title}" wilt verwijderen?`);
@@ -404,17 +406,7 @@ export const ProposalsList = ({ proposals, bandMembers }: ProposalsListProps) =>
     setError(null);
 
     try {
-      const response = await fetch(`/api/practice/proposals/${id}`, {
-        method: 'DELETE'
-      });
-
-      const result = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Verwijderen mislukt');
-      }
-
-      setItems(prev => prev.filter(item => item._id !== id));
+      await deleteProposal({ id: id as Id<"proposals"> });
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Verwijderen mislukt';
       setError(message);
@@ -429,68 +421,32 @@ export const ProposalsList = ({ proposals, bandMembers }: ProposalsListProps) =>
       return;
     }
 
-    const proposal = items.find(item => item._id === proposalId);
-    if (!proposal) {
-      return;
-    }
-
-    const previousVotes = proposal.votes;
-
-    const nextVotes = (() => {
-      const filtered = proposal.votes.filter(vote => vote.bandMemberId !== currentMember.id);
-      if (status) {
-        return [...filtered, { bandMemberId: currentMember.id, status }];
-      }
-      return filtered;
-    })();
-
-    setItems(prev => prev.map(item => (item._id === proposalId ? { ...item, votes: nextVotes } : item)));
     setUpdatingId(proposalId);
     setError(null);
 
     try {
-      let response: Response;
       if (status) {
-        response = await fetch(`/api/practice/proposals/${proposalId}/vote`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ status })
+        await voteMutation({
+          proposalId: proposalId as Id<"proposals">,
+          bandMemberId: currentMember.id as Id<"bandMembers">,
+          status: status as 'accepted' | 'rejected',
         });
       } else {
-        response = await fetch(`/api/practice/proposals/${proposalId}/vote`, {
-          method: 'DELETE'
+        await removeVoteMutation({
+          proposalId: proposalId as Id<"proposals">,
+          bandMemberId: currentMember.id as Id<"bandMembers">,
         });
       }
-
-      const result = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Stem opslaan mislukt');
-      }
-
-      const latestVotes = Array.isArray(result.votes)
-        ? result.votes
-          .filter((vote: any) => vote?.band_member_id && vote?.status)
-          .map((vote: any) => ({
-            bandMemberId: vote.band_member_id as string,
-            status: vote.status as ProposalVoteStatus
-          }))
-        : nextVotes;
-
-      setItems(prev => prev.map(item => (item._id === proposalId ? { ...item, votes: latestVotes } : item)));
       setExpandedId(null);
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Stem opslaan mislukt';
       setError(message);
-      setItems(prev => prev.map(item => (item._id === proposalId ? { ...item, votes: previousVotes } : item)));
     } finally {
       setUpdatingId(null);
     }
   };
 
-  if (!items || items.length === 0) {
+  if (!proposals || proposals.length === 0) {
     return (
       <div className={`${THEME.card} ${THEME.border} border rounded-lg p-8 text-center`}>
         <p className={THEME.textSecondary}>Nog geen voorstellen toegevoegd</p>
@@ -505,7 +461,7 @@ export const ProposalsList = ({ proposals, bandMembers }: ProposalsListProps) =>
           {error}
         </div>
       )}
-      {items.map(proposal => (
+      {proposals.map(proposal => (
         <ProposalCard
           key={proposal._id}
           proposal={proposal}

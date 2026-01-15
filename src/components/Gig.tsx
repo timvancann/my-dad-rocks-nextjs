@@ -7,12 +7,13 @@ import { AddSongModal } from '@/components/AddSongModal';
 import GigProvider, { useGigStore } from '@/context/GigProvider';
 import { usePracticeStore } from '@/context/PracticeProvider';
 import { GigType, SongType } from '@/lib/interface';
-import { updateSetlistSongs } from '@/actions/supabase';
+import { useAddSetlistItem, useRemoveSetlistItem, useReorderSetlistItems } from '@/hooks/convex';
 import { THEME } from '@/themes';
 import { ArrowLeft, Calendar, Clock, MapPin, Music, Edit, Play } from 'lucide-react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePlayerStore } from '@/store/store';
+import type { Id } from '../../convex/_generated/dataModel';
 
 type GigProps = {
   gig: GigType;
@@ -149,22 +150,29 @@ export const Gig = ({ gig }: GigProps) => {
 
 const Content = () => {
   const store = useGigStore((state) => state);
+  const addSetlistItem = useAddSetlistItem();
 
   const handleAddSongToSetlist = async (song: SongType) => {
     store.addSong(song);
-    await updateSetlistSongs(store.setlist._id, [...store.setlist.songs, song]);
+    // Add item to Convex setlist
+    await addSetlistItem({
+      setlistId: store.setlist._id as Id<'setlists'>,
+      songId: song._id as Id<'songs'>,
+      itemType: 'song',
+      position: store.setlist.songs.length,
+    });
     // Don't close modal - let user continue adding songs
   };
 
   return (
     <>
-      <Setlist 
-        setlist={store.setlist} 
-        removeSong={store.removeSong} 
+      <Setlist
+        setlist={store.setlist}
+        removeSong={store.removeSong}
         updateSongsInSetlist={store.updateSongsInSetlist}
         onAddSong={store.openAddSongModal}
       />
-      
+
       <AddSongModal
         isOpen={store.isAddSongModalOpen}
         onClose={store.closeAddSongModal}
@@ -172,7 +180,7 @@ const Content = () => {
         excludeSongs={store.setlist.songs}
         onAddSong={handleAddSongToSetlist}
       />
-      
+
       <div className="flex justify-end">
         <AddPause addSong={store.addSong} setlist={store.setlist} />
       </div>

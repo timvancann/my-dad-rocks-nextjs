@@ -1,7 +1,8 @@
 'use client';
 
 import { usePlayerStore } from '@/store/store';
-import { getLyrics } from '@/actions/supabase';
+import { useSong } from '@/hooks/convex';
+import type { Id } from '../../convex/_generated/dataModel';
 import { LyricType } from '@/lib/interface';
 import { ChevronLeft, ChevronRight, X, RotateCcw, ZoomIn, ZoomOut, Loader2, Sun, Moon, Eye, EyeOff, Waves } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -24,8 +25,6 @@ export default function PerformanceView() {
 
   const defaultTextSize = 8;
   const [textSize, setTextSize] = useState(defaultTextSize); // Larger default for performance
-  const [currentLyrics, setCurrentLyrics] = useState<LyricType | null>(null);
-  const [isLoadingLyrics, setIsLoadingLyrics] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [metronomeVisualEnabled, setMetronomeVisualEnabled] = useState(false);
   const [metronomePulse, setMetronomePulse] = useState<{ id: number; accent: boolean } | null>(null);
@@ -37,6 +36,15 @@ export default function PerformanceView() {
 
   // Get current song
   const currentSong = performancePlaylist[currentPerformanceIndex];
+
+  // Fetch full song data (including lyrics) from Convex
+  const songData = useSong(currentSong?._id as Id<"songs"> | undefined);
+  const isLoadingLyrics = songData === undefined && !!currentSong?._id;
+  const currentLyrics: LyricType | null = songData ? {
+    title: songData.title,
+    artist: songData.artist || '',
+    lyrics: songData.lyrics || '',
+  } : null;
 
   // Get tempo from song data, default to 120 BPM if not available
   const songTempo = (currentSong as any)?.tempo_bpm || 120;
@@ -63,14 +71,12 @@ export default function PerformanceView() {
   // Navigation functions
   const navigateToPrevious = useCallback(() => {
     if (hasPrevious) {
-      setCurrentLyrics(null);
       setCurrentPerformanceIndex(currentPerformanceIndex - 1);
     }
   }, [hasPrevious, currentPerformanceIndex, setCurrentPerformanceIndex]);
 
   const navigateToNext = useCallback(() => {
     if (hasNext) {
-      setCurrentLyrics(null);
       setCurrentPerformanceIndex(currentPerformanceIndex + 1);
     }
   }, [hasNext, currentPerformanceIndex, setCurrentPerformanceIndex]);
@@ -117,28 +123,7 @@ export default function PerformanceView() {
     }
   }, [metronomeVisualEnabled]);
 
-  // Fetch lyrics for current song
-  const fetchLyrics = useCallback(async (songId: string) => {
-    if (!songId) return;
-
-    setIsLoadingLyrics(true);
-    try {
-      const lyrics = await getLyrics(songId);
-      setCurrentLyrics(lyrics);
-    } catch (error) {
-      console.error('Error fetching lyrics:', error);
-      setCurrentLyrics(null);
-    } finally {
-      setIsLoadingLyrics(false);
-    }
-  }, []);
-
-  // Fetch lyrics when current song changes
-  useEffect(() => {
-    if (currentSong?._id) {
-      fetchLyrics(currentSong._id);
-    }
-  }, [currentSong?._id, fetchLyrics]);
+  // Lyrics are now fetched reactively via useSong hook above
 
   // Fullscreen management
   const enterFullscreen = useCallback(async () => {

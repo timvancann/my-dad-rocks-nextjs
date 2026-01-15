@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import React from 'react';
 import '../globals.css';
+import ConvexClientProvider from '@/components/ConvexClientProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -34,7 +35,9 @@ export default function PublicLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body className={`${inter.className} bg-zinc-950 text-gray-100`}>
-        {children}
+        <ConvexClientProvider>
+          {children}
+        </ConvexClientProvider>
       </body>
     </html>
   );

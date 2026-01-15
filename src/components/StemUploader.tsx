@@ -5,9 +5,8 @@ import { Upload, X, Loader2, CheckCircle2, Music2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { STEM_CATEGORIES, STEM_COLORS, type StemCategory } from '@/types/stems';
-import { createSongAudioCue } from '@/actions/supabase';
-import { supabase } from '@/lib/supabase';
-import { v4 as uuidv4 } from 'uuid';
+import { useCreateAudioCue, useGenerateUploadUrl } from '@/hooks/convex';
+import type { Id } from '../../convex/_generated/dataModel';
 
 interface StemFile {
   id: string;
@@ -102,6 +101,10 @@ export function StemUploader({ songId, songSlug, onUploadComplete }: StemUploade
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Convex hooks
+  const generateUploadUrl = useGenerateUploadUrl();
+  const createAudioCue = useCreateAudioCue();
+
   const handleFiles = useCallback((files: FileList | null) => {
     if (!files || files.length === 0) return;
 
@@ -169,41 +172,36 @@ export function StemUploader({ songId, songSlug, onUploadComplete }: StemUploade
         // Extract duration
         const duration = await extractAudioDuration(stemFile.file);
 
-        // Generate unique filename
-        const fileExtension = stemFile.file.name.split('.').pop();
-        const fileName = `${uuidv4()}.${fileExtension}`;
-        const objectPath = `${songSlug}/${fileName}`;
+        // Get upload URL from Convex
+        const uploadUrl = await generateUploadUrl();
 
-        // Upload directly to Supabase storage (bypasses Vercel 4.5MB limit)
-        const { error: uploadError } = await supabase.storage
-          .from('stems')
-          .upload(objectPath, stemFile.file, {
-            contentType: stemFile.file.type,
-            upsert: false,
-          });
+        // Upload file to Convex storage
+        const response = await fetch(uploadUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': stemFile.file.type },
+          body: stemFile.file,
+        });
+
+        const uploadError = !response.ok;
 
         if (uploadError) {
-          console.error('Supabase upload error:', uploadError);
+          console.error('Upload error:', uploadError);
           throw new Error('Upload failed');
         }
 
-        // Get public URL
-        const { data: publicData } = supabase.storage
-          .from('stems')
-          .getPublicUrl(objectPath);
-
-        const url = publicData?.publicUrl;
-        if (!url) {
-          throw new Error('No URL received from upload');
+        const { storageId } = await response.json();
+        if (!storageId) {
+          throw new Error('No storage ID received from upload');
         }
 
         // Create audio cue in database
         const title = deriveStemTitle(stemFile.file.name, stemFile.stemType);
-        await createSongAudioCue(songId, {
+        await createAudioCue({
+          songId: songId as Id<"songs">,
           title,
-          cue_url: url,
+          cueStorageId: storageId as Id<"_storage">,
           description: `${stemFile.stemType} stem`,
-          duration_seconds: duration ? Math.round(duration) : null,
+          durationSeconds: duration ? Math.round(duration) : undefined,
         });
 
         // Mark as uploaded
@@ -231,7 +229,7 @@ export function StemUploader({ songId, songSlug, onUploadComplete }: StemUploade
     if (allUploaded && onUploadComplete) {
       onUploadComplete();
     }
-  }, [stemFiles, isUploading, songId, songSlug, onUploadComplete]);
+  }, [stemFiles, isUploading, songId, onUploadComplete, generateUploadUrl, createAudioCue]);
 
   const allUploaded = stemFiles.length > 0 && stemFiles.every((s) => s.uploaded);
 

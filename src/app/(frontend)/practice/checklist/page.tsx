@@ -4,54 +4,41 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { addChecklistItem, deleteChecklistItem, getChecklistItems, resetAllChecks, updateChecklistItem } from '@/lib/checklist-service';
+import {
+  useChecklistItems,
+  useCreateChecklistItem,
+  useUpdateChecklistItem,
+  useDeleteChecklistItem,
+  useResetAllChecklistItems
+} from '@/hooks/convex';
 import { useSession } from 'next-auth/react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { IoAddCircleOutline, IoCheckmarkOutline, IoCloseOutline, IoPencilOutline, IoTrashOutline } from 'react-icons/io5';
-
-interface ChecklistItem {
-  id: string;
-  user_email: string;
-  name: string;
-  is_checked: boolean;
-  position: number;
-  created_at: string;
-  updated_at: string;
-}
+import type { Id } from '../../../../../convex/_generated/dataModel';
 
 export default function ChecklistPage() {
   const { data: session } = useSession();
-  const [items, setItems] = useState<ChecklistItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [newItemName, setNewItemName] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
 
-  useEffect(() => {
-    if (session?.user?.email) {
-      fetchChecklistItems();
-    }
-  }, [session]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Convex hooks
+  const items = useChecklistItems(session?.user?.email ?? undefined);
+  const createItem = useCreateChecklistItem();
+  const updateItem = useUpdateChecklistItem();
+  const deleteItem = useDeleteChecklistItem();
+  const resetAll = useResetAllChecklistItems();
 
-  const fetchChecklistItems = async () => {
-    if (!session?.user?.email) return;
-
-    try {
-      const data = await getChecklistItems(session.user.email);
-      setItems(data);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching checklist items:', error);
-      setLoading(false);
-    }
-  };
+  const loading = items === undefined;
 
   const addItem = async () => {
     if (!newItemName.trim() || !session?.user?.email) return;
 
     try {
-      const newItem = await addChecklistItem(session.user.email, newItemName.trim());
-      setItems([...items, newItem]);
+      await createItem({
+        userEmail: session.user.email,
+        name: newItemName.trim(),
+      });
       setNewItemName('');
     } catch (error) {
       console.error('Error adding item:', error);
@@ -60,8 +47,10 @@ export default function ChecklistPage() {
 
   const toggleItem = async (id: string, isChecked: boolean) => {
     try {
-      await updateChecklistItem(id, { is_checked: !isChecked });
-      setItems(items.map((item) => (item.id === id ? { ...item, is_checked: !isChecked } : item)));
+      await updateItem({
+        id: id as Id<"checklistItems">,
+        isChecked: !isChecked,
+      });
     } catch (error) {
       console.error('Error toggling item:', error);
     }
@@ -76,8 +65,10 @@ export default function ChecklistPage() {
     if (!editingName.trim() || !editingId) return;
 
     try {
-      await updateChecklistItem(editingId, { name: editingName.trim() });
-      setItems(items.map((item) => (item.id === editingId ? { ...item, name: editingName.trim() } : item)));
+      await updateItem({
+        id: editingId as Id<"checklistItems">,
+        name: editingName.trim(),
+      });
       setEditingId(null);
       setEditingName('');
     } catch (error) {
@@ -90,10 +81,9 @@ export default function ChecklistPage() {
     setEditingName('');
   };
 
-  const deleteItem = async (id: string) => {
+  const handleDeleteItem = async (id: string) => {
     try {
-      await deleteChecklistItem(id);
-      setItems(items.filter((item) => item.id !== id));
+      await deleteItem({ id: id as Id<"checklistItems"> });
     } catch (error) {
       console.error('Error deleting item:', error);
     }
@@ -103,8 +93,7 @@ export default function ChecklistPage() {
     if (!session?.user?.email) return;
 
     try {
-      await resetAllChecks(session.user.email);
-      setItems(items.map((item) => ({ ...item, is_checked: false })));
+      await resetAll({ userEmail: session.user.email });
     } catch (error) {
       console.error('Error resetting checklist:', error);
     }
@@ -123,11 +112,13 @@ export default function ChecklistPage() {
     );
   }
 
+  const sortedItems = [...(items || [])].sort((a, b) => a.position - b.position);
+
   return (
     <div className="container mx-auto max-w-2xl px-4 py-8">
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-3xl font-bold">My Gig Checklist</h1>
-        {items.some((item) => item.is_checked) && (
+        {sortedItems.some((item) => item.isChecked) && (
           <Button variant="outline" size="sm" onClick={resetChecklist}>
             Reset All
           </Button>
@@ -153,15 +144,15 @@ export default function ChecklistPage() {
 
       {/* Checklist items */}
       <div className="space-y-3">
-        {items.length === 0 ? (
+        {sortedItems.length === 0 ? (
           <Card className="p-8 text-center text-muted-foreground">
             <p>No items in your checklist yet.</p>
             <p className="mt-2 text-sm">Add items you need to bring to gigs!</p>
           </Card>
         ) : (
-          items.map((item) => (
-            <div key={item.id} className="space-y-2">
-              {editingId === item.id ? (
+          sortedItems.map((item) => (
+            <div key={item._id} className="space-y-2">
+              {editingId === item._id ? (
                 <Card className="p-4">
                   <div className="flex items-center gap-2">
                     <Input value={editingName} onChange={(e) => setEditingName(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && saveEdit()} className="flex-1" autoFocus />
@@ -175,12 +166,12 @@ export default function ChecklistPage() {
                 </Card>
               ) : (
                 <div className="flex items-center gap-2">
-                  <Card className={`flex-1 cursor-pointer p-2 transition-all active:scale-[0.98] ${item.is_checked ? '' : 'hover:bg-muted/30'}`} onClick={() => toggleItem(item.id, item.is_checked)}>
+                  <Card className={`flex-1 cursor-pointer p-2 transition-all active:scale-[0.98] ${item.isChecked ? '' : 'hover:bg-muted/30'}`} onClick={() => toggleItem(item._id, item.isChecked)}>
                     <div className="flex items-center gap-3">
-                      <div className={`flex h-5 w-5 items-center justify-center rounded border-2 transition-colors ${item.is_checked ? 'border-green-500 text-white' : 'border-muted-foreground/70'}`}>
-                        {item.is_checked && <IoCheckmarkOutline className="h-3 w-3" />}
+                      <div className={`flex h-5 w-5 items-center justify-center rounded border-2 transition-colors ${item.isChecked ? 'border-green-500 text-white' : 'border-muted-foreground/70'}`}>
+                        {item.isChecked && <IoCheckmarkOutline className="h-3 w-3" />}
                       </div>
-                      <span className={`flex-1 text-left transition-colors ${item.is_checked ? 'text-green-700 line-through dark:text-green-300' : 'text-white'}`}>{item.name}</span>
+                      <span className={`flex-1 text-left transition-colors ${item.isChecked ? 'text-green-700 line-through dark:text-green-300' : 'text-white'}`}>{item.name}</span>
                     </div>
                   </Card>
 
@@ -191,7 +182,7 @@ export default function ChecklistPage() {
                       variant="secondary"
                       onClick={(e) => {
                         e.stopPropagation();
-                        startEditing(item.id, item.name);
+                        startEditing(item._id, item.name);
                       }}
                     >
                       <IoPencilOutline className="h-10 w-10" />
@@ -201,7 +192,7 @@ export default function ChecklistPage() {
                       variant="destructive"
                       onClick={(e) => {
                         e.stopPropagation();
-                        deleteItem(item.id);
+                        handleDeleteItem(item._id);
                       }}
                     >
                       <IoTrashOutline className="h-10 w-10" />
@@ -215,9 +206,9 @@ export default function ChecklistPage() {
       </div>
 
       {/* Progress indicator */}
-      {items.length > 0 && (
+      {sortedItems.length > 0 && (
         <div className="mt-8 text-center text-sm text-muted-foreground">
-          {items.filter((item) => item.is_checked).length} of {items.length} items packed
+          {sortedItems.filter((item) => item.isChecked).length} of {sortedItems.length} items packed
         </div>
       )}
     </div>
