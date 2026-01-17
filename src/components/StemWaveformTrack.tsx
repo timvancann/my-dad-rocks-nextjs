@@ -26,6 +26,7 @@ export function StemWaveformTrack({
 }: StemWaveformTrackProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [waveformReady, setWaveformReady] = useState(false);
+  const hasCalledReady = useRef(false);
   const colors = STEM_WAVEFORM_COLORS[category];
 
   const { wavesurfer, isReady } = useWavesurfer({
@@ -56,7 +57,12 @@ export function StemWaveformTrack({
     if (!wavesurfer || !isReady) return;
 
     setWaveformReady(true);
-    onWaveformReady?.();
+
+    // Only call onWaveformReady once
+    if (!hasCalledReady.current) {
+      hasCalledReady.current = true;
+      onWaveformReady?.();
+    }
 
     // Mute and pause to prevent any audio playback
     wavesurfer.setMuted(true);
