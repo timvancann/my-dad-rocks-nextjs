@@ -12,6 +12,7 @@ interface StemWaveformTrackProps {
   duration: number;
   onSeek: (time: number) => void;
   isLoading: boolean;
+  onWaveformReady?: () => void;
 }
 
 export function StemWaveformTrack({
@@ -21,6 +22,7 @@ export function StemWaveformTrack({
   duration,
   onSeek,
   isLoading,
+  onWaveformReady,
 }: StemWaveformTrackProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [waveformReady, setWaveformReady] = useState(false);
@@ -54,6 +56,7 @@ export function StemWaveformTrack({
     if (!wavesurfer || !isReady) return;
 
     setWaveformReady(true);
+    onWaveformReady?.();
 
     // Mute and pause to prevent any audio playback
     wavesurfer.setMuted(true);
@@ -68,7 +71,7 @@ export function StemWaveformTrack({
       audioElement.onpause = null;
       audioElement.onplay = null;
     }
-  }, [wavesurfer, isReady]);
+  }, [wavesurfer, isReady, onWaveformReady]);
 
   // Sync visual position with currentTime from the hook
   useEffect(() => {

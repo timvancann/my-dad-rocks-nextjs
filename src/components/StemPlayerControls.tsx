@@ -1,7 +1,7 @@
 'use client';
 
 import { Play, Pause, Loader2, ArrowLeft, VolumeX } from 'lucide-react';
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -56,6 +56,18 @@ export function StemPlayerControls({
   // Track long press timers per stem
   const longPressTimers = useRef<Map<string, NodeJS.Timeout>>(new Map());
   const longPressTriggered = useRef<Set<string>>(new Set());
+
+  // Track waveform loading state (separate from audio loading)
+  const [waveformsReady, setWaveformsReady] = useState<Set<string>>(new Set());
+  const allWaveformsReady = stems.length > 0 && waveformsReady.size >= stems.length;
+
+  const handleWaveformReady = useCallback((stemId: string) => {
+    setWaveformsReady((prev) => {
+      const next = new Set(prev);
+      next.add(stemId);
+      return next;
+    });
+  }, []);
 
   const handlePlayPause = () => {
     if (isPlaying) {
@@ -251,6 +263,20 @@ export function StemPlayerControls({
 
         {/* Right Panel - Waveforms */}
         <div className="flex-1 relative">
+          {/* Loading overlay */}
+          {(isLoading || !allWaveformsReady) && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-30">
+              <div className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin text-amber-400" />
+                <span className={`text-sm ${THEME.textSecondary}`}>
+                  {isLoading
+                    ? `Loading stems (${Object.values(loadingProgress).filter(Boolean).length}/${stems.length})...`
+                    : `Loading waveforms (${waveformsReady.size}/${stems.length})...`}
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Unified Playhead */}
           {duration > 0 && (
             <div
@@ -283,6 +309,7 @@ export function StemPlayerControls({
                     duration={duration}
                     onSeek={handleWaveformSeek}
                     isLoading={isLoading || !isLoaded}
+                    onWaveformReady={() => handleWaveformReady(stem.id)}
                   />
                 </div>
               );
