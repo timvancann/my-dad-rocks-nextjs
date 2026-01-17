@@ -1,8 +1,9 @@
 'use client';
 
 import { Play, Pause, Loader2, VolumeX } from 'lucide-react';
-import { useRef, useCallback, useState } from 'react';
+import { useRef, useCallback, useState, useEffect } from 'react';
 import Image from 'next/image';
+import { useGlobalAudioPlayer } from 'react-use-audio-player';
 import type { Stem } from '@/types/stems';
 import {
   inferStemCategory,
@@ -34,6 +35,14 @@ export function StemPlayerControls({
   songTitle,
   artworkUrl,
 }: StemPlayerControlsProps) {
+  // Stop the global audio player when stem player mounts
+  const { stop: stopGlobal } = useGlobalAudioPlayer();
+
+  useEffect(() => {
+    // Stop the global player to prevent both playing simultaneously
+    stopGlobal();
+  }, [stopGlobal]);
+
   const {
     isPlaying,
     currentTime,
