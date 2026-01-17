@@ -1,11 +1,13 @@
 'use client';
 
 import { Play, Pause, Loader2 } from 'lucide-react';
-import { useCallback } from 'react';
+import { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import Image from 'next/image';
+import { useWavesurfer } from '@wavesurfer/react';
 import { usePlayerStore } from '@/store/store';
-import { usePlaylistPlayer, useAudioTime } from '@/hooks/useAudioTime';
+import { useAudioTime } from '@/hooks/useAudioTime';
 import { useGlobalAudioPlayer } from 'react-use-audio-player';
+import { db } from '@/lib/db';
 import { THEME } from '@/themes';
 
 function formatTime(seconds: number): string {
@@ -16,22 +18,123 @@ function formatTime(seconds: number): string {
 
 export function SingleTrackPlayer() {
   const { currentSong } = usePlayerStore();
-  const { playPauseTrack, seekTrack } = usePlaylistPlayer();
-  const { paused, duration, isLoading } = useGlobalAudioPlayer();
+  const { paused, duration, isLoading: isAudioLoading, togglePlayPause, seek } = useGlobalAudioPlayer();
   const currentTime = useAudioTime();
 
-  // Handle click-to-seek on progress bar
-  const handleProgressClick = useCallback(
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [waveformReady, setWaveformReady] = useState(false);
+
+  // Track the song ID to detect actual song changes vs re-renders
+  const loadedSongIdRef = useRef<string | null>(null);
+
+  // Load audio URL from cache for waveform visualization only
+  // Use a ref to prevent re-triggering on re-renders
+  useEffect(() => {
+    const loadAudio = async () => {
+      if (!currentSong?.audio || !currentSong._id) return;
+
+      // Don't reload if we already loaded this song
+      if (loadedSongIdRef.current === currentSong._id && audioUrl) {
+        return;
+      }
+
+      setWaveformReady(false);
+      loadedSongIdRef.current = currentSong._id;
+
+      try {
+        const cachedFile = await db.audioFiles.get(currentSong._id);
+        if (cachedFile && cachedFile.version === (currentSong.version || 0)) {
+          const url = URL.createObjectURL(cachedFile.blob);
+          setAudioUrl(url);
+        } else {
+          // If not cached, use the direct URL
+          setAudioUrl(currentSong.audio);
+        }
+      } catch (error) {
+        console.error('Error loading audio for waveform:', error);
+        setAudioUrl(currentSong.audio);
+      }
+    };
+
+    loadAudio();
+  }, [currentSong?._id, currentSong?.audio, currentSong?.version, audioUrl]);
+
+  // Memoize wavesurfer options to prevent re-initialization
+  const wavesurferOptions = useMemo(() => ({
+    container: containerRef,
+    url: audioUrl || undefined,
+    waveColor: '#ef4444',
+    progressColor: '#dc2626',
+    cursorColor: 'transparent',
+    cursorWidth: 0,
+    barWidth: 2,
+    barRadius: 1,
+    barGap: 1,
+    height: 120,
+    normalize: true,
+    interact: false,
+    hideScrollbar: true,
+    autoCenter: false,
+    autoScroll: false,
+    minPxPerSec: 1,
+    fillParent: true,
+    autoplay: false,
+    backend: 'WebAudio' as const,
+    mediaControls: false,
+  }), [audioUrl]);
+
+  const { wavesurfer, isReady } = useWavesurfer(wavesurferOptions);
+
+  // Mute and pause wavesurfer immediately (visualization only)
+  useEffect(() => {
+    if (!wavesurfer || !isReady) return;
+
+    setWaveformReady(true);
+
+    // Immediately mute and pause - this is only for visualization
+    wavesurfer.setMuted(true);
+    wavesurfer.pause();
+
+    const audioElement = wavesurfer.getMediaElement();
+    if (audioElement) {
+      audioElement.muted = true;
+      audioElement.pause();
+      audioElement.volume = 0;
+    }
+  }, [wavesurfer, isReady]);
+
+  // Sync waveform position with actual playback
+  useEffect(() => {
+    if (!wavesurfer || !isReady || !waveformReady) return;
+
+    // Only sync time, never play
+    try {
+      wavesurfer.setTime(currentTime);
+    } catch {
+      // Ignore errors during time sync
+    }
+  }, [currentTime, wavesurfer, isReady, waveformReady]);
+
+  // Handle click-to-seek on waveform
+  const handleWaveformClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
-      const rect = e.currentTarget.getBoundingClientRect();
+      if (!containerRef.current || duration <= 0) return;
+
+      const rect = containerRef.current.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const relativeX = x / rect.width;
       const seekTime = relativeX * duration;
       const clampedTime = Math.max(0, Math.min(seekTime, duration));
-      seekTrack(clampedTime);
+      seek(clampedTime);
     },
-    [duration, seekTrack]
+    [duration, seek]
   );
+
+  // Handle play/pause without triggering reload
+  const handlePlayPause = useCallback(() => {
+    togglePlayPause();
+  }, [togglePlayPause]);
 
   if (!currentSong) {
     return (
@@ -46,7 +149,7 @@ export function SingleTrackPlayer() {
     );
   }
 
-  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const isLoading = isAudioLoading || !waveformReady;
 
   return (
     <div className={`flex flex-col ${THEME.bg}`}>
@@ -73,8 +176,8 @@ export function SingleTrackPlayer() {
           </div>
           {/* Play/Pause Button Overlay */}
           <button
-            onClick={playPauseTrack}
-            disabled={isLoading}
+            onClick={handlePlayPause}
+            disabled={isAudioLoading}
             className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 hover:bg-opacity-50 rounded-full transition-all disabled:opacity-50"
           >
             {paused ? (
@@ -106,41 +209,34 @@ export function SingleTrackPlayer() {
         )}
       </div>
 
-      {/* Progress Bar */}
-      <div className="px-4 py-8">
-        <div
-          className="relative h-24 bg-zinc-800 rounded-lg cursor-pointer overflow-hidden"
-          onClick={handleProgressClick}
-        >
-          {/* Progress fill */}
-          <div
-            className="absolute inset-y-0 left-0 bg-red-600/30"
-            style={{ width: `${progress}%` }}
-          />
-
-          {/* Playhead */}
-          {duration > 0 && (
-            <div
-              className="absolute top-0 bottom-0 w-0.5 bg-amber-400 z-10"
-              style={{ left: `${progress}%` }}
-            />
-          )}
-
-          {/* Decorative waveform pattern */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-30">
-            <div className="flex items-center gap-0.5 h-full py-4">
-              {Array.from({ length: 80 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="w-1 bg-red-500 rounded-full"
-                  style={{
-                    height: `${20 + Math.sin(i * 0.3) * 30 + Math.random() * 30}%`,
-                  }}
-                />
-              ))}
+      {/* Waveform */}
+      <div className="relative">
+        {/* Loading overlay */}
+        {!waveformReady && audioUrl && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-30">
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin text-amber-400" />
+              <span className={`text-sm ${THEME.textSecondary}`}>
+                Loading waveform...
+              </span>
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Unified Playhead */}
+        {duration > 0 && (
+          <div
+            className="absolute top-0 bottom-0 w-0.5 bg-amber-400 z-20 pointer-events-none"
+            style={{ left: `${(currentTime / duration) * 100}%` }}
+          />
+        )}
+
+        <div
+          ref={containerRef}
+          onClick={handleWaveformClick}
+          className="w-full cursor-pointer"
+          style={{ minHeight: '120px' }}
+        />
       </div>
     </div>
   );

@@ -75,13 +75,17 @@ export const usePlaylistPlayer = () => {
   
   // Track loading state per song to prevent race conditions
   const loadingRef = useRef<string | null>(null);
+  // Track which song is currently loaded to prevent unnecessary reloads
+  const loadedSongRef = useRef<string | null>(null);
 
   const skipTrack = useCallback((increment: number) => {
     if (!selectedSong || !playlist.length) return;
 
     const currentIndex = playlist.findIndex((song) => song._id === selectedSong._id);
     let nextIndex = (currentIndex + increment + playlist.length) % playlist.length;
-    
+
+    // Clear loaded song ref so the new song will load
+    loadedSongRef.current = null;
     setSongIndex(nextIndex);
   }, [selectedSong, playlist, setSongIndex]);
 
@@ -122,6 +126,11 @@ export const usePlaylistPlayer = () => {
         return;
       }
 
+      // Skip if this song is already loaded (prevents restart on navigation)
+      if (loadedSongRef.current === song._id) {
+        return;
+      }
+
       // Mark this song as loading
       loadingRef.current = song._id;
       
@@ -145,6 +154,8 @@ export const usePlaylistPlayer = () => {
               if (loadingRef.current === song._id) {
                 setIsChangingSong(false);
                 loadingRef.current = null;
+                // Mark this song as loaded to prevent reloading on navigation
+                loadedSongRef.current = song._id;
               }
             },
             onend: () => {
