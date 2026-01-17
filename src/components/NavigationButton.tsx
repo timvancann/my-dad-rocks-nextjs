@@ -12,20 +12,23 @@ interface NavigationButtonProps {
   onClick?: () => void;
   icon?: ReactNode;
   rightContent?: ReactNode;
+  disabled?: boolean;
 }
 
-export function NavigationButton({ 
-  href, 
-  children, 
-  className = '', 
+export function NavigationButton({
+  href,
+  children,
+  className = '',
   onClick,
   icon,
-  rightContent
+  rightContent,
+  disabled = false
 }: NavigationButtonProps) {
   const router = useRouter();
   const [isNavigating, setIsNavigating] = useState(false);
 
   const handleClick = () => {
+    if (disabled) return;
     setIsNavigating(true);
     onClick?.();
     router.push(href);
@@ -34,10 +37,11 @@ export function NavigationButton({
   return (
     <button
       onClick={handleClick}
-      disabled={isNavigating}
+      disabled={isNavigating || disabled}
       className={cn(
         'flex w-full items-center justify-between gap-2 rounded px-2 py-1.5 text-sm transition-all',
         isNavigating && 'opacity-75 cursor-wait',
+        disabled && 'opacity-50 cursor-not-allowed',
         className
       )}
     >

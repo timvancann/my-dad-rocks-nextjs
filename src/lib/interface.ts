@@ -22,6 +22,8 @@ export interface SongType {
   lastPracticedAt?: number;
   lastPlayedAt?: number;
   firstLearnedAt?: number;
+  // Stem count
+  stemCount?: number;
 }
 
 export interface SetlistItemType {

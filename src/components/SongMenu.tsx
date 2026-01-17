@@ -153,8 +153,9 @@ export const SongMenu = ({ song, removeFromSetlistFn, addToSetlistFn, onShowNote
             onClick={() => setIsOpen(false)}
             className={`${THEME.text} hover:${THEME.highlight} cursor-pointer`}
             rightContent={<ChevronRight className="h-3 w-3 opacity-50" />}
+            disabled={(song.stemCount ?? 0) === 0}
           >
-            Stem Player
+            Stem Player{(song.stemCount ?? 0) === 0 ? ' (no stems)' : ''}
           </NavigationButton>
 
           <NavigationButton

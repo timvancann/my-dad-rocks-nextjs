@@ -41,6 +41,7 @@ function transformSong(song: any): SongType {
     lastPracticedAt: song.lastPracticedAt,
     lastPlayedAt: song.lastPlayedAt,
     firstLearnedAt: song.firstLearnedAt,
+    stemCount: song.stemCount,
   };
 }
 
