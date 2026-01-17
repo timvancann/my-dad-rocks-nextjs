@@ -3,7 +3,6 @@ import { THEME } from '@/themes';
 import { Calendar, Home, ListMusic, Lightbulb, Disc3 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { usePlayerStore } from '@/store/store';
 
 interface NavItem {
   href: string;
@@ -13,7 +12,6 @@ interface NavItem {
 
 export const Navbar = () => {
   const pathname = usePathname();
-  const { currentSong } = usePlayerStore();
 
   const tabs: NavItem[] = [
     {
@@ -27,6 +25,11 @@ export const Navbar = () => {
       text: 'Repertoire'
     },
     {
+      href: '/practice/player',
+      icon: <Disc3 />,
+      text: 'Player'
+    },
+    {
       href: '/practice/gigs',
       icon: <Calendar />,
       text: 'Optredens'
@@ -37,15 +40,6 @@ export const Navbar = () => {
       text: 'Voorstellen'
     }
   ];
-
-  // Add Player tab when a song is playing
-  if (currentSong) {
-    tabs.push({
-      href: '/practice/player',
-      icon: <Disc3 />,
-      text: 'Player'
-    });
-  }
 
   return (
     <nav className={`${THEME.card} border-t ${THEME.border} z-40 flex justify-around py-2 shadow-lg`}>
