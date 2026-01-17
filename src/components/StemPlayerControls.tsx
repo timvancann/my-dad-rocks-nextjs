@@ -1,10 +1,10 @@
 'use client';
 
-import { Play, Pause, Loader2, ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
+import { Play, Pause, Loader2, ArrowLeft, VolumeX } from 'lucide-react';
+import { useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { Button } from '@/components/ui/button';
 import type { Stem } from '@/types/stems';
 import {
   inferStemCategory,
@@ -29,6 +29,9 @@ function formatTime(seconds: number): string {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
+// Long press duration in ms
+const LONG_PRESS_DURATION = 500;
+
 export function StemPlayerControls({
   stems,
   songTitle,
@@ -50,6 +53,10 @@ export function StemPlayerControls({
     toggleSolo,
   } = useStemPlayer(stems);
 
+  // Track long press timers per stem
+  const longPressTimers = useRef<Map<string, NodeJS.Timeout>>(new Map());
+  const longPressTriggered = useRef<Set<string>>(new Set());
+
   const handlePlayPause = () => {
     if (isPlaying) {
       pause();
@@ -58,13 +65,52 @@ export function StemPlayerControls({
     }
   };
 
-  const handleSeek = (value: number[]) => {
-    seek(value[0]);
-  };
-
   const handleWaveformSeek = (time: number) => {
     seek(time);
   };
+
+  // Handle touch/mouse down - start long press timer
+  const handlePressStart = useCallback(
+    (stemId: string) => {
+      longPressTriggered.current.delete(stemId);
+
+      const timer = setTimeout(() => {
+        longPressTriggered.current.add(stemId);
+        toggleSolo(stemId);
+      }, LONG_PRESS_DURATION);
+
+      longPressTimers.current.set(stemId, timer);
+    },
+    [toggleSolo]
+  );
+
+  // Handle touch/mouse up - clear timer and handle tap
+  const handlePressEnd = useCallback(
+    (stemId: string) => {
+      const timer = longPressTimers.current.get(stemId);
+      if (timer) {
+        clearTimeout(timer);
+        longPressTimers.current.delete(stemId);
+      }
+
+      // If long press wasn't triggered, it's a tap → toggle mute
+      if (!longPressTriggered.current.has(stemId)) {
+        toggleMute(stemId);
+      }
+      longPressTriggered.current.delete(stemId);
+    },
+    [toggleMute]
+  );
+
+  // Cancel on touch move (prevents accidental triggers while scrolling)
+  const handlePressCancel = useCallback((stemId: string) => {
+    const timer = longPressTimers.current.get(stemId);
+    if (timer) {
+      clearTimeout(timer);
+      longPressTimers.current.delete(stemId);
+    }
+    longPressTriggered.current.delete(stemId);
+  }, []);
 
   // Sort stems by category
   const sortedStems = sortStemsByCategory(stems);
@@ -86,7 +132,7 @@ export function StemPlayerControls({
   }
 
   return (
-    <div className={`flex flex-col h-screen ${THEME.bg}`}>
+    <div className={`flex flex-col ${THEME.bg}`}>
       {/* Compact Header */}
       <div
         className={`${THEME.card} border-b ${THEME.border} px-4 py-3 flex items-center gap-3`}
@@ -152,12 +198,12 @@ export function StemPlayerControls({
       </div>
 
       {/* Two-Panel Layout: Controls (left) + Waveforms (right) */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left Panel - Controls */}
+      <div className="flex">
+        {/* Left Panel - Touch-friendly Controls */}
         <div
-          className={`w-14 flex-shrink-0 border-r ${THEME.border} overflow-y-auto`}
+          className={`w-16 flex-shrink-0 border-r ${THEME.border}`}
         >
-          <div className="py-2">
+          <div>
             {sortedStems.map((stem) => {
               const category = inferStemCategory(stem.title);
               const isMuted = soloStem
@@ -170,42 +216,33 @@ export function StemPlayerControls({
               return (
                 <div
                   key={stem.id}
-                  className={`h-12 flex flex-col items-center justify-center gap-0.5 border-b ${THEME.border} ${
+                  className={`h-12 flex items-center justify-center border-b ${THEME.border} relative select-none touch-none ${
                     isSolo ? soloBgClass : ''
-                  } ${isMuted && !isSolo ? 'opacity-40' : ''}`}
+                  } ${isMuted && !isSolo ? 'opacity-40' : ''} ${
+                    isLoading || !isLoaded
+                      ? 'pointer-events-none'
+                      : 'cursor-pointer active:bg-zinc-700/50'
+                  }`}
+                  onMouseDown={() => handlePressStart(stem.id)}
+                  onMouseUp={() => handlePressEnd(stem.id)}
+                  onMouseLeave={() => handlePressCancel(stem.id)}
+                  onTouchStart={() => handlePressStart(stem.id)}
+                  onTouchEnd={() => handlePressEnd(stem.id)}
+                  onTouchCancel={() => handlePressCancel(stem.id)}
                 >
-                  {/* Icon */}
-                  <StemTrackIcon category={category} size={18} />
+                  {/* Icon - shows mute icon when muted, otherwise category icon */}
+                  {isMuted && !isSolo ? (
+                    <VolumeX className="h-5 w-5 text-amber-500" />
+                  ) : (
+                    <StemTrackIcon category={category} size={20} />
+                  )}
 
-                  {/* M/S Buttons */}
-                  <div className="flex gap-0.5">
-                    <Button
-                      onClick={() => toggleMute(stem.id)}
-                      variant="ghost"
-                      size="sm"
-                      className={`h-5 w-5 p-0 text-[9px] font-bold ${
-                        isMuted && !soloStem
-                          ? 'bg-amber-500 text-white hover:bg-amber-600'
-                          : `${THEME.text} hover:bg-zinc-700`
-                      }`}
-                      disabled={isLoading || !isLoaded}
-                    >
-                      M
-                    </Button>
-                    <Button
-                      onClick={() => toggleSolo(stem.id)}
-                      variant="ghost"
-                      size="sm"
-                      className={`h-5 w-5 p-0 text-[9px] font-bold ${
-                        isSolo
-                          ? 'bg-cyan-500 text-white hover:bg-cyan-600'
-                          : `${THEME.text} hover:bg-zinc-700`
-                      }`}
-                      disabled={isLoading || !isLoaded}
-                    >
+                  {/* Solo badge */}
+                  {isSolo && (
+                    <div className="absolute top-1 right-1 bg-cyan-500 text-white text-[8px] font-bold px-1 rounded">
                       S
-                    </Button>
-                  </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -213,7 +250,7 @@ export function StemPlayerControls({
         </div>
 
         {/* Right Panel - Waveforms */}
-        <div className="flex-1 overflow-y-auto relative">
+        <div className="flex-1 relative">
           {/* Unified Playhead */}
           {duration > 0 && (
             <div
@@ -222,7 +259,7 @@ export function StemPlayerControls({
             />
           )}
 
-          <div className="py-2">
+          <div>
             {sortedStems.map((stem) => {
               const category = inferStemCategory(stem.title);
               const isMuted = soloStem
@@ -254,22 +291,13 @@ export function StemPlayerControls({
         </div>
       </div>
 
-      {/* Bottom Progress Bar */}
-      <div className={`px-4 py-3 ${THEME.card} border-t ${THEME.border}`}>
-        <Slider
-          value={[currentTime]}
-          max={duration || 100}
-          step={0.1}
-          onValueChange={handleSeek}
-          className="w-full"
-          disabled={isLoading}
-        />
-        <div
-          className={`flex justify-between text-xs ${THEME.textSecondary} mt-1 font-mono`}
-        >
-          <span>{formatTime(currentTime)}</span>
-          <span>{formatTime(duration)}</span>
-        </div>
+      {/* Hint text at bottom */}
+      <div
+        className={`px-4 py-2 ${THEME.card} border-t ${THEME.border} text-center`}
+      >
+        <p className={`text-[10px] ${THEME.textSecondary}`}>
+          Tap icon to mute • Long-press to solo
+        </p>
       </div>
     </div>
   );
