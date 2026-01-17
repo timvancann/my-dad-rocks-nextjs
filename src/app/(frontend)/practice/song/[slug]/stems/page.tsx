@@ -55,7 +55,6 @@ function StemPlayer({ slug }: { slug: string }) {
         stems={stems}
         songTitle={song.title}
         artworkUrl={song.artworkUrl ?? undefined}
-        slug={slug}
       />
     </div>
   );

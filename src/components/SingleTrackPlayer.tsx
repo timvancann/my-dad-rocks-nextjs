@@ -1,20 +1,14 @@
 'use client';
 
-import { Play, Pause, Loader2, ArrowLeft, SkipBack, SkipForward } from 'lucide-react';
+import { Play, Pause, Loader2 } from 'lucide-react';
 import { useRef, useState, useCallback, useEffect } from 'react';
-import Link from 'next/link';
 import Image from 'next/image';
 import { useWavesurfer } from '@wavesurfer/react';
-import { Button } from '@/components/ui/button';
 import { usePlayerStore } from '@/store/store';
 import { usePlaylistPlayer, useAudioTime } from '@/hooks/useAudioTime';
 import { useGlobalAudioPlayer } from 'react-use-audio-player';
 import { db } from '@/lib/db';
 import { THEME } from '@/themes';
-
-interface SingleTrackPlayerProps {
-  onBack?: () => void;
-}
 
 function formatTime(seconds: number): string {
   const mins = Math.floor(seconds / 60);
@@ -22,11 +16,10 @@ function formatTime(seconds: number): string {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-export function SingleTrackPlayer({ onBack }: SingleTrackPlayerProps) {
+export function SingleTrackPlayer() {
   const { currentSong } = usePlayerStore();
-  const { playPauseTrack, nextTrack, previousTrack, seekTrack, isChangingSong } =
-    usePlaylistPlayer();
-  const { paused, duration, isLoading } = useGlobalAudioPlayer();
+  const { playPauseTrack, seekTrack } = usePlaylistPlayer();
+  const { paused, duration, isLoading: isAudioLoading } = useGlobalAudioPlayer();
   const currentTime = useAudioTime();
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -129,28 +122,17 @@ export function SingleTrackPlayer({ onBack }: SingleTrackPlayerProps) {
     );
   }
 
+  const isLoading = isAudioLoading || !waveformReady;
+
   return (
     <div className={`flex flex-col ${THEME.bg}`}>
-      {/* Header */}
+      {/* Header - matches StemPlayerControls */}
       <div
         className={`${THEME.card} border-b ${THEME.border} px-4 py-3 flex items-center gap-3`}
       >
-        {/* Back Button */}
-        {onBack ? (
-          <Button variant="ghost" size="sm" className="p-2 h-8 w-8" onClick={onBack}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        ) : currentSong.slug ? (
-          <Link href={`/practice/song/${currentSong.slug}`}>
-            <Button variant="ghost" size="sm" className="p-2 h-8 w-8">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-        ) : null}
-
-        {/* Artwork */}
+        {/* LP Artwork with Play/Pause */}
         <div className="relative flex-shrink-0">
-          <div className="w-14 h-14 rounded-lg overflow-hidden bg-gray-200 border border-gray-300">
+          <div className="w-14 h-14 rounded-full overflow-hidden bg-gray-200 border-2 border-gray-300">
             {currentSong.artworkUrl ? (
               <Image
                 src={currentSong.artworkUrl}
@@ -165,6 +147,18 @@ export function SingleTrackPlayer({ onBack }: SingleTrackPlayerProps) {
               </div>
             )}
           </div>
+          {/* Play/Pause Button Overlay */}
+          <button
+            onClick={playPauseTrack}
+            disabled={isAudioLoading}
+            className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 hover:bg-opacity-50 rounded-full transition-all disabled:opacity-50"
+          >
+            {paused ? (
+              <Play className="h-6 w-6 text-white fill-white" />
+            ) : (
+              <Pause className="h-6 w-6 text-white fill-white" />
+            )}
+          </button>
         </div>
 
         {/* Song Title and Time */}
@@ -177,89 +171,45 @@ export function SingleTrackPlayer({ onBack }: SingleTrackPlayerProps) {
               {currentSong.artist}
             </p>
           )}
+          <p className={`text-xs ${THEME.textSecondary} font-mono`}>
+            {formatTime(currentTime)} / {formatTime(duration)}
+          </p>
         </div>
 
         {/* Loading Indicator */}
-        {(isLoading || isChangingSong) && (
+        {isLoading && (
           <Loader2 className={`h-4 w-4 animate-spin ${THEME.primary}`} />
         )}
       </div>
 
       {/* Waveform */}
-      <div className="px-4 py-6">
-        <div className="relative">
-          {/* Loading overlay */}
-          {(!waveformReady || isLoading) && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-30 rounded-lg">
-              <div className="flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin text-amber-400" />
-                <span className={`text-sm ${THEME.textSecondary}`}>
-                  Loading waveform...
-                </span>
-              </div>
+      <div className="relative">
+        {/* Loading overlay */}
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-30">
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin text-amber-400" />
+              <span className={`text-sm ${THEME.textSecondary}`}>
+                Loading waveform...
+              </span>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Unified Playhead */}
-          {duration > 0 && (
-            <div
-              className="absolute top-0 bottom-0 w-0.5 bg-amber-400 z-20 pointer-events-none"
-              style={{ left: `${(currentTime / duration) * 100}%` }}
-            />
-          )}
-
+        {/* Unified Playhead */}
+        {duration > 0 && (
           <div
-            ref={containerRef}
-            onClick={handleWaveformClick}
-            className="w-full cursor-pointer rounded-lg overflow-hidden"
-            style={{ minHeight: '120px' }}
+            className="absolute top-0 bottom-0 w-0.5 bg-amber-400 z-20 pointer-events-none"
+            style={{ left: `${(currentTime / duration) * 100}%` }}
           />
-        </div>
+        )}
 
-        {/* Time display */}
         <div
-          className={`flex justify-between text-xs ${THEME.textSecondary} mt-2 font-mono`}
-        >
-          <span>{formatTime(currentTime)}</span>
-          <span>{formatTime(duration)}</span>
-        </div>
-      </div>
-
-      {/* Playback Controls */}
-      <div className="px-4 pb-6">
-        <div className="flex items-center justify-center gap-6">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={previousTrack}
-            className="h-12 w-12 rounded-full"
-            disabled={isChangingSong}
-          >
-            <SkipBack className="h-6 w-6" />
-          </Button>
-
-          <Button
-            onClick={playPauseTrack}
-            disabled={isLoading || isChangingSong}
-            className="h-16 w-16 rounded-full bg-red-600 hover:bg-red-700 text-white"
-          >
-            {paused ? (
-              <Play className="h-8 w-8 fill-white" />
-            ) : (
-              <Pause className="h-8 w-8 fill-white" />
-            )}
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={nextTrack}
-            className="h-12 w-12 rounded-full"
-            disabled={isChangingSong}
-          >
-            <SkipForward className="h-6 w-6" />
-          </Button>
-        </div>
+          ref={containerRef}
+          onClick={handleWaveformClick}
+          className="w-full cursor-pointer"
+          style={{ minHeight: '120px' }}
+        />
       </div>
     </div>
   );

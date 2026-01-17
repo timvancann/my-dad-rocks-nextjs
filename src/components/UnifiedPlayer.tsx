@@ -5,7 +5,6 @@ import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { usePlayerStore } from '@/store/store';
 import { useSongWithDetails } from '@/hooks/convex';
-import { usePlaylistPlayer } from '@/hooks/useAudioTime';
 import { StemPlayerControls } from '@/components/StemPlayerControls';
 import { SingleTrackPlayer } from '@/components/SingleTrackPlayer';
 import type { Stem } from '@/types/stems';
@@ -14,7 +13,6 @@ import { THEME } from '@/themes';
 export function UnifiedPlayer() {
   const router = useRouter();
   const { currentSong } = usePlayerStore();
-  const { paused } = usePlaylistPlayer();
 
   // Fetch song details to get stems/audio cues
   const songDetails = useSongWithDetails(currentSong?.slug);
@@ -62,7 +60,6 @@ export function UnifiedPlayer() {
         stems={stems}
         songTitle={songDetails.title}
         artworkUrl={songDetails.artworkUrl ?? undefined}
-        slug={currentSong.slug || ''}
       />
     );
   }

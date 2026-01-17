@@ -1,10 +1,8 @@
 'use client';
 
-import { Play, Pause, Loader2, ArrowLeft, VolumeX } from 'lucide-react';
+import { Play, Pause, Loader2, VolumeX } from 'lucide-react';
 import { useRef, useCallback, useState } from 'react';
-import Link from 'next/link';
 import Image from 'next/image';
-import { Button } from '@/components/ui/button';
 import type { Stem } from '@/types/stems';
 import {
   inferStemCategory,
@@ -20,7 +18,6 @@ interface StemPlayerControlsProps {
   stems: Stem[];
   songTitle: string;
   artworkUrl?: string | null;
-  slug: string;
 }
 
 function formatTime(seconds: number): string {
@@ -36,7 +33,6 @@ export function StemPlayerControls({
   stems,
   songTitle,
   artworkUrl,
-  slug,
 }: StemPlayerControlsProps) {
   const {
     isPlaying,
@@ -149,13 +145,6 @@ export function StemPlayerControls({
       <div
         className={`${THEME.card} border-b ${THEME.border} px-4 py-3 flex items-center gap-3`}
       >
-        {/* Back Button */}
-        <Link href={`/practice/song/${slug}`}>
-          <Button variant="ghost" size="sm" className="p-2 h-8 w-8">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-
         {/* LP Artwork with Play/Pause */}
         <div className="relative flex-shrink-0">
           <div className="w-14 h-14 rounded-full overflow-hidden bg-gray-200 border-2 border-gray-300">
