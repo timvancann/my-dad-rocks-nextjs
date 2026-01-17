@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { THEME } from '@/themes';
 import { ArrowLeft, Upload, Music, Image as ImageIcon, Save } from 'lucide-react';
 import { NavigationLink } from '@/components/NavigationButton';
-import { useFileUpload, useCreateSong } from '@/hooks/convex';
+import { useFileUpload, useCreateSong, useUpdateSong, useCompressedAudioUpload } from '@/hooks/convex';
 import type { Id } from '../../../../../../convex/_generated/dataModel';
 
 interface NewSongFormData {
@@ -65,7 +65,9 @@ export default function NewSongPage() {
 
   // Convex hooks
   const { uploadFile } = useFileUpload();
+  const { uploadAudio } = useCompressedAudioUpload();
   const createSong = useCreateSong();
+  const updateSong = useUpdateSong();
 
   useEffect(() => {
     if (prefillApplied) {
@@ -343,13 +345,8 @@ export default function NewSongPage() {
         duration = await calculateAudioDuration(formData.audioFile);
       }
 
-      // Upload files to Convex storage
-      let audioStorageId: Id<"_storage"> | undefined;
+      // Upload artwork to Convex storage (images don't need compression)
       let artworkStorageId: Id<"_storage"> | undefined;
-
-      if (formData.audioFile) {
-        audioStorageId = await uploadFile(formData.audioFile);
-      }
 
       if (formData.coverArt) {
         artworkStorageId = await uploadFile(formData.coverArt);
@@ -358,16 +355,29 @@ export default function NewSongPage() {
       // Generate slug
       const slug = generateSlug(formData.title);
 
-      // Create song in Convex
-      await createSong({
+      // Create song in Convex first
+      const songId = await createSong({
         title: formData.title,
         artist: formData.artist,
         slug,
-        audioStorageId,
         artworkStorageId,
         artworkUrl: selectedSpotifyArtwork?.imageUrl,
         durationSeconds: duration || undefined,
       });
+
+      // Upload audio to Convex with compression (if provided)
+      if (formData.audioFile && songId) {
+        const uploadResult = await uploadAudio(formData.audioFile);
+        console.log(
+          `Audio compressed: ${(uploadResult.originalSize / 1024 / 1024).toFixed(2)}MB -> ${(uploadResult.compressedSize / 1024 / 1024).toFixed(2)}MB (${uploadResult.compressionRatio.toFixed(1)}x)`
+        );
+
+        // Update song with the Convex storage ID
+        await updateSong({
+          id: songId,
+          audioStorageId: uploadResult.storageId,
+        });
+      }
 
       // Navigate to the new song
       router.push(`/practice/song/${slug}`);

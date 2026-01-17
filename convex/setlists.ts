@@ -52,7 +52,13 @@ export const getByTitle = query({
           ? await ctx.storage.getUrl(song.artworkStorageId)
           : song.artworkUrl;
 
-        return { ...item, song: { ...song, audioUrl, artworkUrl } };
+        // Count stems for this song
+        const audioCues = await ctx.db
+          .query("songAudioCues")
+          .withIndex("by_songId", (q) => q.eq("songId", song._id))
+          .collect();
+
+        return { ...item, song: { ...song, audioUrl, artworkUrl, stemCount: audioCues.length } };
       })
     );
 
@@ -91,7 +97,13 @@ export const getWithItems = query({
           ? await ctx.storage.getUrl(song.artworkStorageId)
           : song.artworkUrl;
 
-        return { ...item, song: { ...song, audioUrl, artworkUrl } };
+        // Count stems for this song
+        const audioCues = await ctx.db
+          .query("songAudioCues")
+          .withIndex("by_songId", (q) => q.eq("songId", song._id))
+          .collect();
+
+        return { ...item, song: { ...song, audioUrl, artworkUrl, stemCount: audioCues.length } };
       })
     );
 

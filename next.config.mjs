@@ -25,6 +25,11 @@ const nextConfig = {
       bodySizeLimit: '20mb',
     },
   },
+  // Exclude ffmpeg packages from bundling (they use native binaries)
+  serverExternalPackages: [
+    '@ffmpeg-installer/ffmpeg',
+    'fluent-ffmpeg',
+  ],
 };
 
 export default nextConfig;

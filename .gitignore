@@ -27,6 +27,10 @@
 # uploads
 /public/uploads/
 
+# Storage analysis output
+/referenced-storage-ids.txt
+/orphaned-storage-ids.txt
+
 # debug
 npm-debug.log*
 yarn-debug.log*

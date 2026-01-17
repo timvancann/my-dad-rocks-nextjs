@@ -5,7 +5,7 @@ import { Upload, X, Loader2, CheckCircle2, Music2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { STEM_CATEGORIES, STEM_COLORS, type StemCategory } from '@/types/stems';
-import { useCreateAudioCue, useGenerateUploadUrl } from '@/hooks/convex';
+import { useCreateAudioCue } from '@/hooks/convex';
 import type { Id } from '../../convex/_generated/dataModel';
 
 interface StemFile {
@@ -16,6 +16,11 @@ interface StemFile {
   uploaded: boolean;
   error: string | null;
   duration: number | null;
+  compressionInfo?: {
+    originalSize: number;
+    compressedSize: number;
+    compressionRatio: number;
+  };
 }
 
 interface StemUploaderProps {
@@ -102,7 +107,6 @@ export function StemUploader({ songId, songSlug, onUploadComplete }: StemUploade
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Convex hooks
-  const generateUploadUrl = useGenerateUploadUrl();
   const createAudioCue = useCreateAudioCue();
 
   const handleFiles = useCallback((files: FileList | null) => {
@@ -172,42 +176,51 @@ export function StemUploader({ songId, songSlug, onUploadComplete }: StemUploade
         // Extract duration
         const duration = await extractAudioDuration(stemFile.file);
 
-        // Get upload URL from Convex
-        const uploadUrl = await generateUploadUrl();
+        // Upload to Convex via our API (includes compression)
+        const formData = new FormData();
+        formData.append('file', stemFile.file);
 
-        // Upload file to Convex storage
-        const response = await fetch(uploadUrl, {
+        const response = await fetch('/api/upload-audio', {
           method: 'POST',
-          headers: { 'Content-Type': stemFile.file.type },
-          body: stemFile.file,
+          body: formData,
         });
 
-        const uploadError = !response.ok;
-
-        if (uploadError) {
-          console.error('Upload error:', uploadError);
-          throw new Error('Upload failed');
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || 'Upload failed');
         }
 
-        const { storageId } = await response.json();
-        if (!storageId) {
-          throw new Error('No storage ID received from upload');
+        const result = await response.json();
+        if (!result.storageId) {
+          throw new Error('No storageId received from upload');
         }
 
-        // Create audio cue in database
+        // Create audio cue in database with the Convex storage ID
         const title = deriveStemTitle(stemFile.file.name, stemFile.stemType);
         await createAudioCue({
           songId: songId as Id<"songs">,
           title,
-          cueStorageId: storageId as Id<"_storage">,
+          cueStorageId: result.storageId as Id<"_storage">,
           description: `${stemFile.stemType} stem`,
           durationSeconds: duration ? Math.round(duration) : undefined,
         });
 
-        // Mark as uploaded
+        // Mark as uploaded with compression info
         setStemFiles((prev) =>
           prev.map((s) =>
-            s.id === stemFile.id ? { ...s, uploading: false, uploaded: true, duration } : s
+            s.id === stemFile.id
+              ? {
+                  ...s,
+                  uploading: false,
+                  uploaded: true,
+                  duration,
+                  compressionInfo: {
+                    originalSize: result.originalSize,
+                    compressedSize: result.compressedSize,
+                    compressionRatio: result.compressionRatio,
+                  },
+                }
+              : s
           )
         );
       } catch (error) {
@@ -229,7 +242,7 @@ export function StemUploader({ songId, songSlug, onUploadComplete }: StemUploade
     if (allUploaded && onUploadComplete) {
       onUploadComplete();
     }
-  }, [stemFiles, isUploading, songId, onUploadComplete, generateUploadUrl, createAudioCue]);
+  }, [stemFiles, isUploading, songId, onUploadComplete, createAudioCue]);
 
   const allUploaded = stemFiles.length > 0 && stemFiles.every((s) => s.uploaded);
 
@@ -326,7 +339,22 @@ export function StemUploader({ songId, songSlug, onUploadComplete }: StemUploade
                           <p className="font-medium truncate">{stemFile.file.name}</p>
                         </div>
                         <p className="text-xs text-gray-500 mt-1">
-                          {(stemFile.file.size / 1024 / 1024).toFixed(2)} MB
+                          {stemFile.compressionInfo ? (
+                            <>
+                              <span className="line-through text-gray-600">
+                                {(stemFile.compressionInfo.originalSize / 1024 / 1024).toFixed(2)} MB
+                              </span>
+                              {' → '}
+                              <span className="text-green-400">
+                                {(stemFile.compressionInfo.compressedSize / 1024 / 1024).toFixed(2)} MB
+                              </span>
+                              <span className="text-gray-600 ml-1">
+                                ({stemFile.compressionInfo.compressionRatio.toFixed(1)}x smaller)
+                              </span>
+                            </>
+                          ) : (
+                            <>{(stemFile.file.size / 1024 / 1024).toFixed(2)} MB</>
+                          )}
                         </p>
                         {stemFile.error && (
                           <p className="text-xs text-red-400 mt-1">{stemFile.error}</p>

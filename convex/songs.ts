@@ -10,7 +10,7 @@ export const getAll = query({
   handler: async (ctx) => {
     const songs = await ctx.db.query("songs").order("asc").collect();
 
-    // Get URLs for storage IDs
+    // Get URLs for storage IDs and stem counts
     const songsWithUrls = await Promise.all(
       songs.map(async (song) => {
         const audioUrl = song.audioStorageId
@@ -19,7 +19,14 @@ export const getAll = query({
         const artworkUrl = song.artworkStorageId
           ? await ctx.storage.getUrl(song.artworkStorageId)
           : song.artworkUrl;
-        return { ...song, audioUrl, artworkUrl };
+
+        // Count stems for this song
+        const audioCues = await ctx.db
+          .query("songAudioCues")
+          .withIndex("by_songId", (q) => q.eq("songId", song._id))
+          .collect();
+
+        return { ...song, audioUrl, artworkUrl, stemCount: audioCues.length };
       })
     );
 
@@ -474,5 +481,98 @@ export const deleteAudioCue = mutation({
       await ctx.storage.delete(cue.cueStorageId);
     }
     await ctx.db.delete(args.id);
+  },
+});
+
+// ============================================
+// Storage Functions
+// ============================================
+
+export const generateUploadUrl = mutation({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+export const deleteStorageFile = mutation({
+  args: { storageId: v.id("_storage") },
+  handler: async (ctx, args) => {
+    await ctx.storage.delete(args.storageId);
+  },
+});
+
+// Delete multiple storage files at once
+export const deleteStorageFiles = mutation({
+  args: { storageIds: v.array(v.id("_storage")) },
+  handler: async (ctx, args) => {
+    const results: { id: string; success: boolean; error?: string }[] = [];
+    for (const storageId of args.storageIds) {
+      try {
+        await ctx.storage.delete(storageId);
+        results.push({ id: storageId, success: true });
+      } catch (e) {
+        results.push({
+          id: storageId,
+          success: false,
+          error: e instanceof Error ? e.message : "Unknown error",
+        });
+      }
+    }
+    return results;
+  },
+});
+
+export const listAllAudioCues = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("songAudioCues").collect();
+  },
+});
+
+// List all storage files in Convex
+export const listAllStorageFiles = query({
+  args: {},
+  handler: async (ctx) => {
+    const files = await ctx.db.system.query("_storage").collect();
+    return files.map((f) => ({
+      id: f._id,
+      size: f.size,
+      contentType: f.contentType,
+    }));
+  },
+});
+
+// Get all storage IDs referenced in the database (songs + audio cues)
+export const getReferencedStorageIds = query({
+  args: {},
+  handler: async (ctx) => {
+    const songs = await ctx.db.query("songs").collect();
+    const audioCues = await ctx.db.query("songAudioCues").collect();
+
+    const referencedIds: string[] = [];
+
+    for (const song of songs) {
+      if (song.audioStorageId) {
+        referencedIds.push(song.audioStorageId);
+      }
+      if (song.artworkStorageId) {
+        referencedIds.push(song.artworkStorageId);
+      }
+    }
+
+    for (const cue of audioCues) {
+      if (cue.cueStorageId) {
+        referencedIds.push(cue.cueStorageId);
+      }
+    }
+
+    return {
+      total: referencedIds.length,
+      songAudioCount: songs.filter((s) => s.audioStorageId).length,
+      songArtworkCount: songs.filter((s) => s.artworkStorageId).length,
+      audioCueCount: audioCues.filter((c) => c.cueStorageId).length,
+      storageIds: referencedIds,
+    };
   },
 });

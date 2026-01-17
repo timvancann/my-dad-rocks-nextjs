@@ -89,3 +89,46 @@ export function useMultiFileUpload() {
 
   return { uploadFiles };
 }
+
+// ============================================
+// Compressed Audio Upload Hook (to Convex)
+// ============================================
+
+export interface CompressedUploadResult {
+  storageId: Id<"_storage">;
+  originalSize: number;
+  compressedSize: number;
+  compressionRatio: number;
+}
+
+export function useCompressedAudioUpload() {
+  const uploadAudio = async (file: File): Promise<CompressedUploadResult> => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch("/api/upload-audio", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || "Upload failed");
+    }
+
+    const result = await response.json();
+    if (!result.storageId) {
+      throw new Error("No storageId received from upload");
+    }
+
+    return {
+      storageId: result.storageId as Id<"_storage">,
+      originalSize: result.originalSize,
+      compressedSize: result.compressedSize,
+      compressionRatio: result.compressionRatio,
+    };
+  };
+
+  return { uploadAudio };
+}
+
