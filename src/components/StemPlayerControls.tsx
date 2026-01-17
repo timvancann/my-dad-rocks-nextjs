@@ -86,9 +86,17 @@ export function StemPlayerControls({
     seek(time);
   };
 
+  // Track if we're handling a touch event to prevent mouse event duplication
+  const isTouchEventRef = useRef(false);
+
   // Handle touch/mouse down - start long press timer
   const handlePressStart = useCallback(
-    (stemId: string) => {
+    (stemId: string, isTouch: boolean = false) => {
+      // If this is a mouse event but we just handled a touch event, ignore it
+      if (!isTouch && isTouchEventRef.current) {
+        return;
+      }
+
       longPressTriggered.current.delete(stemId);
 
       const timer = setTimeout(() => {
@@ -103,7 +111,12 @@ export function StemPlayerControls({
 
   // Handle touch/mouse up - clear timer and handle tap
   const handlePressEnd = useCallback(
-    (stemId: string) => {
+    (stemId: string, isTouch: boolean = false) => {
+      // If this is a mouse event but we just handled a touch event, ignore it
+      if (!isTouch && isTouchEventRef.current) {
+        return;
+      }
+
       const timer = longPressTimers.current.get(stemId);
       if (timer) {
         clearTimeout(timer);
@@ -128,6 +141,27 @@ export function StemPlayerControls({
     }
     longPressTriggered.current.delete(stemId);
   }, []);
+
+  // Handle touch start - mark that we're using touch
+  const handleTouchStart = useCallback(
+    (stemId: string) => {
+      isTouchEventRef.current = true;
+      handlePressStart(stemId, true);
+    },
+    [handlePressStart]
+  );
+
+  // Handle touch end - toggle mute and reset touch flag after a delay
+  const handleTouchEnd = useCallback(
+    (stemId: string) => {
+      handlePressEnd(stemId, true);
+      // Reset touch flag after a short delay to ignore subsequent mouse events
+      setTimeout(() => {
+        isTouchEventRef.current = false;
+      }, 300);
+    },
+    [handlePressEnd]
+  );
 
   // Sort stems by category
   const sortedStems = sortStemsByCategory(stems);
@@ -233,11 +267,11 @@ export function StemPlayerControls({
                       ? 'pointer-events-none'
                       : 'cursor-pointer active:bg-zinc-700/50'
                   }`}
-                  onMouseDown={() => handlePressStart(stem.id)}
-                  onMouseUp={() => handlePressEnd(stem.id)}
+                  onMouseDown={() => handlePressStart(stem.id, false)}
+                  onMouseUp={() => handlePressEnd(stem.id, false)}
                   onMouseLeave={() => handlePressCancel(stem.id)}
-                  onTouchStart={() => handlePressStart(stem.id)}
-                  onTouchEnd={() => handlePressEnd(stem.id)}
+                  onTouchStart={() => handleTouchStart(stem.id)}
+                  onTouchEnd={() => handleTouchEnd(stem.id)}
                   onTouchCancel={() => handlePressCancel(stem.id)}
                 >
                   {/* Icon - shows mute icon when muted, otherwise category icon */}

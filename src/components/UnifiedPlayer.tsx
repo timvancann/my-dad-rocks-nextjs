@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useGlobalAudioPlayer } from 'react-use-audio-player';
 import { usePlayerStore } from '@/store/store';
 import { useSongWithDetails } from '@/hooks/convex';
 import { StemPlayerControls } from '@/components/StemPlayerControls';
@@ -13,6 +14,17 @@ import { THEME } from '@/themes';
 export function UnifiedPlayer() {
   const router = useRouter();
   const { currentSong } = usePlayerStore();
+  const { pause } = useGlobalAudioPlayer();
+  const hasStoppedGlobalRef = useRef(false);
+
+  // Stop the global audio player immediately when player page mounts
+  // This prevents audio from continuing to play from the mini player
+  useEffect(() => {
+    if (!hasStoppedGlobalRef.current) {
+      pause();
+      hasStoppedGlobalRef.current = true;
+    }
+  }, [pause]);
 
   // Fetch song details to get stems/audio cues
   const songDetails = useSongWithDetails(currentSong?.slug);
