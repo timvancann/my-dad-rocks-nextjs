@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { Stem, StemPlayerState } from '@/types/stems';
+import { inferStemCategory, STEM_CATEGORIES } from '@/types/stems';
 
 export function useStemPlayer(stems: Stem[]) {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -74,6 +75,19 @@ export function useStemPlayer(stems: Stem[]) {
     setVolume((prev) => ({ ...prev, ...initialVolume }));
     setLoadingProgress((prev) => ({ ...prev, ...initialLoadingProgress }));
     setIsLoading(!allLoaded);
+
+    // Auto-mute metronome stems by default
+    const metronomeIds = stems
+      .filter((stem) => inferStemCategory(stem.title) === STEM_CATEGORIES.METRONOME)
+      .map((s) => s.id);
+
+    if (metronomeIds.length > 0) {
+      setMutedStems((prev) => {
+        const newMuted = new Set(prev);
+        metronomeIds.forEach((id) => newMuted.add(id));
+        return newMuted;
+      });
+    }
 
     return () => {
       // Cleanup on unmount

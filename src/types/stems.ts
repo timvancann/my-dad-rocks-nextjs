@@ -102,3 +102,36 @@ export const STEM_COLORS: Record<StemCategory, string> = {
   [STEM_CATEGORIES.METRONOME]: 'bg-gray-500',
   [STEM_CATEGORIES.OTHER]: 'bg-yellow-500',
 };
+
+// Hex colors for WaveSurfer waveforms
+export const STEM_WAVEFORM_COLORS: Record<StemCategory, { wave: string; progress: string }> = {
+  [STEM_CATEGORIES.VOCALS]: { wave: '#3b82f6', progress: '#60a5fa' },
+  [STEM_CATEGORIES.GUITAR]: { wave: '#f97316', progress: '#fb923c' },
+  [STEM_CATEGORIES.BASS]: { wave: '#a855f7', progress: '#c084fc' },
+  [STEM_CATEGORIES.DRUMS]: { wave: '#ef4444', progress: '#f87171' },
+  [STEM_CATEGORIES.KEYS]: { wave: '#22c55e', progress: '#4ade80' },
+  [STEM_CATEGORIES.METRONOME]: { wave: '#6b7280', progress: '#9ca3af' },
+  [STEM_CATEGORIES.OTHER]: { wave: '#eab308', progress: '#facc15' },
+};
+
+// Background colors for solo'd tracks
+export const STEM_SOLO_BG: Record<StemCategory, string> = {
+  [STEM_CATEGORIES.VOCALS]: 'bg-blue-500/20',
+  [STEM_CATEGORIES.GUITAR]: 'bg-orange-500/20',
+  [STEM_CATEGORIES.BASS]: 'bg-purple-500/20',
+  [STEM_CATEGORIES.DRUMS]: 'bg-red-500/20',
+  [STEM_CATEGORIES.KEYS]: 'bg-green-500/20',
+  [STEM_CATEGORIES.METRONOME]: 'bg-gray-500/20',
+  [STEM_CATEGORIES.OTHER]: 'bg-yellow-500/20',
+};
+
+// Text colors for stem categories (matching the waveform colors)
+export const STEM_TEXT_COLORS: Record<StemCategory, string> = {
+  [STEM_CATEGORIES.VOCALS]: 'text-blue-500',
+  [STEM_CATEGORIES.GUITAR]: 'text-orange-500',
+  [STEM_CATEGORIES.BASS]: 'text-purple-500',
+  [STEM_CATEGORIES.DRUMS]: 'text-red-500',
+  [STEM_CATEGORIES.KEYS]: 'text-green-500',
+  [STEM_CATEGORIES.METRONOME]: 'text-gray-500',
+  [STEM_CATEGORIES.OTHER]: 'text-yellow-500',
+};
