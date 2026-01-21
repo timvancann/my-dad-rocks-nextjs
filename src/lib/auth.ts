@@ -2,7 +2,7 @@ import { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 
 // List of allowed email addresses
-const allowedEmails = ['timvancann@gmail.com', 'pacramer01@gmail.com', 'lexheijden76@gmail.com', 'nwsbas@outlook.com', 'hetcaf@gmail.com'];
+const allowedEmails = ['timvancann@gmail.com', 'pacramer01@gmail.com', 'lexheijden76@gmail.com', 'nwsbas@outlook.com', 'hetcaf@gmail.com', 'jackson.versigny@gmail.com'];
 
 export const authOptions: NextAuthOptions = {
   providers: [
